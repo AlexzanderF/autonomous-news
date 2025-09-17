@@ -1,0 +1,12 @@
+openai
+requests
+beautifulsoup4
+lxml
+schedule
+python-dotenv
+pydantic
+google-generativeai
+sqlalchemy
+psycopg2-binary
+alembic
+slugify
