@@ -91,6 +91,19 @@ def main():
     )
     save_articles_to_json(al_jazeera_articles, "al_jazeera_articles.json")
 
+    # Combine all articles into one file
+    print("\nCombining all articles into one file...")
+    all_articles = []
+    all_articles.extend(google_news_articles)
+    all_articles.extend(wsj_articles)
+    all_articles.extend(bbc_articles)
+    all_articles.extend(guardian_articles)
+    all_articles.extend(dw_articles)
+    all_articles.extend(euronews_articles)
+    all_articles.extend(al_jazeera_articles)
+    
+    save_articles_to_json(all_articles, "all_rss_articles_combined.json")
+
     # Print summary
     print(f"\n=== SUMMARY ===")
     print(f"Google News articles: {len(google_news_articles)}")
@@ -100,7 +113,7 @@ def main():
     print(f"DW articles: {len(dw_articles)}")
     print(f"Euronews articles: {len(euronews_articles)}")
     print(f"Al Jazeera articles: {len(al_jazeera_articles)}")
-    print(f"Total articles: {len(google_news_articles) + len(wsj_articles) + len(bbc_articles) + len(guardian_articles) + len(dw_articles) + len(euronews_articles) + len(al_jazeera_articles)}")
+    print(f"Total articles: {len(all_articles)}")
     
 if __name__ == "__main__":
     main()
