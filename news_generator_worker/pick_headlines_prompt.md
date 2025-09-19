@@ -20,6 +20,6 @@ Steps to follow:
 - Output exactly 20 items if possible; if fewer distinct clusters, note it and fill with next-best; if more, truncate to top 20.
 
 Output format: A JSON array of objects with the following properties:
-- "title" - the final headline I am going to use for the news article
+- "title" - the final headline I am going to use for the news article. Do not append the source or add any additional information. If source is present at the end remove it
 - "category" - a string representing the category of the news from this list: Politics, Finance, Tech, Science, Culture, Entertainment
 - "explanation" - brief 1-sentence explanation of why it was selected
