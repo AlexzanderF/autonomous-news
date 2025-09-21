@@ -200,6 +200,7 @@ class NewsIngestionWorker:
                     system_instruction=self.pick_headlines_prompt,
                     temperature=self.temperature,
                     response_mime_type='application/json',
+                    thinking_config=genai.types.ThinkingConfig(thinking_budget=-1)
                     # response_schema=list[ProcessedHeadline]
                 )
             )
@@ -215,9 +216,7 @@ class NewsIngestionWorker:
                 logger.error("LLM response did not return a JSON array")
                 return []
 
-            processed_headlines: List[ProcessedHeadline] = [
-                ProcessedHeadline(**headline) for headline in parsed_response
-            ]
+            processed_headlines: List[ProcessedHeadline] = [ProcessedHeadline(**headline) for headline in parsed_response]
 
             logger.info(
                 "Headline selection complete: %d stories ready for Redis publishing",
