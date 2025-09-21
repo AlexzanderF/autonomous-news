@@ -8,8 +8,8 @@ from rss_scrapers.wsj_scraper import WSJScraper
 from rss_scrapers.bbc_scraper import BBCScraper
 from rss_scrapers.the_guardian_scraper import TheGuardianScraper
 from rss_scrapers.dw_scraper import DWScraper
-from rss_scrapers.euronews_scraper import EuronewsScraper
 from rss_scrapers.al_jazeera_scraper import AlJazeeraScraper
+from rss_scrapers.france24_scraper import France24Scraper
 
 def save_articles_to_json(articles: List[ScrapedArticleDTO], filename: str):
     """Save articles to JSON file with proper serialization."""
@@ -18,11 +18,11 @@ def save_articles_to_json(articles: List[ScrapedArticleDTO], filename: str):
     for article in articles:
         article_dict = {
             "title": article.title,
-            "source": article.source,
+            # "source": article.source,
             "date": article.date.isoformat(),  # Convert datetime to ISO string
-            "link": str(article.link),  # Convert HttpUrl to string
+            # "link": str(article.link),  # Convert HttpUrl to string
             "short_description": article.short_description if article.short_description else "",
-            "extracted_from": article.extracted_from
+            # "extracted_from": article.extracted_from
         }
         articles_data.append(article_dict)
     
@@ -77,12 +77,12 @@ def main():
     )
     save_articles_to_json(dw_articles, "dw_articles.json")
 
-    # Test Euronews
-    euronews_scraper = EuronewsScraper()
-    euronews_articles = euronews_scraper.scrape_latest_news(
+    # Test France 24
+    france24_scraper = France24Scraper()
+    france24_articles = france24_scraper.scrape_world_news(
         after_date=after_date
     )
-    save_articles_to_json(euronews_articles, "euronews_articles.json")
+    save_articles_to_json(france24_articles, "france24_articles.json")
 
     # Test Al Jazeera
     al_jazeera_scraper = AlJazeeraScraper()
@@ -99,7 +99,7 @@ def main():
     all_articles.extend(bbc_articles)
     all_articles.extend(guardian_articles)
     all_articles.extend(dw_articles)
-    all_articles.extend(euronews_articles)
+    all_articles.extend(france24_articles)
     all_articles.extend(al_jazeera_articles)
     
     save_articles_to_json(all_articles, "all_rss_articles_combined.json")
@@ -111,7 +111,7 @@ def main():
     print(f"BBC articles: {len(bbc_articles)}")
     print(f"Guardian articles: {len(guardian_articles)}")
     print(f"DW articles: {len(dw_articles)}")
-    print(f"Euronews articles: {len(euronews_articles)}")
+    print(f"France 24 articles: {len(france24_articles)}")
     print(f"Al Jazeera articles: {len(al_jazeera_articles)}")
     print(f"Total articles: {len(all_articles)}")
     
