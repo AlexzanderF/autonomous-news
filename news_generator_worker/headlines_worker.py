@@ -50,7 +50,7 @@ class NewsIngestionWorker:
         self.genai_client = genai.Client(api_key=api_key)
 
         # Model configuration - can be changed via environment variables
-        self.model_name = os.getenv('LLM_MODEL_NAME')
+        self.model_name = os.getenv('LLM_MODEL_NAME', 'gemini-2.5-flash')
         if not self.model_name:
             raise ValueError("LLM_MODEL_NAME environment variable is required")
         self.temperature = float(os.getenv('LLM_TEMPERATURE', 0.75))
