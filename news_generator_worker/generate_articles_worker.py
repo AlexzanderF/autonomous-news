@@ -142,7 +142,6 @@ class NewsArticleGenerationWorker:
         if not category:
             category = Category(
                 name=category_name,
-                description=f"Articles related to {category_name}"
             )
             db.add(category)
             db.commit()
