@@ -10,7 +10,7 @@ from pathlib import Path
 from google import genai
 from dotenv import load_dotenv
 import redis
-from dto import ScrapedArticleDTO, ProcessedHeadline
+from dto import ScrapedArticleDTO, ProcessedHeadlineDTO
 
 # Import existing scrapers
 from rss_scrapers.google_news_scraper import GoogleNewsScraper
@@ -72,7 +72,7 @@ class NewsIngestionWorker:
             port=redis_port,
             db=redis_db,
             password=redis_password if redis_password else None,
-            decode_responses=True,
+            decode_responses=True
         )
 
         try:
@@ -170,7 +170,7 @@ class NewsIngestionWorker:
         logger.info(f"Total headlines fetched: {len(all_articles)}")
         return all_articles
     
-    def deduplicate_headlines_with_llm(self, articles: List[ScrapedArticleDTO], maxHeadlinesCount: int = 20) -> List[ProcessedHeadline]:
+    def deduplicate_headlines_with_llm(self, articles: List[ScrapedArticleDTO], maxHeadlinesCount: int = 20) -> List[ProcessedHeadlineDTO]:
         """Use the selection prompt to pick top headlines for article generation."""
         if not articles:
             return []
@@ -216,7 +216,7 @@ class NewsIngestionWorker:
                 logger.error("LLM response did not return a JSON array")
                 return []
 
-            processed_headlines: List[ProcessedHeadline] = [ProcessedHeadline(**headline) for headline in parsed_response]
+            processed_headlines: List[ProcessedHeadlineDTO] = [ProcessedHeadlineDTO(**headline) for headline in parsed_response]
 
             logger.info(
                 "Headline selection complete: %d stories ready for Redis publishing",
@@ -229,7 +229,7 @@ class NewsIngestionWorker:
             logger.error(f"Error selecting headlines with AI: {exc}")
             return []
     
-    def push_headlines_to_queue(self, headlines: List[ProcessedHeadline]) -> int:
+    def push_headlines_to_queue(self, headlines: List[ProcessedHeadlineDTO]) -> int:
         """Push selected headlines onto the configured Redis queue."""
         if not headlines:
             logger.info("No headlines to publish to Redis")
