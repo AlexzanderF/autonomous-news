@@ -48,7 +48,7 @@ class NewsArticleGenerationWorker:
         self.genai_client = genai.Client(api_key=api_key)
 
         # Model configuration - can be changed via environment variables
-        self.model_name = os.getenv('LLM_MODEL_NAME')
+        self.model_name = os.getenv('LLM_MODEL_NAME', 'gemini-2.5-flash')
         if not self.model_name:
             raise ValueError("LLM_MODEL_NAME environment variable is required")
         self.temperature = float(os.getenv('LLM_TEMPERATURE', 0.5))  # Lower temp for factual articles
@@ -248,20 +248,13 @@ class NewsArticleGenerationWorker:
             # Replace placeholder in the prompt template
             article_prompt = self.article_prompt.replace('{Topic Placeholder}', title)
             
-            # Use Gemini with search grounding and thinking enabled
-            model = self.genai_client.models.get(self.model_name)
-            
             # Enable search grounding and thinking for real-time information and better reasoning
-            response = model.generate_content(
-                article_prompt,
+            response = self.genai_client.models.generate_content(
+                contents=article_prompt,
+                model=self.model_name,
                 config=genai.types.GenerateContentConfig(
                     temperature=self.temperature,
                     tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
-                    tool_config=genai.types.ToolConfig(
-                        function_calling_config=genai.types.FunctionCallingConfig(
-                            mode=genai.types.FunctionCallingConfig.Mode.ANY
-                        )
-                    ),
                     thinking_config=genai.types.ThinkingConfig(
                         thinking_budget=-1  # Unlimited thinking budget for best quality
                     )
