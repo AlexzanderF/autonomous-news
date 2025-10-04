@@ -186,7 +186,7 @@ class NewsIngestionWorker:
             })
 
         user_message = (
-            f"Current UTC time: {datetime.utcnow().isoformat()}\n"
+            f"Current UTC time: {datetime.now(timezone.utc).isoformat()}\n"
             "Analyze the following JSON array of headlines and follow the instructions in the system prompt.\n"
             f"Return ONLY a JSON array of objects, with maximum length of {maxHeadlinesCount}.\n"
             f"Headlines JSON:\n{json.dumps(headlines_data, indent=2)}"
