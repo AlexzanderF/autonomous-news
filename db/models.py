@@ -35,7 +35,6 @@ class Category(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False, unique=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     articles = relationship('Article', secondary=article_categories, back_populates='categories')
@@ -53,7 +52,6 @@ class Source(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     url = Column(String(500), nullable=False, unique=True)  # Full URL of the source
     domain = Column(String(100), nullable=False)  # Extract domain for easier querying
-    created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     articles = relationship('Article', secondary=article_sources, back_populates='sources')
@@ -103,13 +101,9 @@ class Article(Base):
     sources = relationship('Source', secondary=article_sources, back_populates='articles')
     categories = relationship('Category', secondary=article_categories, back_populates='articles')
     
-    # Self-referential relationship for duplicates
-    duplicates = relationship('Article', remote_side=[id])
-    
     # Indexes for performance
     __table_args__ = (
         Index('idx_articles_published_at', 'published_at'),
-        Index('idx_articles_status', 'status'),
         # Index('idx_articles_search_vector', 'search_vector', postgresql_using='gin'),
         Index('idx_articles_slug', 'slug'),
     )
