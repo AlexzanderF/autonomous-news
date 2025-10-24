@@ -10,6 +10,7 @@ from rss_scrapers.the_guardian_scraper import TheGuardianScraper
 from rss_scrapers.dw_scraper import DWScraper
 from rss_scrapers.al_jazeera_scraper import AlJazeeraScraper
 from rss_scrapers.france24_scraper import France24Scraper
+from rss_scrapers.politico_scraper import PoliticoScraper
 
 def save_articles_to_json(articles: List[ScrapedArticleDTO], filename: str):
     """Save articles to JSON file with proper serialization."""
@@ -91,6 +92,13 @@ def main():
     )
     save_articles_to_json(al_jazeera_articles, "al_jazeera_articles.json")
 
+    # Test Politico
+    politico_scraper = PoliticoScraper()
+    politico_articles = politico_scraper.scrape_europe_news(
+        after_date=after_date
+    )
+    save_articles_to_json(politico_articles, "politico_articles.json")
+
     # Combine all articles into one file
     print("\nCombining all articles into one file...")
     all_articles = []
@@ -101,7 +109,7 @@ def main():
     all_articles.extend(dw_articles)
     all_articles.extend(france24_articles)
     all_articles.extend(al_jazeera_articles)
-    
+    all_articles.extend(politico_articles)
     save_articles_to_json(all_articles, "all_rss_articles_combined.json")
 
     # Print summary
@@ -113,6 +121,7 @@ def main():
     print(f"DW articles: {len(dw_articles)}")
     print(f"France 24 articles: {len(france24_articles)}")
     print(f"Al Jazeera articles: {len(al_jazeera_articles)}")
+    print(f"Politico articles: {len(politico_articles)}")
     print(f"Total articles: {len(all_articles)}")
     
 if __name__ == "__main__":

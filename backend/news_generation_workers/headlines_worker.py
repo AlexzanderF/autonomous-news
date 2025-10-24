@@ -57,7 +57,7 @@ class NewsIngestionWorker:
 
         # Load reusable prompts from markdown files
         self.worker_dir = Path(__file__).resolve().parent
-        self.pick_headlines_prompt = self._load_prompt('pick_headlines_prompt.md')
+        self.pick_headlines_prompt = self._load_prompt('llm_prompts/pick_headlines_prompt.md')
 
         # Redis configuration
         redis_host = os.getenv('REDIS_HOST', 'localhost')
@@ -170,7 +170,7 @@ class NewsIngestionWorker:
         logger.info(f"Total headlines fetched: {len(all_articles)}")
         return all_articles
     
-    def deduplicate_headlines_with_llm(self, articles: List[ScrapedArticleDTO], maxHeadlinesCount: int = 20) -> List[ProcessedHeadlineDTO]:
+    def deduplicate_headlines_with_llm(self, articles: List[ScrapedArticleDTO], maxHeadlinesCount: int = 40) -> List[ProcessedHeadlineDTO]:
         """Use the selection prompt to pick top headlines for article generation."""
         if not articles:
             return []
@@ -188,7 +188,7 @@ class NewsIngestionWorker:
         user_message = (
             f"Current UTC time: {datetime.now(timezone.utc).isoformat()}\n"
             "Analyze the following JSON array of headlines and follow the instructions in the system prompt.\n"
-            f"Return ONLY a JSON array of objects, with maximum length of {maxHeadlinesCount}.\n"
+            f"Return ONLY a JSON array of objects.\n"
             f"Headlines JSON:\n{json.dumps(headlines_data, indent=2)}"
         )
         

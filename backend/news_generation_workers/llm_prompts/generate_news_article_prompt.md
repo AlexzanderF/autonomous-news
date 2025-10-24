@@ -18,3 +18,4 @@ Write a concise, neutral, and factual news article structured as follows:
 3. Ensure readability: Use short sentences, active voice where appropriate, and transitions for flow.
 4. Focus on the specified topic and relevant context, avoiding unrelated tangents.
 5. Do not include any introductory or concluding remarks about the generation process, data sourcing, or how the article was constructed. Only output the news article itself.
+

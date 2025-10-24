@@ -55,7 +55,7 @@ class NewsArticleGenerationWorker:
 
         # Load reusable prompts from markdown files
         self.worker_dir = Path(__file__).resolve().parent
-        self.article_prompt = self._load_prompt('generate_news_article_prompt.md')
+        self.article_prompt = self._load_prompt('llm_prompts/generate_news_article_prompt.md')
 
         # Redis configuration
         redis_host = os.getenv('REDIS_HOST', 'localhost')
@@ -67,7 +67,7 @@ class NewsArticleGenerationWorker:
         self.redis_headlines_queue = os.getenv('REDIS_QUEUE_NAME', 'news:headlines')
         
         # Processing tracking
-        self.max_concurrent_processing = int(os.getenv('MAX_CONCURRENT_ARTICLES', '10'))
+        self.max_concurrent_processing = int(os.getenv('MAX_CONCURRENT_ARTICLES', '1'))
         self.check_interval_minutes = int(os.getenv('CHECK_INTERVAL_MINUTES', '1'))
 
         self.redis_client = redis.Redis(
@@ -84,9 +84,9 @@ class NewsArticleGenerationWorker:
             raise ConnectionError(f"Failed to connect to Redis: {exc}") from exc
 
         # Database configuration
-        db_url = os.getenv('DATABASE_URL')
+        db_url = os.getenv('DB_URL')
         if not db_url:
-            raise ValueError("DATABASE_URL environment variable is required")
+            raise ValueError("DB_URL environment variable is required")
 
         self.engine = create_engine(db_url, echo=False)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
@@ -179,28 +179,55 @@ class NewsArticleGenerationWorker:
                 
                 # Look for grounding metadata
                 if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
-                    grounding_supports = getattr(candidate.grounding_metadata, 'grounding_supports', [])
+                    grounding_metadata = candidate.grounding_metadata
                     
-                    for support in grounding_supports:
-                        if hasattr(support, 'segment') and hasattr(support.segment, 'start_index'):
-                            # Extract URLs from grounding supports
-                            if hasattr(support, 'grounding_chunk_indices'):
-                                for chunk_idx in support.grounding_chunk_indices:
-                                    if hasattr(candidate.grounding_metadata, 'search_entry_point'):
-                                        search_results = getattr(candidate.grounding_metadata.search_entry_point, 'rendered_content', '')
-                                        # Extract URLs from search results if available
-                                        urls = re.findall(r'https?://[^\s<>"]+', search_results)
-                                        sources.extend(urls)
+                    # Extract URLs from grounding_chunks (the actual web sources)
+                    # According to API docs: groundingChunks contains objects with web.uri and web.title
+                    if hasattr(grounding_metadata, 'grounding_chunks') and grounding_metadata.grounding_chunks:
+                        logger.info(f"Found {len(grounding_metadata.grounding_chunks)} grounding chunks")
+                        
+                        for idx, chunk in enumerate(grounding_metadata.grounding_chunks):
+                            # Each chunk has a 'web' attribute with 'uri' and 'title'
+                            if hasattr(chunk, 'web') and chunk.web:
+                                # The title field contains the domain name (e.g., "aljazeera.com", "bbc.com")
+                                # The uri field contains a redirect URL through vertexaisearch.cloud.google.com
+                                
+                                if hasattr(chunk.web, 'title') and chunk.web.title:
+                                    title = chunk.web.title.strip()
+                                    
+                                    # If title is already a full URL, use it directly
+                                    if title.startswith(('http://', 'https://')):
+                                        sources.append(title)
+                                        logger.debug(f"Chunk {idx}: Found full URL in title: {title}")
+                                    else:
+                                        # Title contains domain name, construct HTTPS URL
+                                        # Clean up the domain (remove any paths or extra characters)
+                                        domain = title.split('/')[0].strip()
+                                        if domain and '.' in domain:  # Basic domain validation
+                                            constructed_url = f"https://{domain}"
+                                            sources.append(constructed_url)
+                                            logger.debug(f"Chunk {idx}: Constructed URL from domain '{domain}': {constructed_url}")
+                                
+                                # Log the redirect URL for debugging purposes
+                                if hasattr(chunk.web, 'uri') and chunk.web.uri:
+                                    logger.debug(f"Chunk {idx}: Redirect URL: {chunk.web.uri}")
+                    
+                    # Log web search queries used (for debugging)
+                    if hasattr(grounding_metadata, 'web_search_queries') and grounding_metadata.web_search_queries:
+                        logger.info(f"Web search queries used: {grounding_metadata.web_search_queries}")
                 
-                # Also check citation metadata if available
+                # Also check citation metadata if available (fallback)
                 if hasattr(candidate, 'citation_metadata') and candidate.citation_metadata:
                     citations = getattr(candidate.citation_metadata, 'citation_sources', [])
                     for citation in citations:
                         if hasattr(citation, 'uri') and citation.uri:
-                            sources.append(citation.uri)
+                            # Only use non-redirect URLs from citations
+                            if 'vertexaisearch.cloud.google.com' not in citation.uri:
+                                sources.append(citation.uri)
+                                logger.debug(f"Found citation source: {citation.uri}")
                             
         except Exception as exc:
-            logger.warning(f"Could not extract sources from Gemini response: {exc}")
+            logger.warning(f"Could not extract sources from Gemini response: {exc}", exc_info=True)
             
         # Use Set to efficiently remove duplicates and filter valid URLs
         unique_sources = {
@@ -209,6 +236,11 @@ class NewsArticleGenerationWorker:
         }
                 
         logger.info(f"Extracted {len(unique_sources)} unique sources from Gemini response")
+        if unique_sources:
+            logger.info(f"Sources: {list(unique_sources)}")
+        else:
+            logger.warning("No sources extracted - this may indicate the response structure has changed")
+        
         return list(unique_sources)  # Return all unique sources, no limit
 
     def get_headlines_from_queue(self, batch_size: int = 5) -> List[Dict[str, Any]]:
@@ -282,7 +314,7 @@ class NewsArticleGenerationWorker:
             # Add source URLs to the DTO for processing in store method
             generated_article.source_urls = source_urls
 
-            logger.info(f"Successfully generated article for: {title[:50]}... (Length: {len(article_content)} chars, Sources: {len(source_urls)})")
+            logger.info(f"Successfully generated article for: {title[:50]}... (Length: {len(article_content)} chars)")
             return generated_article
 
         except Exception as exc:
