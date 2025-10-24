@@ -8,6 +8,6 @@ pydantic
 sqlalchemy
 psycopg2-binary
 alembic
-slugify
+python-slugify
 redis
 google-genai
