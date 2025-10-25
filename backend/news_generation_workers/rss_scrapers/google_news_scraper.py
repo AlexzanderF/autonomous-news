@@ -151,3 +151,67 @@ class GoogleNewsScraper:
             raise ValueError(f"Failed to fetch RSS feed: {e}")
         
         return self._parse_rss_response(response.text, num_articles, after_date, "Google News")
+
+    def scrape_top_headlines(self, num_articles: int = 200, hl: str = "en-US", gl: str = "US", ceid: str = "US:en", after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
+        """
+        Scrape top headlines from Google News.
+        
+        :param num_articles: Maximum number of articles to scrape (default: 200).
+        :param hl: Language code (default: "en-US").
+        :param gl: Country code (default: "US").
+        :param ceid: Content edition ID (default: "US:en").
+        :param after_date: Optional datetime to filter articles published after this date.
+        :return: List of ScrapedArticleDTO objects with article data.
+        """
+
+        topic = "CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtVnVHZ0pWVXlnQVAB"
+
+        return self.scrape_rss_by_topic(topic, num_articles, hl, gl, ceid, after_date)
+
+    def scrape_top_world_headlines(self, num_articles: int = 200, hl: str = "en-US", gl: str = "US", ceid: str = "US:en", after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
+        """
+        Scrape top world headlines from Google News.
+        
+        :param num_articles: Maximum number of articles to scrape (default: 200).
+        :param hl: Language code (default: "en-US").
+        :param gl: Country code (default: "US").
+        :param ceid: Content edition ID (default: "US:en").
+        :param after_date: Optional datetime to filter articles published after this date.
+        :return: List of ScrapedArticleDTO objects with article data.
+        """
+        
+        topic = "CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtVnVHZ0pWVXlnQVAB"
+
+        return self.scrape_rss_by_topic(topic, num_articles, hl, gl, ceid, after_date)
+
+    def scrape_top_business_headlines(self, num_articles: int = 200, hl: str = "en-US", gl: str = "US", ceid: str = "US:en", after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
+        """
+        Scrape top business headlines from Google News.
+        
+        :param num_articles: Maximum number of articles to scrape (default: 200).
+        :param hl: Language code (default: "en-US").
+        :param gl: Country code (default: "US").
+        :param ceid: Content edition ID (default: "US:en").
+        :param after_date: Optional datetime to filter articles published after this date.
+        :return: List of ScrapedArticleDTO objects with article data.
+        """
+
+        topic = "CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pWVXlnQVAB"
+
+        return self.scrape_rss_by_topic(topic, num_articles, hl, gl, ceid, after_date)
+
+    def scrape_top_technology_headlines(self, num_articles: int = 200, hl: str = "en-US", gl: str = "US", ceid: str = "US:en", after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
+        """
+        Scrape top technology headlines from Google News.
+        
+        :param num_articles: Maximum number of articles to scrape (default: 200).
+        :param hl: Language code (default: "en-US").
+        :param gl: Country code (default: "US").
+        :param ceid: Content edition ID (default: "US:en").
+        :param after_date: Optional datetime to filter articles published after this date.
+        :return: List of ScrapedArticleDTO objects with article data.
+        """
+
+        topic = "CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtVnVHZ0pWVXlnQVAB"
+
+        return self.scrape_rss_by_topic(topic, num_articles, hl, gl, ceid, after_date)
