@@ -168,81 +168,6 @@ class NewsArticleGenerationWorker:
                 return new_slug
             counter += 1
 
-    def extract_sources_from_gemini_response(self, response) -> List[str]:
-        """Extract source URLs from Gemini's search/grounding response."""
-        sources = []
-        
-        try:
-            # Check if response has grounding metadata with sources
-            if hasattr(response, 'candidates') and response.candidates:
-                candidate = response.candidates[0]
-                
-                # Look for grounding metadata
-                if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
-                    grounding_metadata = candidate.grounding_metadata
-                    
-                    # Extract URLs from grounding_chunks (the actual web sources)
-                    # According to API docs: groundingChunks contains objects with web.uri and web.title
-                    if hasattr(grounding_metadata, 'grounding_chunks') and grounding_metadata.grounding_chunks:
-                        logger.info(f"Found {len(grounding_metadata.grounding_chunks)} grounding chunks")
-                        
-                        for idx, chunk in enumerate(grounding_metadata.grounding_chunks):
-                            # Each chunk has a 'web' attribute with 'uri' and 'title'
-                            if hasattr(chunk, 'web') and chunk.web:
-                                # The title field contains the domain name (e.g., "aljazeera.com", "bbc.com")
-                                # The uri field contains a redirect URL through vertexaisearch.cloud.google.com
-                                
-                                if hasattr(chunk.web, 'title') and chunk.web.title:
-                                    title = chunk.web.title.strip()
-                                    
-                                    # If title is already a full URL, use it directly
-                                    if title.startswith(('http://', 'https://')):
-                                        sources.append(title)
-                                        logger.debug(f"Chunk {idx}: Found full URL in title: {title}")
-                                    else:
-                                        # Title contains domain name, construct HTTPS URL
-                                        # Clean up the domain (remove any paths or extra characters)
-                                        domain = title.split('/')[0].strip()
-                                        if domain and '.' in domain:  # Basic domain validation
-                                            constructed_url = f"https://{domain}"
-                                            sources.append(constructed_url)
-                                            logger.debug(f"Chunk {idx}: Constructed URL from domain '{domain}': {constructed_url}")
-                                
-                                # Log the redirect URL for debugging purposes
-                                if hasattr(chunk.web, 'uri') and chunk.web.uri:
-                                    logger.debug(f"Chunk {idx}: Redirect URL: {chunk.web.uri}")
-                    
-                    # Log web search queries used (for debugging)
-                    if hasattr(grounding_metadata, 'web_search_queries') and grounding_metadata.web_search_queries:
-                        logger.info(f"Web search queries used: {grounding_metadata.web_search_queries}")
-                
-                # Also check citation metadata if available (fallback)
-                if hasattr(candidate, 'citation_metadata') and candidate.citation_metadata:
-                    citations = getattr(candidate.citation_metadata, 'citation_sources', [])
-                    for citation in citations:
-                        if hasattr(citation, 'uri') and citation.uri:
-                            # Only use non-redirect URLs from citations
-                            if 'vertexaisearch.cloud.google.com' not in citation.uri:
-                                sources.append(citation.uri)
-                                logger.debug(f"Found citation source: {citation.uri}")
-                            
-        except Exception as exc:
-            logger.warning(f"Could not extract sources from Gemini response: {exc}", exc_info=True)
-            
-        # Use Set to efficiently remove duplicates and filter valid URLs
-        unique_sources = {
-            source for source in sources 
-            if source.startswith(('http://', 'https://')) and len(source.strip()) > 8
-        }
-                
-        logger.info(f"Extracted {len(unique_sources)} unique sources from Gemini response")
-        if unique_sources:
-            logger.info(f"Sources: {list(unique_sources)}")
-        else:
-            logger.warning("No sources extracted - this may indicate the response structure has changed")
-        
-        return list(unique_sources)  # Return all unique sources, no limit
-
     def get_headlines_from_queue(self, batch_size: int = 5) -> List[Dict[str, Any]]:
         """Get headlines from Redis queue."""
         headlines = []
@@ -299,10 +224,7 @@ class NewsArticleGenerationWorker:
 
             article_content = response.text.strip()
             
-            # Extract sources from Gemini's search/grounding response
-            source_urls = self.extract_sources_from_gemini_response(response)
-            
-            # Create GeneratedArticle object with source URLs
+            # Create GeneratedArticle object
             generated_article = GeneratedArticleDTO(
                 title=title,
                 category=category,
@@ -311,9 +233,6 @@ class NewsArticleGenerationWorker:
                 status="draft"
             )
             
-            # Add source URLs to the DTO for processing in store method
-            generated_article.source_urls = source_urls
-
             logger.info(f"Successfully generated article for: {title[:50]}... (Length: {len(article_content)} chars)")
             return generated_article
 
@@ -432,45 +351,41 @@ class NewsArticleGenerationWorker:
             headlines = self.get_headlines_from_queue(batch_size=self.max_concurrent_processing)
             
             if headlines:
-                logger.info(f"📰 Found {len(headlines)} headlines to process")
+                logger.info(f"Found {len(headlines)} headlines to process")
                 
                 for headline in headlines:
                     try:
-                        logger.info(f"🔄 Processing: {headline.get('title', 'Unknown')[:50]}...")
+                        logger.info(f"Processing: {headline.get('title', 'Unknown')[:50]}...")
                         
                         article = self.generate_article_with_search(headline)
                         if article:
                             if self.store_generated_article(article):
-                                logger.info(f"✅ Successfully processed: {headline.get('title', 'Unknown')[:50]}...")
+                                logger.info(f"Successfully processed: {headline.get('title', 'Unknown')[:50]}...")
                             else:
-                                logger.error(f"❌ Failed to store: {headline.get('title', 'Unknown')[:50]}...")
+                                logger.error(f"Failed to store: {headline.get('title', 'Unknown')[:50]}...")
                         else:
-                            logger.error(f"❌ Failed to generate: {headline.get('title', 'Unknown')[:50]}...")
+                            logger.error(f"Failed to generate: {headline.get('title', 'Unknown')[:50]}...")
                             
                     except Exception as exc:
-                        logger.error(f"❌ Error processing headline: {exc}")
+                        logger.error(f"Error processing headline: {exc}")
                         continue
             else:
-                logger.debug("💤 No headlines found")
+                logger.debug("No headlines found")
                 
         except Exception as exc:
-            logger.error(f"❌ Unexpected error in job: {exc}")
+            logger.error(f"Unexpected error in job: {exc}")
 
-    def start_simple_worker(self) -> None:
+    def start_worker(self) -> None:
         """
-        Simple worker using schedule library to check for headlines every minute.
+        Worker using schedule library to check for headlines every minute.
         """
-        logger.info("🚀 Starting simple article generation worker")
-        logger.info(f"⏰ Using schedule library to check every {self.check_interval_minutes} minute(s)")
+        logger.info("Starting article generation worker")
+        logger.info(f"Using schedule library to check every {self.check_interval_minutes} minute(s)")
         
-        # Schedule the job based on configuration
-        if self.check_interval_minutes == 1:
-            schedule.every().minute.do(self.process_headlines_job)
-        else:
-            schedule.every(self.check_interval_minutes).minutes.do(self.process_headlines_job)
+        schedule.every(self.check_interval_minutes).minutes.do(self.process_headlines_job)
         
         # Run once immediately
-        logger.info("🔄 Running initial check...")
+        logger.info("Running initial check...")
         self.process_headlines_job()
         
         # Keep the scheduler running
@@ -479,7 +394,7 @@ class NewsArticleGenerationWorker:
                 schedule.run_pending()
                 time.sleep(1)  # Check every second for scheduled jobs
         except KeyboardInterrupt:
-            logger.info("🛑 Worker stopped by user")
+            logger.info("Worker stopped by user")
 
 def main():
     """
@@ -487,12 +402,12 @@ def main():
     """
     try:
         worker = NewsArticleGenerationWorker()
-        logger.info("📰 Article generation worker initialized successfully, starting simple worker...")
-        worker.start_simple_worker()
+        logger.info("Article generation worker initialized successfully, starting simple worker...")
+        worker.start_worker()
     except KeyboardInterrupt:
-        logger.info("🛑 Article generation worker stopped by user")
+        logger.info("Article generation worker stopped by user")
     except Exception as e:
-        logger.error(f"❌ Article generation worker failed to start: {str(e)}")
+        logger.error(f"Article generation worker failed to start: {str(e)}")
         raise
 
 if __name__ == "__main__":
