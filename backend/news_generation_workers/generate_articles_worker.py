@@ -112,30 +112,6 @@ class NewsArticleGenerationWorker:
         """Create and return a new database session."""
         return self.SessionLocal()
 
-    def get_or_create_source(self, db: Session, source_url: str) -> Source:
-        """Get or create a source based on URL from Gemini search results."""
-        # Check if source already exists by URL
-        existing_source = db.query(Source).filter(Source.url == source_url).first()
-        if existing_source:
-            return existing_source
-        
-        # Parse URL to extract domain
-        parsed_url = urlparse(source_url)
-        domain = parsed_url.netloc.lower()
-        
-        # Clean up common prefixes from domain
-        domain = domain.replace('www.', '')
-            
-        # Create new source
-        source = Source(
-            url=source_url,
-            domain=domain
-        )
-        db.add(source)
-        db.commit()
-        db.refresh(source)
-        return source
-
     def get_or_create_category(self, db: Session, category_name: str) -> Category:
         """Get or create a category by name."""
         category = db.query(Category).filter(Category.name == category_name).first()
@@ -271,18 +247,6 @@ class NewsArticleGenerationWorker:
             
             # Associate with category
             db_article.categories.append(category)
-            
-            # Associate with sources from Gemini search/grounding
-            source_count = 0
-            if hasattr(article, 'source_urls') and article.source_urls:
-                for source_url in article.source_urls:
-                    try:
-                        source = self.get_or_create_source(db, source_url)
-                        db_article.sources.append(source)
-                        source_count += 1
-                    except Exception as exc:
-                        logger.warning(f"Failed to create source for URL '{source_url}': {exc}")
-                        continue
             
             db.commit()
             
