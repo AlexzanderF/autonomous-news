@@ -20,7 +20,7 @@ from rss_scrapers.the_guardian_scraper import TheGuardianScraper
 from rss_scrapers.dw_scraper import DWScraper
 from rss_scrapers.france24_scraper import France24Scraper
 from rss_scrapers.al_jazeera_scraper import AlJazeeraScraper
-
+from rss_scrapers.politico_scraper import PoliticoScraper
 # Load environment variables
 load_dotenv()
 
@@ -126,13 +126,18 @@ class NewsIngestionWorker:
         
         try:
             # Google News
-            google_articles = GoogleNewsScraper().scrape_rss_by_topic(
-                "CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtVnVHZ0pWVXlnQVAB",   #Headlines topic id
-                after_date=after_date
-            )
-            all_articles.extend(google_articles)
-            logger.info(f"Fetched {len(google_articles)} Google News articles")
-            
+            google_articles_world = GoogleNewsScraper().scrape_top_world_headlines(after_date=after_date)
+            all_articles.extend(google_articles_world)
+            logger.info(f"Fetched {len(google_articles_world)} Google News World news")
+
+            google_articles_business = GoogleNewsScraper().scrape_top_business_headlines(after_date=after_date)
+            all_articles.extend(google_articles_business)
+            logger.info(f"Fetched {len(google_articles_business)} Google News Business Headlines")
+
+            google_articles_technology = GoogleNewsScraper().scrape_top_technology_headlines(after_date=after_date)
+            all_articles.extend(google_articles_technology)
+            logger.info(f"Fetched {len(google_articles_technology)} Google News Technology Headlines")
+
             # WSJ
             wsj_articles = WSJScraper().scrape_world_news(after_date=after_date)
             all_articles.extend(wsj_articles)
@@ -157,6 +162,11 @@ class NewsIngestionWorker:
             france24 = France24Scraper().scrape_world_news(after_date=after_date)
             all_articles.extend(france24)
             logger.info(f"Fetched {len(france24)} France24 articles")
+
+            # Politico
+            politico_articles = PoliticoScraper().scrape_europe_news(after_date=after_date)
+            all_articles.extend(politico_articles)
+            logger.info(f"Fetched {len(politico_articles)} Politico articles")
             
             # Al Jazeera
             al_jazeera_articles =  AlJazeeraScraper().scrape_all_news(after_date=after_date)
