@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:18
+    container_name: postgres
+    restart: always
+    env_file: .env
+    volumes:
+      - /data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - devnet
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - /data/redis:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - devnet
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: news_generation_workers/Dockerfile.celery
+    env_file: .env
+    restart: unless-stopped
+    command: celery -A celery_config worker --loglevel=info --concurrency=1
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - devnet
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: news_generation_workers/Dockerfile.celery
+    env_file: .env
+    restart: unless-stopped
+    command: celery -A celery_config beat --loglevel=info
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - devnet
+
+networks:
+  devnet:
+    driver: bridge  
