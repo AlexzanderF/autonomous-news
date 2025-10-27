@@ -326,3 +326,11 @@ tmp_*
 *.zip
 *.rar
 *.7z
+
+# Celery
+celery_worker.pid
+celery_beat.pid
+celery_worker.log
+celery_beat.log
+celerybeat-schedule
+celerybeat-schedule.db

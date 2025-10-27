@@ -1,0 +1,287 @@
+import json
+import logging
+from datetime import datetime, timezone, timedelta
+from typing import List, Optional, Dict, Any
+import redis
+from google import genai
+from celery import Task
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+from dto import ScrapedArticleDTO, ProcessedHeadlineDTO
+
+# Import RSS scrapers
+from rss_scrapers.google_news_scraper import GoogleNewsScraper
+from rss_scrapers.wsj_scraper import WSJScraper
+from rss_scrapers.bbc_scraper import BBCScraper
+from rss_scrapers.the_guardian_scraper import TheGuardianScraper
+from rss_scrapers.dw_scraper import DWScraper
+from rss_scrapers.france24_scraper import France24Scraper
+from rss_scrapers.al_jazeera_scraper import AlJazeeraScraper
+from rss_scrapers.politico_scraper import PoliticoScraper
+from rss_scrapers.bloomberg_scraper import BloombergScraper
+
+from celery_config import celery_app
+from .shared import (
+    get_redis_client,
+    get_genai_client,
+    load_prompt,
+    logger,
+    REDIS_LAST_RUN_KEY,
+    LLM_MODEL_NAME,
+)
+
+import os
+
+# ============================================================================
+# Headline Ingestion Task
+# ============================================================================
+
+@celery_app.task(bind=True, name='news_generation_workers.tasks.headline_picker.run_headline_picker_cycle')
+def run_headline_picker_cycle(self: Task) -> Dict[str, Any]:
+    """
+    Periodic task that fetches headlines, deduplicates them using LLM,
+    and queues article generation tasks.
+    Runs every 4 hours via Celery Beat.
+    """
+    try:
+        logger.info("=== Starting headline ingestion cycle ===")
+        cycle_start_time = datetime.now(timezone.utc)
+
+        redis_client = get_redis_client()
+
+        # Get the last run timestamp, or fall back to 24 hours ago for initial run
+        last_run_timestamp = get_last_run_timestamp(redis_client)
+        if last_run_timestamp:
+            after_date = last_run_timestamp
+            logger.info(f"Using last run timestamp: {after_date}")
+        else:
+            after_date = datetime.now(timezone.utc) - timedelta(days=1)
+            logger.info(f"No previous run found, using 24-hour fallback: {after_date}")
+
+        # Fetch all headlines
+        all_articles = fetch_all_headlines(after_date)
+
+        if not all_articles:
+            logger.info("No new articles found, ending cycle")
+            return {
+                'status': 'success',
+                'message': 'No new articles found',
+                'scraped_count': 0,
+                'selected_count': 0
+            }
+
+        # Deduplicate and select top headlines using LLM
+        processed_headlines = pick_headlines_with_llm(all_articles, max_headlines_count=20)
+
+        if not processed_headlines:
+            logger.error("No headlines processed")
+            return {
+                'status': 'error',
+                'message': 'No headlines processed by LLM',
+                'scraped_count': len(all_articles),
+                'selected_count': 0
+            }
+
+        # Store the current timestamp as the last successful run
+        if set_last_run_timestamp(redis_client, cycle_start_time):
+            logger.info(f"Updated last run timestamp to: {cycle_start_time}")
+        else:
+            logger.warning("Failed to update last run timestamp")
+
+        # Queue article generation tasks using Celery
+        from .article_generation import generate_article_from_headline
+        
+        queued_count = 0
+        for headline in processed_headlines:
+            try:
+                generate_article_from_headline.delay(
+                    title=headline.title,
+                    category=headline.category
+                )
+                queued_count += 1
+            except Exception as exc:
+                logger.error(f"Failed to queue article generation for '{headline.title}': {exc}")
+
+        cycle_duration = datetime.now(timezone.utc) - cycle_start_time
+        logger.info("=== Headline ingestion cycle completed ===")
+        logger.info(
+            "Duration: %s | Scraped: %d | Selected: %d | Queued: %d",
+            cycle_duration,
+            len(all_articles),
+            len(processed_headlines),
+            queued_count
+        )
+
+        return {
+            'status': 'success',
+            'scraped_count': len(all_articles),
+            'selected_count': len(processed_headlines),
+            'queued_count': queued_count,
+            'duration_seconds': cycle_duration.total_seconds()
+        }
+
+    except Exception as exc:
+        logger.error(f"Error in ingestion cycle: {exc}")
+        return {
+            'status': 'error',
+            'message': str(exc)
+        }
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def get_last_run_timestamp(redis_client: redis.Redis) -> Optional[datetime]:
+    """Get the timestamp of the last worker run from Redis."""
+    try:
+        timestamp_str = redis_client.get(REDIS_LAST_RUN_KEY)
+        if timestamp_str:
+            return datetime.fromisoformat(timestamp_str)
+        return None
+    except (redis.RedisError, ValueError) as exc:
+        logger.warning(f"Failed to retrieve last run timestamp: {exc}")
+        return None
+
+
+def set_last_run_timestamp(redis_client: redis.Redis, timestamp: datetime) -> bool:
+    """Store the timestamp of the current worker run in Redis."""
+    try:
+        redis_client.set(REDIS_LAST_RUN_KEY, timestamp.isoformat())
+        return True
+    except redis.RedisError as exc:
+        logger.error(f"Failed to store last run timestamp: {exc}")
+        return False
+
+
+def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
+    """Fetch headlines from all RSS scrapers."""
+    logger.info(f"Fetching headlines from all sources after {after_date}")
+    all_articles = []
+
+    try:
+        # Google News
+        google_articles_world = GoogleNewsScraper().scrape_top_world_headlines(after_date=after_date)
+        all_articles.extend(google_articles_world)
+        logger.info(f"Fetched {len(google_articles_world)} Google News World news")
+
+        google_articles_business = GoogleNewsScraper().scrape_top_business_headlines(after_date=after_date)
+        all_articles.extend(google_articles_business)
+        logger.info(f"Fetched {len(google_articles_business)} Google News Business Headlines")
+
+        google_articles_technology = GoogleNewsScraper().scrape_top_technology_headlines(after_date=after_date)
+        all_articles.extend(google_articles_technology)
+        logger.info(f"Fetched {len(google_articles_technology)} Google News Technology Headlines")
+
+        # WSJ
+        wsj_articles = WSJScraper().scrape_world_news(after_date=after_date)
+        all_articles.extend(wsj_articles)
+        logger.info(f"Fetched {len(wsj_articles)} WSJ articles")
+
+        # BBC
+        bbc_articles = BBCScraper().scrape_international_news(after_date=after_date)
+        all_articles.extend(bbc_articles)
+        logger.info(f"Fetched {len(bbc_articles)} BBC articles")
+
+        # The Guardian
+        guardian_articles = TheGuardianScraper().scrape_world_news(after_date=after_date)
+        all_articles.extend(guardian_articles)
+        logger.info(f"Fetched {len(guardian_articles)} Guardian articles")
+
+        # Bloomberg
+        bloomberg_articles = BloombergScraper().scrape_news(after_date=after_date)
+        all_articles.extend(bloomberg_articles)
+        logger.info(f"Fetched {len(bloomberg_articles)} Bloomberg articles")
+
+        # DW
+        dw_articles = DWScraper().scrape_top_news(after_date=after_date)
+        all_articles.extend(dw_articles)
+        logger.info(f"Fetched {len(dw_articles)} DW articles")
+
+        # France24
+        france24 = France24Scraper().scrape_world_news(after_date=after_date)
+        all_articles.extend(france24)
+        logger.info(f"Fetched {len(france24)} France24 articles")
+
+        # Politico
+        politico_articles = PoliticoScraper().scrape_europe_news(after_date=after_date)
+        all_articles.extend(politico_articles)
+        logger.info(f"Fetched {len(politico_articles)} Politico articles")
+
+        # Al Jazeera
+        al_jazeera_articles = AlJazeeraScraper().scrape_all_news(after_date=after_date)
+        all_articles.extend(al_jazeera_articles)
+        logger.info(f"Fetched {len(al_jazeera_articles)} Al Jazeera articles")
+
+    except Exception as e:
+        logger.error(f"Error fetching headlines: {str(e)}")
+        return []
+
+    logger.info(f"Total headlines fetched: {len(all_articles)}")
+    return all_articles
+
+
+def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_count: int = 40) -> List[ProcessedHeadlineDTO]:
+    """Use the selection prompt to pick top headlines for article generation."""
+    if not articles:
+        return []
+
+    logger.info(f"Selecting top headlines from {len(articles)} scraped items using {LLM_MODEL_NAME}")
+
+    pick_headlines_prompt = load_prompt('llm_prompts/pick_headlines_prompt.md')
+    genai_client = get_genai_client()
+    temperature = float(os.getenv('LLM_TEMPERATURE', 0.75))
+
+    headlines_data: List[Dict[str, str]] = []
+    for article in articles:
+        headlines_data.append({
+            'title': article.title,
+            'short_description': article.short_description or "",
+            'date': article.date.isoformat(),
+        })
+
+    user_message = (
+        f"Current UTC time: {datetime.now(timezone.utc).isoformat()}\n"
+        "Analyze the following JSON array of headlines and follow the instructions in the system prompt.\n"
+        f"Return ONLY a JSON array of objects.\n"
+        f"Headlines JSON Input:\n{json.dumps(headlines_data, indent=2)}"
+    )
+
+    try:
+        response = genai_client.models.generate_content(
+            model=LLM_MODEL_NAME,
+            contents=user_message,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=pick_headlines_prompt,
+                temperature=temperature,
+                response_mime_type='application/json',
+                thinking_config=genai.types.ThinkingConfig(thinking_budget=-1)
+            )
+        )
+
+        response_text = response.text.strip()
+        try:
+            parsed_response = json.loads(response_text)
+        except json.JSONDecodeError as exc:
+            logger.error(f"Failed to parse JSON response: {exc}. Raw output: {response_text[:200]}...")
+            raise
+
+        if not isinstance(parsed_response, list):
+            logger.error("LLM response did not return a JSON array")
+            return []
+
+        processed_headlines: List[ProcessedHeadlineDTO] = [ProcessedHeadlineDTO(**headline) for headline in parsed_response]
+
+        logger.info(
+            "Headline selection complete: %d stories ready for article generation",
+            len(processed_headlines)
+        )
+
+        return processed_headlines
+
+    except Exception as exc:
+        logger.error(f"Error selecting headlines with AI: {exc}")
+        return []
+

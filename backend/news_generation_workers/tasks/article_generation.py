@@ -1,0 +1,193 @@
+import os
+import logging
+from datetime import datetime, timezone
+from typing import Dict, Any
+from google import genai
+from celery import Task
+from slugify import slugify
+from sqlalchemy.orm import Session
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+from dto import GeneratedArticleDTO
+from db.models import Article, Category
+
+from celery_config import celery_app
+from .shared import (
+    get_genai_client,
+    get_database_session,
+    load_prompt,
+    logger,
+    LLM_MODEL_NAME,
+)
+
+# ============================================================================
+# Article Generation Task
+# ============================================================================
+
+@celery_app.task(bind=True, name='news_generation_workers.tasks.article_generation.generate_article_from_headline')
+def generate_article_from_headline(self: Task, title: str, category: str) -> Dict[str, Any]:
+    """
+    Generate a full news article from a headline using Gemini with search/grounding.
+    This task is queued automatically when headlines are selected.
+    """
+    try:
+        logger.info(f"Generating article for headline: {title[:50]}...")
+
+        if not title:
+            logger.warning("Empty title received, skipping article generation")
+            return {
+                'status': 'error',
+                'message': 'Empty title provided'
+            }
+
+        # Load the article generation prompt
+        article_prompt_template = load_prompt('llm_prompts/generate_news_article_prompt.md')
+        article_prompt = article_prompt_template.replace('{Topic Placeholder}', title)
+
+        # Generate article using Gemini with search grounding
+        genai_client = get_genai_client()
+        temperature = float(os.getenv('LLM_TEMPERATURE', 1))
+
+        response = genai_client.models.generate_content(
+            contents=article_prompt,
+            model=LLM_MODEL_NAME,
+            config=genai.types.GenerateContentConfig(
+                temperature=temperature,
+                tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
+                thinking_config=genai.types.ThinkingConfig(
+                    thinking_budget=-1  # Unlimited thinking budget for best quality
+                )
+            )
+        )
+
+        if not response or not response.text:
+            logger.error(f"Empty response from Gemini for headline: {title}")
+            return {
+                'status': 'error',
+                'message': 'Empty response from LLM'
+            }
+
+        article_content = response.text.strip()
+
+        # Create GeneratedArticle object
+        generated_article = GeneratedArticleDTO(
+            title=title,
+            category=category,
+            content=article_content,
+            generated_at=datetime.now(timezone.utc),
+            status="draft"
+        )
+
+        logger.info(f"Successfully generated article for: {title[:50]}... (Length: {len(article_content)} chars)")
+
+        # Store the article in the database
+        if store_generated_article(generated_article):
+            logger.info(f"Successfully stored article: {title[:50]}...")
+            return {
+                'status': 'success',
+                'title': title,
+                'category': category,
+                'content_length': len(article_content)
+            }
+        else:
+            logger.error(f"Failed to store article: {title[:50]}...")
+            return {
+                'status': 'error',
+                'message': 'Failed to store article in database'
+            }
+
+    except Exception as exc:
+        logger.error(f"Error generating article for headline '{title}': {exc}")
+        return {
+            'status': 'error',
+            'message': str(exc)
+        }
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def store_generated_article(article: GeneratedArticleDTO) -> bool:
+    """Store the generated article in PostgreSQL database."""
+    db = None
+    try:
+        db = get_database_session()
+
+        # Get or create category
+        category = get_or_create_category(db, article.category)
+
+        # Generate unique slug
+        slug = generate_unique_slug(db, article.title)
+
+        # Create the Article record
+        db_article = Article(
+            title=article.title,
+            slug=slug,
+            content=article.content,
+            status='published',
+            ai_model_used=LLM_MODEL_NAME,
+            published_at=article.generated_at,
+            created_at=article.generated_at,
+            updated_at=article.generated_at
+        )
+
+        # Add the article to the session
+        db.add(db_article)
+        db.commit()
+        db.refresh(db_article)
+
+        # Associate with category
+        db_article.categories.append(category)
+
+        db.commit()
+
+        logger.info(f"Stored article in database: {article.title[:50]}... (ID: {db_article.id})")
+        return True
+
+    except Exception as exc:
+        if db:
+            db.rollback()
+        logger.error(f"Failed to store article '{article.title}' in database: {exc}")
+        return False
+
+    finally:
+        if db:
+            db.close()
+
+
+def get_or_create_category(db: Session, category_name: str) -> Category:
+    """Get or create a category by name."""
+    category = db.query(Category).filter(Category.name == category_name).first()
+    if not category:
+        category = Category(
+            name=category_name,
+        )
+        db.add(category)
+        db.commit()
+        db.refresh(category)
+    return category
+
+
+def generate_unique_slug(db: Session, title: str) -> str:
+    """Generate a unique slug for the article."""
+    base_slug = slugify(title)
+    if len(base_slug) > 450:  # Leave room for suffix
+        base_slug = base_slug[:450]
+
+    # Check if slug exists
+    existing = db.query(Article).filter(Article.slug == base_slug).first()
+    if not existing:
+        return base_slug
+
+    # If exists, add a number suffix
+    counter = 1
+    while True:
+        new_slug = f"{base_slug}-{counter}"
+        existing = db.query(Article).filter(Article.slug == new_slug).first()
+        if not existing:
+            return new_slug
+        counter += 1
+
