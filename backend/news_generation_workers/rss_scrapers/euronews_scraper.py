@@ -1,102 +1,39 @@
-import requests
 from typing import List, Optional
-from bs4 import BeautifulSoup
-from datetime import datetime, timezone 
-import email.utils
+from datetime import datetime
+from .base_scraper import BaseRSSScraper
 from dto import ScrapedArticleDTO
 
-class EuronewsScraper:
+
+class EuronewsScraper(BaseRSSScraper):
     """
     A class to scrape Euronews RSS feeds using BeautifulSoup.
+    Inherits common functionality from BaseRSSScraper.
     """
     
-    def __init__(self):
-        """
-        Initialize the scraper with a session and default headers.
-        """
-        self.session = requests.Session()
-        default_ua = (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
-        self.session.headers.update({
-            "User-Agent": default_ua,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate",
-            "Connection": "keep-alive",
-        })
+    SOURCE_NAME = "Euronews"
     
-    def _parse_article_date(self, date_str: str) -> datetime:
+    def _fetch_rss_feed(self, url: str, params: Optional[dict] = None) -> str:
         """
-        Parse article date string to datetime object.
+        Fetch RSS feed content from the given URL with custom encoding handling.
         
-        :param date_str: Date string in RFC 2822 format with timezone (e.g., "Tue, 16 Sep 2025 21:26:38 +0200").
-        :return: Parsed datetime object, or current datetime as fallback.
+        Euronews requires UTF-8 encoding handling.
+        
+        :param url: RSS feed URL.
+        :param params: Optional query parameters.
+        :return: Raw XML content as string.
+        :raises ValueError: If the request fails.
         """
-        if not date_str:
-            # Return timezone-aware datetime to match parsed dates
-            return datetime.now(timezone.utc)
-        
         try:
-            # Parse RFC 2822 date format (returns timezone-aware datetime)
-            return email.utils.parsedate_to_datetime(date_str)
-        except (ValueError, TypeError):
-            # If date parsing fails, use current datetime as fallback
-            return datetime.now(timezone.utc)
-
-    def _parse_rss_response(self, xml_content: str, num_articles: int, after_date: Optional[datetime] = None, extracted_from: str = None) -> List[ScrapedArticleDTO]:
-        """
-        Parse RSS XML content and extract articles from Euronews feed.
-        
-        :param xml_content: Raw XML content from RSS feed.
-        :param num_articles: Maximum number of articles to extract.
-        :param after_date: Optional datetime to filter articles published after this date.
-        :param extracted_from: Source where the headline was extracted from.
-        :return: List of ScrapedArticleDTO objects.
-        """
-        soup = BeautifulSoup(xml_content, "xml")
-        
-        # Find item elements
-        item_elements = soup.select("item")[:num_articles]
-        articles = []
-        for item in item_elements:
-            # Extract link first to filter out non-news content
-            link_elem = item.find("link")
-            link = link_elem.get_text(strip=True) if link_elem else ""
+            response = self.session.get(url, params=params)
+            response.raise_for_status()
             
-            # Extract title
-            title_elem = item.find("title")
-            title = title_elem.get_text(strip=True) if title_elem else ""
-                        
-            # Extract date/time
-            pubdate_elem = item.find("pubDate")
-            date_str = pubdate_elem.get_text(strip=True) if pubdate_elem else ""
+            # Ensure proper encoding handling - Euronews returns UTF-8
+            if response.encoding != 'utf-8':
+                response.encoding = 'utf-8'
             
-            # Parse date to datetime object
-            article_date = self._parse_article_date(date_str)
-            
-            # Filter by date if after_date is provided
-            if after_date and article_date and article_date < after_date:
-                continue  # Skip this article if it's before the cutoff date
-
-            # Extract description for additional context
-            description_elem = item.find("description")
-            description = description_elem.get_text(strip=True) if description_elem else ""
-            
-            # For Euronews, the source is Euronews
-            source = "Euronews"
-            
-            articles.append(ScrapedArticleDTO(
-                title=title,
-                source=source,
-                date=article_date,
-                link=link,
-                short_description=description,
-                extracted_from=extracted_from
-            ))
-        
-        return articles
+            return response.text
+        except Exception as e:
+            raise ValueError(f"Failed to fetch RSS feed from {url}: {e}")
     
     def scrape_latest_news(self, num_articles: int = 200, after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
         """
@@ -106,18 +43,5 @@ class EuronewsScraper:
         :param after_date: Optional datetime to filter articles published after this date.
         :return: List of ScrapedArticleDTO objects with article data.
         """
-        
         url = "https://www.euronews.com/rss"
-        
-        try:
-            response = self.session.get(url)
-            response.raise_for_status()
-            
-            # Ensure proper encoding handling - Euronews returns UTF-8
-            if response.encoding != 'utf-8':
-                response.encoding = 'utf-8'
-                
-        except requests.RequestException as e:
-            raise ValueError(f"Failed to fetch Euronews RSS feed: {e}")
-        
-        return self._parse_rss_response(response.text, num_articles, after_date, "Euronews RSS")
+        return self._scrape_feed(url, num_articles, after_date, "Euronews RSS")

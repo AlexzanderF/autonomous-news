@@ -1,107 +1,27 @@
-import requests
 from typing import List, Optional
+from datetime import datetime
 from bs4 import BeautifulSoup
-from datetime import datetime, timezone 
-import email.utils
+from .base_scraper import BaseRSSScraper
 from dto import ScrapedArticleDTO
 
-class BBCScraper:
+class BBCScraper(BaseRSSScraper):
     """
     A class to scrape BBC News RSS feeds using BeautifulSoup.
+    Inherits common functionality from BaseRSSScraper.
     """
     
-    def __init__(self):
-        """
-        Initialize the scraper with a session and default headers.
-        """
-        self.session = requests.Session()
-        default_ua = (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
-        self.session.headers.update({
-            "User-Agent": default_ua,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate",
-            "Connection": "keep-alive",
-        })
+    SOURCE_NAME = "BBC News"
     
-    def _parse_article_date(self, date_str: str) -> datetime:
+    def _should_skip_article(self, item: BeautifulSoup, link: str) -> bool:
         """
-        Parse article date string to datetime object.
+        Filter to only include news articles (skip sport, sounds, etc.).
         
-        :param date_str: Date string in RFC 2822 format (e.g., "Wed, 17 Sep 2025 00:15:22 GMT").
-        :return: Parsed datetime object, or current datetime as fallback.
+        :param item: BeautifulSoup item element from RSS feed.
+        :param link: Article URL.
+        :return: True if article should be skipped, False otherwise.
         """
-        if not date_str:
-            # Return timezone-aware datetime to match parsed dates
-            return datetime.now(timezone.utc)
-        
-        try:
-            # Parse RFC 2822 date format (returns timezone-aware datetime)
-            return email.utils.parsedate_to_datetime(date_str)
-        except (ValueError, TypeError):
-            # If date parsing fails, use current datetime as fallback
-            return datetime.now(timezone.utc)
-
-    def _parse_rss_response(self, xml_content: str, num_articles: int, after_date: Optional[datetime] = None, extracted_from: str = None) -> List[ScrapedArticleDTO]:
-        """
-        Parse RSS XML content and extract articles from BBC feed.
-        
-        :param xml_content: Raw XML content from RSS feed.
-        :param num_articles: Maximum number of articles to extract.
-        :param after_date: Optional datetime to filter articles published after this date.
-        :param extracted_from: Source where the headline was extracted from.
-        :return: List of ScrapedArticleDTO objects.
-        """
-        soup = BeautifulSoup(xml_content, "xml")
-        
-        # Find item elements
-        item_elements = soup.select("item")[:num_articles]
-        
-        articles = []
-        for item in item_elements:
-            # Extract link
-            link_elem = item.find("link")
-            link = link_elem.get_text(strip=True) if link_elem else ""
-            
-            # Filter to only include news articles (skip sport, sounds, etc.)
-            if "/news/articles" not in link:
-                continue  # Skip non-news articles
-
-            # Extract title - BBC uses CDATA sections
-            title_elem = item.find("title")
-            title = title_elem.get_text(strip=True) if title_elem else ""
-                        
-            # Extract date/time
-            pubdate_elem = item.find("pubDate")
-            date_str = pubdate_elem.get_text(strip=True) if pubdate_elem else ""
-            
-            # Parse date to datetime object
-            article_date = self._parse_article_date(date_str)
-            
-            # Filter by date if after_date is provided
-            if after_date and article_date and article_date < after_date:
-                continue  # Skip this article if it's before the cutoff date
-
-            # Extract description for additional context
-            description_elem = item.find("description")
-            description = description_elem.get_text(strip=True) if description_elem else ""
-            
-            # For BBC, the source is BBC News
-            source = "BBC News"
-            
-            articles.append(ScrapedArticleDTO(
-                title=title,
-                source=source,
-                date=article_date,
-                link=link,
-                short_description=description,
-                extracted_from=extracted_from
-            ))
-        
-        return articles
+        # BBC news articles have "/news/articles" in their URL
+        return "/news/articles" not in link
     
     def scrape_international_news(self, num_articles: int = 200, after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
         """
@@ -111,13 +31,5 @@ class BBCScraper:
         :param after_date: Optional datetime to filter articles published after this date.
         :return: List of ScrapedArticleDTO objects with article data.
         """
-        
         url = "https://feeds.bbci.co.uk/news/rss.xml?edition=int"
-        
-        try:
-            response = self.session.get(url)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            raise ValueError(f"Failed to fetch BBC RSS feed: {e}")
-        
-        return self._parse_rss_response(response.text, num_articles, after_date, "BBC International RSS")
+        return self._scrape_feed(url, num_articles, after_date, "BBC International RSS")

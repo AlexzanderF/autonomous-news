@@ -1,117 +1,46 @@
-import requests
 from typing import List, Optional
+from datetime import datetime
 from bs4 import BeautifulSoup
-from datetime import datetime, timezone 
-import email.utils
+from .base_scraper import BaseRSSScraper
 from dto import ScrapedArticleDTO
 
-class France24Scraper:
+
+class France24Scraper(BaseRSSScraper):
     """
     A class to scrape France 24 RSS feeds using BeautifulSoup.
+    Inherits common functionality from BaseRSSScraper.
     """
     
-    def __init__(self):
-        """
-        Initialize the scraper with a session and default headers.
-        """
-        self.session = requests.Session()
-        default_ua = (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
-        self.session.headers.update({
-            "User-Agent": default_ua,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip, deflate",
-            "Connection": "keep-alive",
-        })
+    SOURCE_NAME = "France 24"
     
-    def _parse_article_date(self, date_str: str) -> datetime:
+    # URL patterns to exclude from scraping
+    EXCLUDED_URL_PATTERNS = ["/tv-shows/"]
+    
+    def _should_skip_article(self, item: BeautifulSoup, link: str) -> bool:
         """
-        Parse article date string to datetime object.
+        Filter out TV shows but keep video content as it often contains substantial news.
         
-        :param date_str: Date string in RFC 2822 format (e.g., "Fri, 19 Sep 2025 20:40:36 GMT").
-        :return: Parsed datetime object, or current datetime as fallback.
+        :param item: BeautifulSoup item element from RSS feed.
+        :param link: Article URL.
+        :return: True if article should be skipped, False otherwise.
         """
-        if not date_str:
-            # Return timezone-aware datetime to match parsed dates
-            return datetime.now(timezone.utc)
-        
-        try:
-            # Parse RFC 2822 date format (returns timezone-aware datetime)
-            return email.utils.parsedate_to_datetime(date_str)
-        except (ValueError, TypeError):
-            # If date parsing fails, use current datetime as fallback
-            return datetime.now(timezone.utc)
-
-    def _parse_rss_response(self, xml_content: str, num_articles: int, after_date: Optional[datetime] = None, extracted_from: str = None) -> List[ScrapedArticleDTO]:
+        return any(pattern in link for pattern in self.EXCLUDED_URL_PATTERNS)
+    
+    def _extract_description(self, item: BeautifulSoup) -> str:
         """
-        Parse RSS XML content and extract articles from France 24 feed.
+        Extract description from RSS item element with HTML tag stripping.
         
-        :param xml_content: Raw XML content from RSS feed.
-        :param num_articles: Maximum number of articles to extract.
-        :param after_date: Optional datetime to filter articles published after this date.
-        :param extracted_from: Source where the headline was extracted from.
-        :return: List of ScrapedArticleDTO objects.
+        France 24 descriptions contain HTML tags that need to be stripped.
+        
+        :param item: BeautifulSoup item element.
+        :return: Article description string with HTML tags removed.
         """
-        soup = BeautifulSoup(xml_content, "xml")
-        
-        # Find item elements
-        item_elements = soup.select("item")[:num_articles]
-        
-        articles = []
-        for item in item_elements:
-            # Extract link
-            link_elem = item.find("link")
-            link = link_elem.get_text(strip=True) if link_elem else ""
-            
-            # Filter out TV shows but keep video content as it often contains substantial news
-            excluded_patterns = [
-                "/tv-shows/",
-            ]
-            
-            # Skip if URL contains excluded patterns
-            if any(pattern in link for pattern in excluded_patterns):
-                continue
-            
-            # Extract title
-            title_elem = item.find("title")
-            title = title_elem.get_text(strip=True) if title_elem else ""
-                        
-            # Extract date/time
-            pubdate_elem = item.find("pubDate")
-            date_str = pubdate_elem.get_text(strip=True) if pubdate_elem else ""
-            
-            # Parse date to datetime object
-            article_date = self._parse_article_date(date_str)
-            
-            # Filter by date if after_date is provided
-            if after_date and article_date and article_date < after_date:
-                continue  # Skip this article if it's before the cutoff date
-
-            # Extract description for additional context and strip HTML tags
-            description_elem = item.find("description")
-            if description_elem:
-                # Parse the description content as HTML to strip tags
-                description_soup = BeautifulSoup(description_elem.get_text(), "html.parser")
-                description = description_soup.get_text(strip=True)
-            else:
-                description = ""
-            
-            # For France 24, the source is France 24
-            source = "France 24"
-            
-            articles.append(ScrapedArticleDTO(
-                title=title,
-                source=source,
-                date=article_date,
-                link=link,
-                short_description=description,
-                extracted_from=extracted_from
-            ))
-        
-        return articles
+        description_elem = item.find("description")
+        if description_elem:
+            # Parse the description content as HTML to strip tags
+            description_soup = BeautifulSoup(description_elem.get_text(), "html.parser")
+            return description_soup.get_text(strip=True)
+        return ""
     
     def scrape_europe_news(self, num_articles: int = 200, after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
         """
@@ -121,16 +50,8 @@ class France24Scraper:
         :param after_date: Optional datetime to filter articles published after this date.
         :return: List of ScrapedArticleDTO objects with article data.
         """
-        
         url = "https://www.france24.com/en/europe/rss"
-        
-        try:
-            response = self.session.get(url)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            raise ValueError(f"Failed to fetch France 24 RSS feed: {e}")
-        
-        return self._parse_rss_response(response.text, num_articles, after_date, "France 24 Europe RSS")
+        return self._scrape_feed(url, num_articles, after_date, "France 24 Europe RSS")
     
     def scrape_world_news(self, num_articles: int = 200, after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
         """
@@ -140,13 +61,5 @@ class France24Scraper:
         :param after_date: Optional datetime to filter articles published after this date.
         :return: List of ScrapedArticleDTO objects with article data.
         """
-        
         url = "https://www.france24.com/en/rss"
-        
-        try:
-            response = self.session.get(url)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            raise ValueError(f"Failed to fetch France 24 RSS feed: {e}")
-        
-        return self._parse_rss_response(response.text, num_articles, after_date, "France 24 World RSS")
+        return self._scrape_feed(url, num_articles, after_date, "France 24 World RSS")
