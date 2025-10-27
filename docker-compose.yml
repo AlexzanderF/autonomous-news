@@ -47,7 +47,6 @@ services:
     command: celery -A celery_config beat --loglevel=info
     depends_on:
       - redis
-      - postgres
     networks:
       - devnet
 

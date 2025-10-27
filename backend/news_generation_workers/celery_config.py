@@ -12,6 +12,8 @@ redis_port = int(os.getenv('REDIS_PORT', '6379'))
 redis_db = int(os.getenv('REDIS_DB', '0'))
 redis_password = os.getenv('REDIS_PASSWORD')
 
+crontab_interval = os.getenv('HEADLINE_PICKER_CRONTAB_INTERVAL', '4')
+
 # Build Redis URL for Celery broker and backend
 if redis_password:
     redis_url = f"redis://:{redis_password}@{redis_host}:{redis_port}/{redis_db}"
@@ -45,8 +47,8 @@ celery_app.conf.update(
 
 # Celery Beat schedule for periodic tasks
 celery_app.conf.beat_schedule = {
-    'pick-headlines-every-4-hours': {
+    'pick-headlines': {
         'task': 'news_generation_workers.tasks.headline_picker.run_headline_picker_cycle',
-        'schedule': crontab(minute=0, hour='*/4'),  # Every 4 hours at minute 0
+        'schedule': crontab(minute=0, hour=f'*/{crontab_interval}'),
     },
 }
