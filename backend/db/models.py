@@ -78,6 +78,7 @@ class Article(Base):
     slug = Column(String(500), nullable=False, unique=True)
     excerpt = Column(Text, nullable=True)  # Short description/summary
     content = Column(Text, nullable=False)  # Generated article content
+    thumbnail_url = Column(String(500), nullable=True)  # Wikimedia Commons or other image URL
     
     # SEO and metadata
     # meta_title = Column(String(60), nullable=True)  # SEO title
