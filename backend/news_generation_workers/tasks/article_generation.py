@@ -8,6 +8,7 @@ from slugify import slugify
 from sqlalchemy.orm import Session
 import sys
 from pathlib import Path
+from .thumbnail_picker import add_thumbnail_to_article
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from dto import GeneratedArticleDTO
@@ -127,9 +128,7 @@ def store_generated_article(article: GeneratedArticleDTO) -> bool:
             title=article.title,
             slug=slug,
             content=article.content,
-            status='published',
             ai_model_used=LLM_MODEL_NAME,
-            published_at=article.generated_at,
             created_at=article.generated_at,
             updated_at=article.generated_at
         )
@@ -145,6 +144,14 @@ def store_generated_article(article: GeneratedArticleDTO) -> bool:
         db.commit()
 
         logger.info(f"Stored article in database: {article.title[:50]}... (ID: {db_article.id})")
+        
+        # Queue thumbnail selection task
+        try:
+            add_thumbnail_to_article.delay(db_article.id)
+            logger.info(f"Queued thumbnail selection task for article ID: {db_article.id}")
+        except Exception as thumbnail_exc:
+            logger.warning(f"Failed to queue thumbnail task for article ID {db_article.id}: {thumbnail_exc}")
+        
         return True
 
     except Exception as exc:

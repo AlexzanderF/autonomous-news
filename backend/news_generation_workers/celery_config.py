@@ -28,6 +28,7 @@ celery_app = Celery(
     include=[
         'news_generation_workers.tasks.headline_picker',
         'news_generation_workers.tasks.article_generation',
+        'news_generation_workers.tasks.thumbnail_picker',
     ]
 )
 
