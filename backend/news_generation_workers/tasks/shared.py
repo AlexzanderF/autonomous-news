@@ -6,13 +6,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 import redis
 from google import genai
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
 import sys
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from db.models import Article, Category, Base
 
 # Load environment variables
 load_dotenv()
@@ -38,14 +35,6 @@ REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
 REDIS_DB = int(os.getenv('REDIS_DB', '0'))
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 REDIS_LAST_RUN_KEY = 'news:worker:last_run_timestamp'
-
-# Database configuration
-DB_URL = os.getenv('DB_URL')
-if not DB_URL:
-    raise ValueError("DB_URL environment variable is required")
-
-engine = create_engine(DB_URL, echo=False)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # LLM configuration
 LLM_API_KEY = os.getenv('LLM_API_KEY')
@@ -77,11 +66,6 @@ def get_redis_client() -> redis.Redis:
 def get_genai_client() -> genai.Client:
     """Create and return a Google GenAI client."""
     return genai.Client(api_key=LLM_API_KEY)
-
-
-def get_database_session() -> Session:
-    """Create and return a new database session."""
-    return SessionLocal()
 
 
 # ============================================================================

@@ -12,13 +12,12 @@ import os
 import re
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from db.models import Article
+from db import get_database_session, Article
 
 from celery_config import celery_app
 from .shared import (
     get_genai_client,
     load_prompt,
-    get_database_session,
     logger,
 )
 
@@ -43,7 +42,7 @@ ALLOWED_MIME_TYPES = {
 }
 
 
-@celery_app.task(bind=True, name='news_generation_workers.tasks.thumbnail_picker.add_thumbnail_to_article')
+# @celery_app.task(bind=True, name='news_generation_workers.tasks.thumbnail_picker.add_thumbnail_to_article')
 def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
     """
     Add a thumbnail image to an article using Wikimedia Commons API.

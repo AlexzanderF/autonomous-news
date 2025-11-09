@@ -12,12 +12,11 @@ from .thumbnail_picker import add_thumbnail_to_article
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from dto import GeneratedArticleDTO
-from db.models import Article, Category
+from db import Article, Category, get_database_session
 
 from celery_config import celery_app
 from .shared import (
     get_genai_client,
-    get_database_session,
     load_prompt,
     logger,
     LLM_MODEL_NAME,
