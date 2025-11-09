@@ -73,7 +73,9 @@ def run_headline_picker_cycle(self: Task) -> Dict[str, Any]:
             }
 
         # Deduplicate and select top headlines using LLM
-        processed_headlines = pick_headlines_with_llm(all_articles, max_headlines_count=20)
+        # Calculate dynamic limit based on input count
+        max_headlines = calculate_headline_limit(len(all_articles))
+        processed_headlines = pick_headlines_with_llm(all_articles, max_headlines_count=max_headlines)
 
         if not processed_headlines:
             logger.error("No headlines processed")
@@ -133,6 +135,30 @@ def run_headline_picker_cycle(self: Task) -> Dict[str, Any]:
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
+def calculate_headline_limit(input_count: int) -> int:
+    """
+    Calculate the maximum number of headlines to pick based on input count.
+    Progression: 0-100 → 20, 101-200 → 40, 201-300 → 60, etc.
+    
+    Args:
+        input_count: Number of scraped headlines
+        
+    Returns:
+        Maximum number of headlines to select (20 per 100 range, max 100)
+    """
+    if input_count <= 0:
+        return 0
+    
+    # Calculate which 100-range bracket we're in (1-100 = bracket 1, 101-200 = bracket 2, etc.)
+    bracket = ((input_count - 1) // 100) + 1
+    
+    # Each bracket gets 20 headlines
+    limit = bracket * 20
+    
+    # Cap at 100 maximum
+    return min(100, limit)
+
 
 def get_last_run_timestamp(redis_client: redis.Redis) -> Optional[datetime]:
     """Get the timestamp of the last worker run from Redis."""
@@ -243,8 +269,8 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
         })
 
     user_message = (
-        f"Current UTC time: {datetime.now(timezone.utc).isoformat()}\n"
         "Analyze the following JSON array of headlines and follow the instructions in the system prompt.\n"
+        f"Maximum headlines to select: {max_headlines_count}\n"
         f"Return ONLY a JSON array of objects.\n"
         f"Headlines JSON Input:\n{json.dumps(headlines_data, indent=2)}"
     )

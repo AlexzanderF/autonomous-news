@@ -18,8 +18,8 @@ Steps to follow:
 - For each cluster, calculate a score: (frequency across unique sources * 0.4) + (entity importance score, 1-10 * 0.3) + (world dynamics relevance score, 1-10 * 0.2) + (timeliness/novelty score based on date, 1-10 * 0.1).
 - Rank clusters by score descending.
 - From the top-ranked clusters, select one representative headline per cluster (the clearest or most concise "title").
-- **Determine the output count**: Start with the significant headlines. Then evaluate if there are additional headlines that meet a high significance threshold (score >= 7.0 out of 10) to justify including them, up to a maximum of 40 total. Only include headlines if they represent truly significant stories that warrant coverage.
+- **Determine the output count**: The user message will specify the maximum number of headlines to select. This limit is dynamically calculated based on the input size. Only select headlines that meet a high significance threshold (score >= 7.0 out of 10). If there aren't enough significant headlines to reach the maximum, return fewer headlines rather than including low-quality ones. Prioritize quality over quantity.
 
-Output format: A JSON array of objects with the following properties (minimum 20, maximum 40 items based on significance):
+Output format: A JSON array of objects with the following properties (number of items determined by the maximum specified in the user message, but only if they meet the significance threshold):
 - "title" - the final headline I am going to use for the news article. Do not append the source or add any additional information. If source is present at the end remove it
 - "category" - a string representing the category of the news from this list: Politics, Finance, Tech, Science, Economy, and Environment
