@@ -11,6 +11,7 @@ from rss_scrapers.dw_scraper import DWScraper
 from rss_scrapers.al_jazeera_scraper import AlJazeeraScraper
 from rss_scrapers.france24_scraper import France24Scraper
 from rss_scrapers.politico_scraper import PoliticoScraper
+from rss_scrapers.bloomberg_scraper import BloombergScraper
 
 def save_articles_to_json(articles: List[ScrapedArticleDTO], filename: str):
     """Save articles to JSON file with proper serialization."""
@@ -42,16 +43,15 @@ def main():
     after_date = datetime.now(timezone.utc) - timedelta(days=1)
     
     googleNewsScraper = GoogleNewsScraper()
-    # Test 1: Scrape by topic (existing functionality)
-    print("Testing topic-based scraping...")
-    google_news_articles = googleNewsScraper.scrape_rss_by_topic(
-        "CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtVnVHZ0pWVXlnQVAB", 
-        after_date=after_date
-    )
+    google_news_articles = googleNewsScraper.scrape_top_world_headlines(after_date=after_date)
     save_articles_to_json(google_news_articles, "google_news_articles.json")
+
+    bloomberg_scraper = BloombergScraper()
+    bloomberg_articles = bloomberg_scraper.scrape_news(after_date=after_date)
+    save_articles_to_json(bloomberg_articles, "bloomberg_articles.json")
     
-    wsj_scraper = WSJScraper()
     # Test WSJ
+    wsj_scraper = WSJScraper()
     wsj_articles = wsj_scraper.scrape_world_news(
         after_date=after_date
     )
