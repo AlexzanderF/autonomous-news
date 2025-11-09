@@ -10,3 +10,6 @@ alembic
 python-slugify
 redis
 google-genai
+fastapi
+uvicorn[standard]
+python-multipart
