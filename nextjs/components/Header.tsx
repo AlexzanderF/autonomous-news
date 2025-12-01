@@ -15,10 +15,6 @@ const Header: React.FC = () => {
           ANI <span className="text-xs font-normal text-slate-400 tracking-widest ml-1 opacity-70">AUTONOMOUS NEWS</span>
         </h1>
       </div>
-
-      <div className="text-xs font-mono text-slate-500">
-        v2.5.0-alpha
-      </div>
     </header>
   );
 };
