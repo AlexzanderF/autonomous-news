@@ -82,80 +82,41 @@ def get_articles(
     if has_more:
         articles = articles[:limit]
     
-    # Get total count (optional - can be expensive for large datasets)
-    # For true cursor-based pagination, you might want to remove this
-    total = db.query(Article).filter(Article.status == 'published').count()
-    
     # Get next cursor (ID of last item) if there are more items
     next_cursor = articles[-1].id if articles and has_more else None
     
     return PaginatedArticlesResponse(
         items=articles,
-        total=total,
         has_more=has_more,
         next_cursor=next_cursor,
-        page=1,  # Not applicable for cursor-based pagination
         page_size=limit,
-        total_pages=0  # Not applicable for cursor-based pagination
     )
 
 
-# NOTE: Temporarily disabled because of conflict with /{article_id} route
-# @router.get("/{slug}", response_model=ArticleResponse)
-# def get_article_by_slug(
-#     slug: str,
-#     db: Session = Depends(get_db)
-# ):
-#     """
-#     Get a single article by its slug.
-    
-#     Args:
-#         slug: Article slug (URL-friendly identifier)
-#         db: Database session (injected)
-    
-#     Returns:
-#         Full article with content, categories, and sources
-#     """
-#     article = db.query(Article).options(
-#         joinedload(Article.categories),
-#         joinedload(Article.sources)
-#     ).filter(
-#         Article.slug == slug,
-#         Article.status == 'published'
-#     ).first()
-    
-#     if not article:
-#         raise HTTPException(status_code=404, detail="Article not found")
-    
-#     return article
-
-
-@router.get("/{article_id}", response_model=ArticleResponse)
-def get_article_by_id(
-    article_id: int,
+@router.get("/{slug}", response_model=ArticleResponse)
+def get_article_by_slug(
+    slug: str,
     db: Session = Depends(get_db)
 ):
     """
-    Get a single article by its ID.
+    Get a single article by its slug.
     
     Args:
-        article_id: Article ID
+        slug: Article slug (URL-friendly identifier)
         db: Database session (injected)
     
     Returns:
         Full article with content, categories, and sources
     """
-
     article = db.query(Article).options(
         joinedload(Article.categories),
         joinedload(Article.sources)
     ).filter(
-        Article.id == article_id,
-        # Article.status == 'published'
+        Article.slug == slug,
+        Article.status == 'published'
     ).first()
     
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     
     return article
-
