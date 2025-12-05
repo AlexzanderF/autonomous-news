@@ -32,6 +32,9 @@ services:
     env_file: .env
     restart: unless-stopped
     command: celery -A celery_config worker --loglevel=info --concurrency=1
+    volumes:
+      - ./backend/news_generation_workers:/app/news_generation_workers
+      - ./backend/db:/app/db
     depends_on:
       - redis
       - postgres
@@ -45,6 +48,9 @@ services:
     env_file: .env
     restart: unless-stopped
     command: celery -A celery_config beat --loglevel=info
+    volumes:
+      - ./backend/news_generation_workers:/app/news_generation_workers
+      - ./backend/db:/app/db
     depends_on:
       - redis
     networks:
