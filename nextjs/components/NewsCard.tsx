@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { NewsItem, Sentiment } from '@/types';
+import { NewsItem, Sentiment } from '@/dtos';
 import { Globe, BarChart2, FileText } from 'lucide-react';
 
 interface NewsCardProps {

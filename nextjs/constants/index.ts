@@ -1,4 +1,4 @@
-import { NewsCategory, NewsItem, Sentiment } from "@/types";
+import { NewsCategory, NewsItem, Sentiment } from "@/dtos";
 
 export const MOCK_NEWS: NewsItem[] = [
   {

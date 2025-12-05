@@ -27,8 +27,29 @@ export interface NewsItem {
   sentimentScore: number; // 0 to 100
 }
 
-export interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
-  timestamp: number;
+export interface CategoryDTO {
+  id: number;
+  name: string;
+}
+
+export interface SourceDTO {
+  id: number;
+  url: string;
+  domain: string;
+}
+
+export interface GetArticleResponse {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string;
+  thumbnail_url: string | null;
+  status: string;
+  ai_model_used: string | null;
+  created_at: string;
+  updated_at: string;
+  published_at: string;
+  categories: CategoryDTO[];
+  sources: SourceDTO[];
 }
