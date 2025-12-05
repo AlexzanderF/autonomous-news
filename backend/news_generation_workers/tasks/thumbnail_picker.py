@@ -19,6 +19,8 @@ from .shared import (
     get_genai_client,
     load_prompt,
     logger,
+    SEARCH_PHRASES_MODEL_NAME,
+    THUMBNAIL_PICKER_MODEL_NAME,
 )
 
 # ============================================================================
@@ -209,7 +211,7 @@ def get_search_phrases_with_llm(title: str, content: str) -> List[str]:
     genai_client = get_genai_client()
 
     response = genai_client.models.generate_content(
-        model="gemma-3-27b-it",
+        model=SEARCH_PHRASES_MODEL_NAME,
         contents=user_message,
     )
 
@@ -236,7 +238,7 @@ def pick_thumbnail_with_llm(title: str, content: str, images: List[Dict[str, Any
 
     genai_client = get_genai_client()
     response = genai_client.models.generate_content(
-        model="gemini-flash-lite-latest",
+        model=THUMBNAIL_PICKER_MODEL_NAME,
         contents=user_message,
         config=genai.types.GenerateContentConfig(
             system_instruction=system_prompt,

@@ -29,7 +29,7 @@ from .shared import (
     load_prompt,
     logger,
     REDIS_LAST_RUN_KEY,
-    LLM_MODEL_NAME,
+    DEFAULT_LLM_MODEL_NAME,
 )
 
 import os
@@ -254,7 +254,7 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
     if not articles:
         return []
 
-    logger.info(f"Selecting top headlines from {len(articles)} scraped items using {LLM_MODEL_NAME}")
+    logger.info(f"Selecting top headlines from {len(articles)} scraped items using {DEFAULT_LLM_MODEL_NAME}")
 
     pick_headlines_prompt = load_prompt('llm_prompts/pick_headlines_prompt.md')
     genai_client = get_genai_client()
@@ -277,7 +277,7 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
 
     try:
         response = genai_client.models.generate_content(
-            model=LLM_MODEL_NAME,
+            model=DEFAULT_LLM_MODEL_NAME,
             contents=user_message,
             config=genai.types.GenerateContentConfig(
                 system_instruction=pick_headlines_prompt,

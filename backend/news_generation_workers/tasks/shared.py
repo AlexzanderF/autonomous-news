@@ -41,9 +41,10 @@ LLM_API_KEY = os.getenv('LLM_API_KEY')
 if not LLM_API_KEY:
     raise ValueError("LLM_API_KEY environment variable is required")
 
-LLM_MODEL_NAME = os.getenv('LLM_MODEL_NAME', 'gemini-2.5-flash')
-if not LLM_MODEL_NAME:
-    raise ValueError("LLM_MODEL_NAME environment variable is required")
+DEFAULT_LLM_MODEL_NAME = os.getenv('DEFAULT_LLM_MODEL_NAME', 'gemini-2.5-flash')
+# Thumbnail picker models
+SEARCH_PHRASES_MODEL_NAME = os.getenv('SEARCH_PHRASES_MODEL_NAME', 'gemma-3-27b-it')
+THUMBNAIL_PICKER_MODEL_NAME = os.getenv('THUMBNAIL_PICKER_MODEL_NAME', 'gemini-flash-lite-latest')
 
 # Paths
 WORKER_DIR = Path(__file__).resolve().parent.parent

@@ -8,6 +8,7 @@ from slugify import slugify
 from sqlalchemy.orm import Session
 import sys
 from pathlib import Path
+from .thumbnail_picker import add_thumbnail_to_article
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from dto import GeneratedArticleDTO
@@ -18,7 +19,7 @@ from .shared import (
     get_genai_client,
     load_prompt,
     logger,
-    LLM_MODEL_NAME,
+    DEFAULT_LLM_MODEL_NAME,
 )
 
 # ============================================================================
@@ -51,7 +52,7 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
 
         response = genai_client.models.generate_content(
             contents=article_prompt,
-            model=LLM_MODEL_NAME,
+            model=DEFAULT_LLM_MODEL_NAME,
             config=genai.types.GenerateContentConfig(
                 temperature=temperature,
                 tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
@@ -83,7 +84,14 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
 
         # Store the article in the database
         if store_generated_article(generated_article):
-            logger.info(f"Successfully stored article: {title[:50]}...")
+
+            # Queue thumbnail selection task
+            try:
+                add_thumbnail_to_article.delay(db_article.id)
+                logger.info(f"Queued thumbnail selection task for article ID: {db_article.id}")
+            except Exception as thumbnail_exc:
+                logger.warning(f"Failed to queue thumbnail task for article ID {db_article.id}: {thumbnail_exc}")
+
             return {
                 'status': 'success',
                 'title': title,
@@ -126,7 +134,7 @@ def store_generated_article(article: GeneratedArticleDTO) -> bool:
             title=article.title,
             slug=slug,
             content=article.content,
-            ai_model_used=LLM_MODEL_NAME,
+            ai_model_used=DEFAULT_LLM_MODEL_NAME,
             status=article.status,
             created_at=article.generated_at,
             updated_at=article.generated_at
@@ -143,14 +151,6 @@ def store_generated_article(article: GeneratedArticleDTO) -> bool:
         db.commit()
 
         logger.info(f"Stored article in database: {article.title[:50]}... (ID: {db_article.id})")
-        
-        # Queue thumbnail selection task
-        try:
-            from .thumbnail_picker import add_thumbnail_to_article
-            add_thumbnail_to_article.delay(db_article.id)
-            logger.info(f"Queued thumbnail selection task for article ID: {db_article.id}")
-        except Exception as thumbnail_exc:
-            logger.warning(f"Failed to queue thumbnail task for article ID {db_article.id}: {thumbnail_exc}")
         
         return True
 
