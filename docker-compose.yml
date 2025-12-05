@@ -29,6 +29,7 @@ services:
     build:
       context: ./backend
       dockerfile: news_generation_workers/Dockerfile.celery
+    container_name: celery-worker
     env_file: .env
     restart: unless-stopped
     command: celery -A celery_config worker --loglevel=info --concurrency=1
@@ -45,6 +46,7 @@ services:
     build:
       context: ./backend
       dockerfile: news_generation_workers/Dockerfile.celery
+    container_name: celery-beat
     env_file: .env
     restart: unless-stopped
     command: celery -A celery_config beat --loglevel=info
@@ -63,6 +65,42 @@ services:
     command: celery --broker=redis://redis:6379/0 --result-backend=redis://redis:6379/0 flower --port=5555
     ports:
       - "5555:5555"
+    networks:
+      - devnet
+
+  fastapi:
+    build:
+      context: ./backend
+      dockerfile: api/Dockerfile
+    container_name: fastapi
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/api:/app/api
+      - ./backend/db:/app/db
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - devnet
+
+  nextjs:
+    build:
+      context: ./nextjs
+      dockerfile: Dockerfile
+    container_name: nextjs
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - API_BASE_URL=http://fastapi:8000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - fastapi
     networks:
       - devnet
 
