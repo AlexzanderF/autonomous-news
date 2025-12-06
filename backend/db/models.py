@@ -14,7 +14,7 @@ Base = declarative_base()
 article_categories = Table(
     'article_categories',
     Base.metadata,
-    Column('article_id', Integer, ForeignKey('articles.id'), primary_key=True),
+    Column('article_id', Integer, ForeignKey('articles.id', ondelete='CASCADE'), primary_key=True),
     Column('category_id', Integer, ForeignKey('categories.id'), primary_key=True)
 )
 
@@ -22,7 +22,7 @@ article_categories = Table(
 article_sources = Table(
     'article_sources',
     Base.metadata,
-    Column('article_id', Integer, ForeignKey('articles.id'), primary_key=True),
+    Column('article_id', Integer, ForeignKey('articles.id', ondelete='CASCADE'), primary_key=True),
     Column('source_id', Integer, ForeignKey('sources.id'), primary_key=True)
 )
 
