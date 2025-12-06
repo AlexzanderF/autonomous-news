@@ -242,7 +242,6 @@ def pick_thumbnail_with_llm(title: str, content: str, images: List[Dict[str, Any
         contents=user_message,
         config=genai.types.GenerateContentConfig(
             system_instruction=system_prompt,
-            temperature=0.75,
             response_mime_type='application/json',
             thinking_config=genai.types.ThinkingConfig(thinking_budget=-1)
         )

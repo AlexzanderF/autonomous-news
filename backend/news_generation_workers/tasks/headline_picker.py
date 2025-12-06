@@ -258,7 +258,6 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
 
     pick_headlines_prompt = load_prompt('llm_prompts/pick_headlines_prompt.md')
     genai_client = get_genai_client()
-    temperature = float(os.getenv('LLM_TEMPERATURE', 0.75))
 
     headlines_data: List[Dict[str, str]] = []
     for article in articles:
@@ -281,7 +280,6 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
             contents=user_message,
             config=genai.types.GenerateContentConfig(
                 system_instruction=pick_headlines_prompt,
-                temperature=temperature,
                 response_mime_type='application/json',
                 thinking_config=genai.types.ThinkingConfig(thinking_budget=-1)
             )
