@@ -14,7 +14,7 @@ Your task is to select **the single most appropriate image** from a list of sear
 2. Review the provided image list and select the image that is **most relevant, contextually appropriate, and visually representative** of the article’s content.  
 3. Prefer images that clearly depict the article’s main entity, event, or symbol.  
 4. Avoid images that are unrelated (e.g. random drawings, random landscapes, or anything not mentioned in the article).  
-5. If multiple images fit equally well, pick the one that would make the best **thumbnail** for a news website — visually clear, recognizable, and relevant.
+5. If multiple images fit equally well, pick the one that would make the best **thumbnail** for a news website — visually clear, recognizable, relevant and more horizontal (only if you can choose between multiple images that fit equally well).
 
 **Output format:**  
 Return only a single value which is the chosen image filename/title!
