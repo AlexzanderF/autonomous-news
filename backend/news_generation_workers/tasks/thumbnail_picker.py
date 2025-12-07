@@ -11,6 +11,8 @@ import re
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from db import get_database_session, Article
 from services.wikimedia_service import WikimediaService
+from services.pexels_service import PexelsService
+from services.freepik_service import FreepikService
 
 from celery_config import celery_app
 from .shared import (
@@ -56,9 +58,35 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
         search_phrases = get_search_phrases_with_llm(article.title, article.content)
         logger.info(f"Search phrases used for article ID {article_id}: {search_phrases}")
         
-        # Search for an appropriate image
-        wikimedia = WikimediaService()
-        images = wikimedia.search_images(search_phrases)
+        images = []
+
+        # Search for an appropriate image from Wikimedia
+        try:
+            wikimedia = WikimediaService()
+            wikimedia_images = wikimedia.search_images_by_phrases_list(search_phrases)
+            images.extend(wikimedia_images)
+            logger.info(f"Wikimedia images fetched for article ID {article_id}: {len(wikimedia_images)}")
+        except Exception as exc:
+            logger.warning(f"Failed to fetch Wikimedia images: {exc}")
+        
+        # Search for images from Pexels (if API key is available)
+        try:
+            pexels = PexelsService()
+            pexels_images = pexels.search_images_by_phrases_list(search_phrases, 10, 'landscape')
+            images.extend(pexels_images)
+            logger.info(f"Pexels images fetched for article ID {article_id}: {len(pexels_images)}")
+        except Exception as exc:
+            logger.warning(f"Failed to fetch Pexels images: {exc}")
+        
+        # Search for images from Freepik (if API key is available)
+        try:
+            freepik = FreepikService()
+            freepik_images = freepik.search_images_by_phrases_list(search_phrases, 10, 'landscape')
+            images.extend(freepik_images)
+            logger.info(f"Freepik images fetched for article ID {article_id}: {len(freepik_images)}")
+        except Exception as exc:
+            logger.warning(f"Failed to fetch Freepik images: {exc}")
+        
         logger.info(f"Total images fetched for article ID {article_id}: {len(images)}")
         
         if not images:

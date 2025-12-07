@@ -33,7 +33,7 @@ class WikimediaService:
         self.headers = headers or WIKIMEDIA_HEADERS
         self.timeout = timeout
     
-    def search_images(
+    def search_images_by_phrases_list(
         self,
         search_phrases: List[str],
         limit: int = 20,
