@@ -36,6 +36,7 @@ class ArticleResponse(BaseModel):
     published_at: datetime
     categories: List[CategoryDTO] = []
     sources: List[SourceDTO] = []
+    sentiment_score: Optional[int] = None
 
     class Config:
         from_attributes = True
