@@ -11,7 +11,7 @@ from pathlib import Path
 from .thumbnail_picker import add_thumbnail_to_article
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from dto import GeneratedArticleDTO
+from dto import GeneratedArticleDTO, ArticleLLMResponseSchema
 from db import Article, Category, get_database_session
 
 from celery_config import celery_app
@@ -58,7 +58,9 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
                 tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
                 thinking_config=genai.types.ThinkingConfig(
                     thinking_budget=-1  # Unlimited thinking budget for best quality
-                )
+                ),
+                response_schema=ArticleLLMResponseSchema,
+                response_mime_type="application/json",
             )
         )
 
@@ -69,13 +71,19 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
                 'message': 'Empty response from LLM'
             }
 
-        article_content = response.text.strip()
+        # Parse the structured response
+        article_data = ArticleLLMResponseSchema.model_validate_json(response.text)
+        article_content = article_data.content.strip()
+        article_excerpt = article_data.excerpt.strip()
+        sentiment_score = article_data.sentiment_score
 
         # Create GeneratedArticle object
         generated_article = GeneratedArticleDTO(
             title=title,
             category=category,
             content=article_content,
+            excerpt=article_excerpt,
+            sentiment_score=sentiment_score,
             generated_at=datetime.now(timezone.utc),
             status="draft"
         )
@@ -134,6 +142,8 @@ def store_generated_article(article: GeneratedArticleDTO) -> bool:
             title=article.title,
             slug=slug,
             content=article.content,
+            excerpt=article.excerpt,
+            sentiment_score=article.sentiment_score,
             ai_model_used=DEFAULT_LLM_MODEL_NAME,
             status=article.status,
             created_at=article.generated_at,

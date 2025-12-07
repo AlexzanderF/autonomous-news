@@ -19,6 +19,13 @@ class GeneratedArticleDTO(BaseModel):
     title: str
     category: str
     content: str
+    excerpt: Optional[str] = None
+    sentiment_score: Optional[int] = None
     generated_at: datetime
     status: str = "draft"
     source_urls: Optional[List[str]] = []
+
+class ArticleLLMResponseSchema(BaseModel):
+    content: str
+    excerpt: str
+    sentiment_score: int

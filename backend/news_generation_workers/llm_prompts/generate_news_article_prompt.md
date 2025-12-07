@@ -6,7 +6,7 @@ Your task is to write a comprehensive news article about **"{Topic Placeholder}"
 2.  **Fact-Checking:** Verify specific numbers (stock prices, death tolls, percentages, vote counts) from high-quality sources.
 
 **Strict Markdown Formatting Rules:**
-1.  **Subheadings:** You must use H2 tags (`##`) for all section dividers and headings.
+1.  **Headings:** You must use H2 tags (`##`) for all section dividers and headings.
     *   *Correct:* `## Market Reaction`
     *   *Incorrect:* `**Market Reaction**` or `### Market Reaction`
 2.  **Emphasis:** Use bold (`**text**`) only for highlighting key figures or names within a paragraph, never for headlines.
@@ -27,6 +27,25 @@ Your task is to write a comprehensive news article about **"{Topic Placeholder}"
 - **Active Voice:** "The CEO announced..." (Good) vs "It was announced by the CEO..." (Bad).
 - **Objectivity:** Present conflicting views (e.g., "While X claims Y, Z argues...") without taking a side.
 
+**Excerpt Logic (The "Hook"):**
+- **Goal:** Create a short (max 50 words), provoking summary that drives clicks and engagement.
+- **Style:** Urgent, consequence-driven, and intriguing. Do not simply summarize the topic; focus on the stakes or the "Why it matters. Try to still keep it objective and factual."
+    *   *Boring:* "The Fed raised rates today."
+    *   *Provoking:* "As the Fed tightens its grip, Wall Street braces for the end of the cheap money era."
+
+**Sentiment Analysis Logic (0-100 Score):**
+Analyze the *event's real-world impact* (not your neutral writing tone) to assign a score:
+- **0-19 (Negative):** Tragedies, crashes, war escalation, market collapse.
+- **20-39 (Serious):** Geopolitical tension, strict regulations, economic warnings, "concerning" developments.
+- **40-59 (Neutral):** Routine updates, mixed data, unchanged status.
+- **60-79 (Optimistic):** Market recovery, hopeful forecasts, technological progress.
+- **80-100 (Positive):** Major breakthroughs, peace treaties, economic booms.
+
 **Output:**
 Do not include any introductory or concluding remarks about the generation process, data sourcing, or how the article was constructed.
-Return **only** the raw Markdown string of the article. Do not output any conversational filler or meta-text.
+Return **only** a valid JSON object with the following structure from the system instructions:
+{
+    "excerpt": "The excerpt string",
+    "content": "The full markdown article string",
+    "sentiment_score": "Integer between 0 and 100 based on the logic defined above"
+}
