@@ -29,7 +29,9 @@ from .shared import (
     load_prompt,
     logger,
     REDIS_LAST_RUN_KEY,
-    DEFAULT_LLM_MODEL_NAME,
+    HEADLINES_PICKER_MODEL_NAME,
+    HEADLINES_PICKER_THINKING_BUDGET,
+    HEADLINES_PICKER_TEMPERATURE,
 )
 
 import os
@@ -254,7 +256,7 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
     if not articles:
         return []
 
-    logger.info(f"Selecting top headlines from {len(articles)} scraped items using {DEFAULT_LLM_MODEL_NAME}")
+    logger.info(f"Selecting top headlines from {len(articles)} scraped items using {HEADLINES_PICKER_MODEL_NAME}")
 
     pick_headlines_prompt = load_prompt('llm_prompts/pick_headlines_prompt.md')
     genai_client = get_genai_client()
@@ -276,12 +278,13 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
 
     try:
         response = genai_client.models.generate_content(
-            model=DEFAULT_LLM_MODEL_NAME,
+            model=HEADLINES_PICKER_MODEL_NAME,
             contents=user_message,
             config=genai.types.GenerateContentConfig(
                 system_instruction=pick_headlines_prompt,
                 response_mime_type='application/json',
-                thinking_config=genai.types.ThinkingConfig(thinking_budget=-1)
+                temperature=HEADLINES_PICKER_TEMPERATURE,
+                thinking_config=genai.types.ThinkingConfig(thinking_budget=HEADLINES_PICKER_THINKING_BUDGET)
             )
         )
 

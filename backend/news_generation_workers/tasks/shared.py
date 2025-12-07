@@ -40,10 +40,21 @@ LLM_API_KEY = os.getenv('LLM_API_KEY')
 if not LLM_API_KEY:
     raise ValueError("LLM_API_KEY environment variable is required")
 
-DEFAULT_LLM_MODEL_NAME = os.getenv('DEFAULT_LLM_MODEL_NAME', 'gemini-2.5-flash')
+HEADLINES_PICKER_MODEL_NAME = os.getenv('HEADLINES_PICKER_MODEL_NAME', 'gemini-2.5-flash')
+ARTICLE_GENERATION_MODEL_NAME = os.getenv('ARTICLE_GENERATION_MODEL_NAME', 'gemini-2.5-flash')
 # Thumbnail picker models
 SEARCH_PHRASES_MODEL_NAME = os.getenv('SEARCH_PHRASES_MODEL_NAME', 'gemma-3-27b-it')
 THUMBNAIL_PICKER_MODEL_NAME = os.getenv('THUMBNAIL_PICKER_MODEL_NAME', 'gemini-flash-lite-latest')
+
+# Thinking Budgets
+HEADLINES_PICKER_THINKING_BUDGET = int(os.getenv('HEADLINES_PICKER_THINKING_BUDGET', 0))
+ARTICLE_GENERATION_THINKING_BUDGET = int(os.getenv('ARTICLE_GENERATION_THINKING_BUDGET', 0))
+THUMBNAIL_PICKER_THINKING_BUDGET = int(os.getenv('THUMBNAIL_PICKER_THINKING_BUDGET', 0))
+
+# Temperatures
+HEADLINES_PICKER_TEMPERATURE = float(os.getenv('HEADLINES_PICKER_TEMPERATURE', 1.0))
+ARTICLE_GENERATION_TEMPERATURE = float(os.getenv('ARTICLE_GENERATION_TEMPERATURE', 1.0))
+THUMBNAIL_PICKER_TEMPERATURE = float(os.getenv('THUMBNAIL_PICKER_TEMPERATURE', 1.0))
 
 # Paths
 WORKER_DIR = Path(__file__).resolve().parent.parent
@@ -87,3 +98,24 @@ def load_prompt(filename: str) -> str:
         logger.error(f"Failed to read prompt file {filename}: {exc}")
         raise
 
+
+def clean_json_response(response_text: str) -> str:
+    """
+    Clean up LLM response text that might contain markdown code blocks.
+    Extracts JSON content from ```json ... ``` or ``` ... ``` blocks.
+    """
+    if not response_text:
+        return ""
+        
+    cleaned_text = response_text.strip()
+    
+    # Check for markdown code blocks
+    if '```' in cleaned_text:
+        # Try to find content between ```json and ``` or just ``` and ```
+        # This regex looks for ```(optional language)\n(content)\n```
+        import re
+        match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', cleaned_text, re.DOTALL)
+        if match:
+            cleaned_text = match.group(1).strip()
+    
+    return cleaned_text

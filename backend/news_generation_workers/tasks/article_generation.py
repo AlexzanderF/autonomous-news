@@ -19,7 +19,10 @@ from .shared import (
     get_genai_client,
     load_prompt,
     logger,
-    DEFAULT_LLM_MODEL_NAME,
+    ARTICLE_GENERATION_MODEL_NAME,
+    clean_json_response,
+    ARTICLE_GENERATION_THINKING_BUDGET,
+    ARTICLE_GENERATION_TEMPERATURE,
 )
 
 # ============================================================================
@@ -48,19 +51,15 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
 
         # Generate article using Gemini with search grounding
         genai_client = get_genai_client()
-        temperature = float(os.getenv('LLM_TEMPERATURE', 1))
-
         response = genai_client.models.generate_content(
             contents=article_prompt,
-            model=DEFAULT_LLM_MODEL_NAME,
+            model=ARTICLE_GENERATION_MODEL_NAME,
             config=genai.types.GenerateContentConfig(
-                temperature=temperature,
+                temperature=ARTICLE_GENERATION_TEMPERATURE,
                 tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
                 thinking_config=genai.types.ThinkingConfig(
-                    thinking_budget=-1  # Unlimited thinking budget for best quality
-                ),
-                response_schema=ArticleLLMResponseSchema,
-                response_mime_type="application/json",
+                    thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET
+                )
             )
         )
 
@@ -72,7 +71,16 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
             }
 
         # Parse the structured response
-        article_data = ArticleLLMResponseSchema.model_validate_json(response.text)
+        try:
+            cleaned_json = clean_json_response(response.text)
+            article_data = ArticleLLMResponseSchema.model_validate_json(cleaned_json)
+        except Exception as e:
+            logger.error(f"Failed to parse article response: {e}")
+            logger.error(f"Raw response: {response.text}")
+            return {
+                'status': 'error',
+                'message': f'Failed to parse LLM response: {str(e)}'
+            }
         article_content = article_data.content.strip()
         article_excerpt = article_data.excerpt.strip()
         sentiment_score = article_data.sentiment_score
@@ -144,7 +152,7 @@ def store_generated_article(article: GeneratedArticleDTO) -> bool:
             content=article.content,
             excerpt=article.excerpt,
             sentiment_score=article.sentiment_score,
-            ai_model_used=DEFAULT_LLM_MODEL_NAME,
+            ai_model_used=ARTICLE_GENERATION_MODEL_NAME,
             status=article.status,
             created_at=article.generated_at,
             updated_at=article.generated_at

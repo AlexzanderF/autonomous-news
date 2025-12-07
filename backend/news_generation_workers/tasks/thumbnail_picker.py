@@ -21,6 +21,8 @@ from .shared import (
     logger,
     SEARCH_PHRASES_MODEL_NAME,
     THUMBNAIL_PICKER_MODEL_NAME,
+    THUMBNAIL_PICKER_THINKING_BUDGET,
+    THUMBNAIL_PICKER_TEMPERATURE,
 )
 
 
@@ -191,7 +193,8 @@ def pick_thumbnail_with_llm(title: str, content: str, images: List[Dict[str, Any
         config=genai.types.GenerateContentConfig(
             system_instruction=system_prompt,
             response_mime_type='application/json',
-            thinking_config=genai.types.ThinkingConfig(thinking_budget=-1)
+            temperature=THUMBNAIL_PICKER_TEMPERATURE,
+            thinking_config=genai.types.ThinkingConfig(thinking_budget=THUMBNAIL_PICKER_THINKING_BUDGET)
         )
     )
 
