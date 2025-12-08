@@ -12,11 +12,12 @@ Your task is to write a comprehensive news article about **"{Topic Placeholder}"
 3.  **Lists:** If using bullet points, strictly use the hyphen (`-`) character.
 
 **Article Structure:**
-1.  **Lead Paragraph (No Heading):** A strong "inverted pyramid" opening and introduction to the topic. In 1-2 sentences, summarize the *Who, What, When, Where, and Why*.
-2.  **Body:** Organize the body into 4-6 sections with bold, descriptive headings tailored to the topic (e.g., "Current Trends," "Historical Context," "Key Drivers"). Each section should:
-    *   Focus on a distinct angle (e.g., trends, comparisons, causes, impacts, outlook).
+1.  **Lead Paragraph (without Heading):** A strong "inverted pyramid" opening and introduction to the topic. In up to 3 sentences, summarize the *Who, What, When, Where, and Why*.
+2.  **Body:** Organize the body into 4-6 sections with bold, descriptive headings. Each section should:
+    *   Each section must have a bold, specific, and descriptive heading that perfectly fits the topic (never generic like “Background” or “Details”).
+    *   Each section should focus on a distinct angle (examples: Historical Context, Recent Triggers, Market Reaction, Regulatory Response, Comparative Analysis, Key Players and Stakes, Technological/Structural Drivers, etc.).
     *   Include synthesized data or statistics (e.g., percentages, figures, or volumes) relevant to the topic.
-    *   If needed, use bullet points sparingly for key factors or comparisons to enhance readability.
+    *   If needed, use bullet points sparingly for listing key factors, comparisons, or timelines to enhance readability.
     *   If present, include how are markets, governments, or the public reacting.
 3.  **Outlook (Forward-Looking):** What happens next? Possible risks and challenges, upcoming deadlines, meetings, or economic forecasts while maintaining evidence-based objectivity.
 
