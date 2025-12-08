@@ -29,7 +29,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const headings = article.content
     .split('\n')
     .filter(line => line.trim().startsWith('### '))
-    .map(line => line.trim().replace(/^### /, ''))
+    .map(line => line.trim().replace(/^(### )|(\*\*)/g, ''))
     .filter(heading => heading.length > 0);
 
 
