@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from google import genai
+from google.api_core.exceptions import ResourceExhausted, TooManyRequests
 from celery import Task
 import json
 from slugify import slugify
@@ -31,7 +32,13 @@ from .shared import (
 # Article Generation Task
 # ============================================================================
 
-@celery_app.task(bind=True, name='news_generation_workers.tasks.article_generation.generate_article_from_headline')
+@celery_app.task(
+    bind=True,
+    name='news_generation_workers.tasks.article_generation.generate_article_from_headline',
+    autoretry_for=(ResourceExhausted, TooManyRequests),
+    max_retries=3,
+    default_retry_delay=60,
+)
 def generate_article_from_headline(self: Task, title: str, category: str) -> Dict[str, Any]:
     """
     Generate a full news article from a headline using Gemini with search/grounding.
@@ -44,23 +51,27 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
             logger.warning("Empty title received, skipping article generation")
             raise ValueError("Empty title provided")
 
+        genai_client = get_genai_client()
+
         # Load the article generation prompt
         article_prompt_template = load_prompt('llm_prompts/generate_news_article_prompt.md')
         article_prompt = article_prompt_template.replace('{Topic Placeholder}', title)
-
-        # Generate article using Gemini with search grounding
-        genai_client = get_genai_client()
-        article_response = genai_client.models.generate_content(
-            contents=article_prompt,
-            model=ARTICLE_GENERATION_MODEL_NAME,
-            config=genai.types.GenerateContentConfig(
-                temperature=ARTICLE_GENERATION_TEMPERATURE,
-                tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
-                thinking_config=genai.types.ThinkingConfig(
-                    thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET
+        try:
+            # Generate article using Gemini with search grounding
+            article_response = genai_client.models.generate_content(
+                contents=article_prompt,
+                model=ARTICLE_GENERATION_MODEL_NAME,
+                config=genai.types.GenerateContentConfig(
+                    temperature=ARTICLE_GENERATION_TEMPERATURE,
+                    tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
+                    thinking_config=genai.types.ThinkingConfig(
+                        thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET
+                    )
                 )
             )
-        )
+        except (ResourceExhausted, TooManyRequests) as exc:
+            logger.warning(f"Gemini Rate Limit hit for {title}. Retrying soon...")
+            raise exc
 
         if not article_response or not article_response.text:
             logger.error(f"Empty Article content response from Gemini for headline: {title}")
