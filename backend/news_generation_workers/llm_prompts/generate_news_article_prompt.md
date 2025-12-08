@@ -40,11 +40,20 @@ Analyze the *event's real-world impact* (not your neutral writing tone) to assig
 - **60-79 (Optimistic):** Market recovery, hopeful forecasts, technological progress.
 - **80-100 (Positive):** Major breakthroughs, peace treaties, economic booms.
 
-**Output:**
-Do not include any introductory or concluding remarks about the generation process, data sourcing, or how the article was constructed.
-Return **only** a valid JSON object with the following exact JSON structure:
+**OUTPUT INSTRUCTIONS:**
+- Do not include any introductory or concluding remarks about the generation process, data sourcing, or how the article was constructed.
+- Do NOT use Markdown code blocks (no ```json).
+- Escape all double quotes within the `content` property string.
+Return **only** a valid JSON object with the following exact JSON schema:
 {
     "excerpt": "The excerpt string",
     "content": "The full markdown article string",
     "sentiment_score": "Integer between 0 and 100 based on the logic defined above"
+}
+
+**Example Output:**
+{
+    "excerpt": "As markets tumble, the Fed signals a pause.",
+    "content": "The **S&P 500** fell 2%...",
+    "sentiment_score": 30
 }

@@ -40,10 +40,7 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
 
         if not title:
             logger.warning("Empty title received, skipping article generation")
-            return {
-                'status': 'error',
-                'message': 'Empty title provided'
-            }
+            raise ValueError("Empty title provided")
 
         # Load the article generation prompt
         article_prompt_template = load_prompt('llm_prompts/generate_news_article_prompt.md')
@@ -59,32 +56,24 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
                 tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
                 thinking_config=genai.types.ThinkingConfig(
                     thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET
-                ),
-                response_mime_type="application/json"
+                )
             )
         )
 
         if not response or not response.text:
             logger.error(f"Empty response from Gemini for headline: {title}")
-            return {
-                'status': 'error',
-                'message': 'Empty response from LLM'
-            }
+            raise RuntimeError("Empty response from LLM")
 
         # Parse the structured response
         try:
             cleaned_json = clean_json_response(response.text)
             article_data = ArticleLLMResponseSchema.model_validate_json(cleaned_json)
+            article_content = article_data.content.strip()
+            article_excerpt = article_data.excerpt.strip()
+            sentiment_score = article_data.sentiment_score
         except Exception as e:
-            logger.error(f"Failed to parse article response: {e}")
-            logger.error(f"Raw response: {response.text}")
-            return {
-                'status': 'error',
-                'message': f'Failed to parse LLM response: {str(e)}'
-            }
-        article_content = article_data.content.strip()
-        article_excerpt = article_data.excerpt.strip()
-        sentiment_score = article_data.sentiment_score
+            logger.error(f"Failed to parse article response as JSON: {e}. Attempting fallback to raw text.")
+            raise ValueError(f"Failed to parse LLM response and fallback failed: {str(e)}")
 
         # Create GeneratedArticle object
         generated_article = GeneratedArticleDTO(
@@ -101,27 +90,24 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
 
         # Store the article in the database
         article_id = store_generated_article(generated_article)
-        if article_id:
 
-            # Queue thumbnail selection task
-            try:
-                add_thumbnail_to_article.delay(article_id)
-                logger.info(f"Queued thumbnail selection task for article ID: {article_id}")
-            except Exception as thumbnail_exc:
-                logger.warning(f"Failed to queue thumbnail task for article ID {article_id}: {thumbnail_exc}")
+        if not article_id:
+            logger.error(f"Missing article ID after storing article: {title[:50]}...")
+            raise ValueError("Missing article ID after storing article")
 
-            return {
-                'status': 'success',
-                'title': title,
-                'category': category,
-                'content_length': len(article_content)
-            }
-        else:
-            logger.error(f"Failed to store article: {title[:50]}...")
-            return {
-                'status': 'error',
-                'message': 'Failed to store article in database'
-            }
+        # Queue thumbnail selection task
+        try:
+            add_thumbnail_to_article.delay(article_id)
+            logger.info(f"Queued thumbnail selection task for article ID: {article_id}")
+        except Exception as thumbnail_exc:
+            logger.warning(f"Failed to queue thumbnail task for article ID {article_id}: {thumbnail_exc}")
+
+        return {
+            'status': 'success',
+            'title': title,
+            'category': category,
+            'content_length': len(article_content)
+        }
 
     except Exception as exc:
         logger.error(f"Error generating article for headline '{title}': {exc}")
@@ -180,7 +166,7 @@ def store_generated_article(article: GeneratedArticleDTO) -> Optional[int]:
         if db:
             db.rollback()
         logger.error(f"Failed to store article '{article.title}' in database: {exc}")
-        return None
+        raise exc
 
     finally:
         if db:
