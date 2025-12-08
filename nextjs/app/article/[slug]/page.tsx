@@ -21,14 +21,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
 
   // Calculate sentiment score for display
-  const sentimentScore = 75; // TODO: Get from article data when available
-
-  // Convert markdown content to HTML
-  // Enable 'breaks' option to convert single newlines to <br> tags
-  const htmlContent = await marked(article.content, {
-    breaks: true,
-    gfm: true
-  });
+  const sentimentScore = article.sentiment_score;
+  const widthPercentage = Math.abs(sentimentScore - 50);
 
   // Extract section headings from markdown for table of contents
   // Looking for lines that start with ### (h3 headers) which are section titles
@@ -146,32 +140,45 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </div>
 
                 <div className="mb-2">
-                  <div className="flex justify-between text-xs text-slate-500 mb-2 font-mono">
+                  <div className="flex justify-between text-xs text-slate-400 mb-2 font-mono w-full px-1">
                     <span>Negative</span>
+                    <span>Serious</span>
+                    <span>Neutral</span>
+                    <span>Optimistic</span>
                     <span>Positive</span>
                   </div>
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden relative">
                     <div
-                      className={`h-full rounded-full ${((sentimentScore - 50) / 50) > 0 ? 'bg-green-500' : 'bg-red-500'
-                        }`}
+                      className="absolute top-0 h-full overflow-hidden rounded-full"
                       style={{
-                        width: `${Math.abs((sentimentScore - 50) / 50) * 100}%`,
-                        marginLeft:
-                          ((sentimentScore - 50) / 50) > 0
-                            ? '50%'
-                            : `${50 - Math.abs((sentimentScore - 50) / 50) * 100}%`,
+                        left: sentimentScore > 50 ? '50%' : `${50 - widthPercentage}%`,
+                        width: `${widthPercentage}%`,
                       }}
-                    ></div>
+                    >
+                      <div
+                        className={`absolute top-0 h-full ${sentimentScore > 50
+                          ? 'left-0 bg-gradient-to-r from-slate-500 to-green-500'
+                          : 'right-0 bg-gradient-to-r from-red-500 to-slate-500'
+                          }`}
+                        style={{
+                          width: widthPercentage > 0 ? `${(50 / widthPercentage) * 100}%` : '0px',
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="text-center mt-2 font-mono text-xl font-bold text-white">
-                  {(((sentimentScore - 50) / 50) * 100).toFixed(1)}%
+                <div className="flex justify-between items-center mt-2 px-1">
+                  <span className="text-xs font-mono text-slate-600 font-bold">0</span>
+                  <div className="text-center font-mono text-l font-bold text-slate-200">
+                    {sentimentScore}
+                  </div>
+                  <span className="text-xs font-mono text-slate-600 font-bold">100</span>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-slate-800">
+                <div className="mt-4 pt-4 border-t border-slate-800">
                   <p className="text-[10px] text-slate-600 font-mono leading-relaxed uppercase">
-                    Sentiment analysis shows the overall tone and emotional direction of this article.
+                    Reflects the overall direction and mood of the article.
                   </p>
                 </div>
               </div>
