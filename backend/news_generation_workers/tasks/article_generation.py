@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from google import genai
-from google.api_core.exceptions import ResourceExhausted, TooManyRequests
+from google.genai import errors
 from celery import Task
 import json
 from slugify import slugify
@@ -28,6 +28,8 @@ from .shared import (
     ARTICLE_METADATA_MODEL_NAME
 )
 
+RETRY_DELAY = 60
+
 # ============================================================================
 # Article Generation Task
 # ============================================================================
@@ -35,9 +37,8 @@ from .shared import (
 @celery_app.task(
     bind=True,
     name='news_generation_workers.tasks.article_generation.generate_article_from_headline',
-    autoretry_for=(ResourceExhausted, TooManyRequests),
     max_retries=3,
-    default_retry_delay=60,
+    default_retry_delay=RETRY_DELAY,
 )
 def generate_article_from_headline(self: Task, title: str, category: str) -> Dict[str, Any]:
     """
@@ -69,9 +70,11 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
                     )
                 )
             )
-        except (ResourceExhausted, TooManyRequests) as exc:
-            logger.warning(f"Gemini Rate Limit hit for {title}. Retrying soon...")
-            raise exc
+        except errors.APIError as api_err:
+            logger.warning(f"Gemini API Error: {api_err}")
+            if api_err.code == 429:
+                self.retry(exc=api_err, countdown=RETRY_DELAY)
+            raise api_err
 
         if not article_response or not article_response.text:
             logger.error(f"Empty Article content response from Gemini for headline: {title}")
