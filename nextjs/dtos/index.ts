@@ -31,7 +31,6 @@ export interface CategoryDTO {
   id: number;
   name: string;
 }
-
 export interface SourceDTO {
   id: number;
   url: string;
@@ -46,10 +45,10 @@ export interface GetArticleResponse {
   content: string;
   thumbnail_url: string | null;
   status: string;
-  ai_model_used: string | null;
   created_at: string;
   updated_at: string;
   published_at: string;
   categories: CategoryDTO[];
   sources: SourceDTO[];
+  sentiment_score: number;
 }
