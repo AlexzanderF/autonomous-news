@@ -87,8 +87,8 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
         try:
             cleaned_json = clean_json_response(article_metadata_response.text)
             parsed_metadata = json.loads(cleaned_json)
-            article_excerpt = parsed_metadata.excerpt.strip()
-            sentiment_score = parsed_metadata.sentiment_score
+            article_excerpt = parsed_metadata['excerpt'].strip()
+            sentiment_score = parsed_metadata['sentiment_score']
         except Exception as e:
             logger.error(f"Failed to parse article metadata response as JSON: {e}. Raw response: {article_metadata_response.text}")
             raise ValueError(f"Failed to parse article metadata response and fallback failed: {str(e)}")
