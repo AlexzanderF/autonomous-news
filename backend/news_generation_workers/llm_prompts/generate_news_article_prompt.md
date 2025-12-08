@@ -44,6 +44,7 @@ Analyze the *event's real-world impact* (not your neutral writing tone) to assig
 - Do not include any introductory or concluding remarks about the generation process, data sourcing, or how the article was constructed.
 - Do NOT use Markdown code blocks (no ```json).
 - Escape all double quotes within the `content` property string.
+- Do NOT output any text before or after the JSON.
 Return **only** a valid JSON object with the following exact JSON schema:
 {
     "excerpt": "The excerpt string",

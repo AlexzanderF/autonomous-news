@@ -67,8 +67,13 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
         # Parse the structured response
         try:
             cleaned_json = clean_json_response(response.text)
-            article_data = ArticleLLMResponseSchema.model_validate_json(cleaned_json)
+            
+            article_data = json.loads(cleaned_json)
+            # article_data = ArticleLLMResponseSchema.model_validate_json(cleaned_json)
+            
             article_content = article_data.content.strip()
+            if (not article_content):
+                raise ValueError("Empty article content")
             article_excerpt = article_data.excerpt.strip()
             sentiment_score = article_data.sentiment_score
         except Exception as e:
