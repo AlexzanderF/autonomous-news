@@ -65,7 +65,7 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
         # Search for an appropriate image from Wikimedia
         try:
             wikimedia = WikimediaService()
-            wikimedia_images = wikimedia.search_images_by_phrases_list(search_phrases)
+            wikimedia_images = wikimedia.search_images_by_phrases_list(search_phrases, 15)
             images.extend(wikimedia_images)
             logger.info(f"Wikimedia images fetched for article ID {article_id}: {len(wikimedia_images)}")
         except Exception as exc:
