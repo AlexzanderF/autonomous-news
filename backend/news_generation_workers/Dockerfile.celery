@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY news_generation_workers/ /app/news_generation_workers/
 COPY db/ /app/db/
+COPY services/ /app/services/
 
 # Set Python path
 ENV PYTHONPATH=/app
