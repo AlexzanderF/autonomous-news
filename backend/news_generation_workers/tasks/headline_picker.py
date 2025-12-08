@@ -32,6 +32,7 @@ from .shared import (
     HEADLINES_PICKER_MODEL_NAME,
     HEADLINES_PICKER_THINKING_BUDGET,
     HEADLINES_PICKER_TEMPERATURE,
+    clean_json_response
 )
 
 import os
@@ -283,16 +284,17 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
             config=genai.types.GenerateContentConfig(
                 system_instruction=pick_headlines_prompt,
                 response_mime_type='application/json',
+                response_schema=List[ProcessedHeadlineDTO],
                 temperature=HEADLINES_PICKER_TEMPERATURE,
                 thinking_config=genai.types.ThinkingConfig(thinking_budget=HEADLINES_PICKER_THINKING_BUDGET)
             )
         )
 
-        response_text = response.text.strip()
         try:
-            parsed_response = json.loads(response_text)
+            cleaned_json = clean_json_response(response.text)
+            parsed_response = json.loads(cleaned_json)
         except json.JSONDecodeError as exc:
-            logger.error(f"Failed to parse JSON response: {exc}. Raw output: {response_text[:200]}...")
+            logger.error(f"Failed to parse JSON response: {exc}. Raw output: {response.text[:200]}...")
             raise
 
         if not isinstance(parsed_response, list):

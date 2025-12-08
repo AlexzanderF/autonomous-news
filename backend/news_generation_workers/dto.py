@@ -13,7 +13,6 @@ class ScrapedArticleDTO(BaseModel):
 class ProcessedHeadlineDTO(BaseModel):
     title: str
     category: Optional[str] = None
-    explanation: str = ""
 
 class GeneratedArticleDTO(BaseModel):
     title: str
@@ -25,7 +24,3 @@ class GeneratedArticleDTO(BaseModel):
     status: str = "draft"
     source_urls: Optional[List[str]] = []
 
-class ArticleLLMResponseSchema(BaseModel):
-    content: str
-    excerpt: str
-    sentiment_score: int
