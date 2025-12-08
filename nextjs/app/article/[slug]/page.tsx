@@ -3,7 +3,7 @@ import { getArticleBySlug } from '@/services/article-service';
 import { ArrowLeft, Share2, Clock } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { marked } from 'marked';
+import ReactMarkdown from 'react-markdown';
 import TableOfContents from '@/components/TableOfContents';
 
 interface ArticlePageProps {
@@ -31,11 +31,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   });
 
   // Extract section headings from markdown for table of contents
-  // Looking for lines that start with ** (bold text) which are section titles
+  // Looking for lines that start with ### (h3 headers) which are section titles
   const headings = article.content
     .split('\n')
-    .filter(line => line.trim().startsWith('**') && line.trim().endsWith('**'))
-    .map(line => line.trim().replace(/^\*\*|\*\*$/g, ''))
+    .filter(line => line.trim().startsWith('### '))
+    .map(line => line.trim().replace(/^### /, ''))
     .filter(heading => heading.length > 0);
 
 
@@ -62,18 +62,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     {category.name}
                   </span>
                 ))}
-                <span className="flex items-center gap-1 text-slate-500 text-xs font-mono">
+                <span className="flex items-center gap-1 text-slate-400 text-xs font-mono">
                   <Clock className="w-3 h-3" />
                   {new Date(article.published_at).toLocaleTimeString()}
                 </span>
               </div>
 
-              <h1 className="text-3xl md:text-5xl font-bold text-slate-100 leading-tight mb-6 font-sans">
+              <h1 className="md:text-5xl text-slate-100 leading-tight mb-6 font-sans">
                 {article.title}
               </h1>
 
               {article.excerpt && (
-                <p className="text-xl text-gray-400 font-light border-l-2 border-blue-500 pl-4">
+                <p className="text-xl text-gray-300 font-light border-l-2 border-blue-500 pl-4">
                   {article.excerpt}
                 </p>
               )}
@@ -84,14 +84,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     {[1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[10px] text-slate-500"
+                        className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-[10px] text-slate-400"
                       >
-                        AI
+                        AF
                       </div>
                     ))}
                   </div>
                   <span className="text-slate-400 text-sm">
-                    Synthesized by ANI {article.ai_model_used ? `(${article.ai_model_used})` : 'v2.5'}
+                    Synthesized by Gemini
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -117,10 +117,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             )}
 
             <article className="max-w-none">
-              <div
-                className="prose prose-invert prose-lg prose-headings:font-bold prose-strong:font-bold prose-strong:text-slate-100 text-slate-300 leading-relaxed space-y-6"
-                dangerouslySetInnerHTML={{ __html: htmlContent }}
-              />
+              <div className="article-content text-slate-200 leading-relaxed">
+                <ReactMarkdown
+                  components={{
+                    h3: ({ node: _node, ...props }) => <h2 className="font-bold text-slate-100 mt-6 mb-6" {...props} />,
+                    p: ({ node: _node, ...props }) => <p className="mt-4" {...props} />
+                  }}
+                >
+                  {article.content}
+                </ReactMarkdown>
+              </div>
             </article>
 
           </div>
