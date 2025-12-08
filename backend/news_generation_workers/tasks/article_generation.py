@@ -25,7 +25,8 @@ from .shared import (
     clean_json_response,
     ARTICLE_GENERATION_THINKING_BUDGET,
     ARTICLE_GENERATION_TEMPERATURE,
-    ARTICLE_METADATA_MODEL_NAME
+    ARTICLE_METADATA_MODEL_NAME,
+    MALFORMED_FUNCTION_REASON_STRING
 )
 
 RETRY_DELAY = 60
@@ -72,12 +73,24 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
             )
         except errors.APIError as api_err:
             logger.warning(f"Gemini API Error: {api_err}")
-            if api_err.code == 429:
-                raise self.retry(exc=api_err, countdown=RETRY_DELAY)
-            elif api_err.code == 503:
-                raise self.retry(exc=api_err, countdown=RETRY_DELAY)
+            if api_err.code == 429 or api_err.code == 503:
+                raise self.retry(
+                    exc=api_err,
+                    kwargs={'title': title, 'category': category},
+                    countdown=RETRY_DELAY
+                )
             else:
                 raise api_err
+
+        if article_response and article_response.candidates and article_response.candidates[0]:
+            finish_reason = article_response.candidates[0].finish_reason
+            if str(finish_reason) == MALFORMED_FUNCTION_REASON_STRING:
+                logger.warning(f"Gemini MALFORMED_FUNCTION_CALL for: {title}")
+                raise self.retry(
+                    exc=Exception("Malformed Gemini search tool function call"),
+                    kwargs={'title': title, 'category': category},
+                    countdown=10 # Shorter delay
+                )   
 
         if not article_response or not article_response.text:
             logger.error(f"Empty Article content response from Gemini for headline: {title}")
