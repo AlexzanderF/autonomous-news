@@ -41,11 +41,7 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
         article = db.query(Article).filter(Article.id == article_id).first()
         
         if not article:
-            logger.error(f"Article with ID {article_id} not found")
-            return {
-                'status': 'error',
-                'message': f'Article with ID {article_id} not found'
-            }
+            raise ValueError(f"Article with ID {article_id} not found")
         
         # Check if thumbnail already exists
         if article.thumbnail_url:
@@ -92,19 +88,11 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
         logger.info(f"Total images fetched for article ID {article_id}: {len(images)}")
         
         if not images:
-            logger.warning(f"No images found with search phrases: {search_phrases}")
-            return {
-                'status': 'error',
-                'message': f"No images found with search phrases: {search_phrases}"
-            }
+            raise ValueError(f"No images found with search phrases: {search_phrases}")
 
         thumbnail_id_str = pick_thumbnail_with_llm(article.title, article.content, images)
         if not thumbnail_id_str:
-            logger.warning("Error picking thumbnail with LLM")
-            return {
-                'status': 'error',
-                'message': "Error picking thumbnail with LLM"
-            }
+            raise ValueError("Error picking thumbnail with LLM")
 
         thumbnail_url = None
         try:
@@ -113,15 +101,11 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
                 thumbnail_url = images[thumbnail_idx]['image_url']
             else:
                 logger.warning(f"Returned ID {thumbnail_idx} is out of bounds (0-{len(images)-1})")
-        except ValueError:
-            logger.warning(f"Returned ID '{thumbnail_id_str}' is not an integer")
+        except Exception as e:
+            raise e
 
         if not thumbnail_url:
-            logger.warning(f"Image with ID {thumbnail_id_str} not found or invalid")
-            return {
-                'status': 'error',
-                'message': f"Image with ID {thumbnail_id_str} not found or invalid"
-            }
+            raise ValueError(f"Image with ID {thumbnail_id_str} not found or invalid")
         
         # Update the article with the thumbnail URL and mark as published
         article.thumbnail_url = thumbnail_url
@@ -141,10 +125,7 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
         
     except Exception as exc:
         logger.error(f"Error adding thumbnail to article ID {article_id}: {exc}")
-        return {
-            'status': 'error',
-            'message': str(exc)
-        }
+        raise exc
     finally:
         if db:
             db.close()
