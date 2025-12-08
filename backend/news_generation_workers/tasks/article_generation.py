@@ -1,7 +1,7 @@
 import os
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from google import genai
 from celery import Task
 from slugify import slugify
@@ -99,14 +99,15 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
         logger.info(f"Successfully generated article for: {title[:50]}... (Length: {len(article_content)} chars)")
 
         # Store the article in the database
-        if store_generated_article(generated_article):
+        article_id = store_generated_article(generated_article)
+        if article_id:
 
             # Queue thumbnail selection task
             try:
-                add_thumbnail_to_article.delay(db_article.id)
-                logger.info(f"Queued thumbnail selection task for article ID: {db_article.id}")
+                add_thumbnail_to_article.delay(article_id)
+                logger.info(f"Queued thumbnail selection task for article ID: {article_id}")
             except Exception as thumbnail_exc:
-                logger.warning(f"Failed to queue thumbnail task for article ID {db_article.id}: {thumbnail_exc}")
+                logger.warning(f"Failed to queue thumbnail task for article ID {article_id}: {thumbnail_exc}")
 
             return {
                 'status': 'success',
@@ -133,8 +134,10 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
 # Helper Functions
 # ============================================================================
 
-def store_generated_article(article: GeneratedArticleDTO) -> bool:
-    """Store the generated article in PostgreSQL database."""
+
+
+def store_generated_article(article: GeneratedArticleDTO) -> Optional[int]:
+    """Store the generated article in PostgreSQL database. Returns ID on success."""
     db = None
     try:
         db = get_database_session()
@@ -170,13 +173,13 @@ def store_generated_article(article: GeneratedArticleDTO) -> bool:
 
         logger.info(f"Stored article in database: {article.title[:50]}... (ID: {db_article.id})")
         
-        return True
+        return db_article.id
 
     except Exception as exc:
         if db:
             db.rollback()
         logger.error(f"Failed to store article '{article.title}' in database: {exc}")
-        return False
+        return None
 
     finally:
         if db:
