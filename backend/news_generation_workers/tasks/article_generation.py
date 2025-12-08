@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from google import genai
 from celery import Task
+import json
 from slugify import slugify
 from sqlalchemy.orm import Session
 import sys
