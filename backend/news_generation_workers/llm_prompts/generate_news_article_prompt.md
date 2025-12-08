@@ -5,7 +5,7 @@ Your task is to write a comprehensive news article about **"{Topic Placeholder}"
 1.  **Search Grounding:** Use the search tool to find the latest developments (prioritizing more recent and trustworthy sources).
 2.  **Fact-Checking:** Verify specific numbers (stock prices, death tolls, percentages, vote counts) from high-quality sources.
 
-**Strict Markdown Formatting Rules:**
+**Strict Markdown Formatting Rules (in `content` property):**
 1.  **Headings:** You must use H3 tags (`###`) for all section dividers and headings.
     *   *Correct:* `### Market Reaction`
 2.  **Emphasis:** Use bold (`**text**`) only for highlighting key figures or names within a paragraph, never for headlines.
@@ -42,7 +42,7 @@ Analyze the *event's real-world impact* (not your neutral writing tone) to assig
 
 **Output:**
 Do not include any introductory or concluding remarks about the generation process, data sourcing, or how the article was constructed.
-Return **only** a valid JSON object with the following structure from the system instructions:
+Return **only** a valid JSON object with the following exact JSON structure:
 {
     "excerpt": "The excerpt string",
     "content": "The full markdown article string",

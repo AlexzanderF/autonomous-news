@@ -59,7 +59,8 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
                 tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
                 thinking_config=genai.types.ThinkingConfig(
                     thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET
-                )
+                ),
+                response_mime_type="application/json"
             )
         )
 
