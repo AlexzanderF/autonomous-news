@@ -72,7 +72,7 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
             article_excerpt = article_data.excerpt.strip()
             sentiment_score = article_data.sentiment_score
         except Exception as e:
-            logger.error(f"Failed to parse article response as JSON: {e}. Attempting fallback to raw text.")
+            logger.error(f"Failed to parse article response as JSON: {e}. Raw response: {response.text}")
             raise ValueError(f"Failed to parse LLM response and fallback failed: {str(e)}")
 
         # Create GeneratedArticle object
