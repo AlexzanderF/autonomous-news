@@ -36,6 +36,7 @@ services:
     volumes:
       - ./backend/news_generation_workers:/app/news_generation_workers
       - ./backend/db:/app/db
+      - ./backend/services:/app/services
     depends_on:
       - redis
       - postgres
@@ -53,6 +54,7 @@ services:
     volumes:
       - ./backend/news_generation_workers:/app/news_generation_workers
       - ./backend/db:/app/db
+      - ./backend/services:/app/services
     depends_on:
       - redis
     networks:
