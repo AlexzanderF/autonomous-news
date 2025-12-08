@@ -12,7 +12,7 @@ from pathlib import Path
 from .thumbnail_picker import add_thumbnail_to_article
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from dto import GeneratedArticleDTO, ArticleLLMResponseSchema
+from dto import GeneratedArticleDTO
 from db import Article, Category, get_database_session
 
 from celery_config import celery_app
@@ -24,6 +24,7 @@ from .shared import (
     clean_json_response,
     ARTICLE_GENERATION_THINKING_BUDGET,
     ARTICLE_GENERATION_TEMPERATURE,
+    ARTICLE_METADATA_MODEL_NAME
 )
 
 # ============================================================================
@@ -49,7 +50,7 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
 
         # Generate article using Gemini with search grounding
         genai_client = get_genai_client()
-        response = genai_client.models.generate_content(
+        article_response = genai_client.models.generate_content(
             contents=article_prompt,
             model=ARTICLE_GENERATION_MODEL_NAME,
             config=genai.types.GenerateContentConfig(
@@ -61,25 +62,36 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
             )
         )
 
-        if not response or not response.text:
-            logger.error(f"Empty response from Gemini for headline: {title}")
-            raise RuntimeError("Empty response from LLM")
+        if not article_response or not article_response.text:
+            logger.error(f"Empty Article content response from Gemini for headline: {title}")
+            raise RuntimeError("Empty Article content response from LLM")
+
+        article_content = article_response.text.strip()
+
+        # Load the article metadata prompt
+        article_metadata_prompt_template = load_prompt('llm_prompts/article_metadata_prompt.md')
+        article_metadata_prompt = article_metadata_prompt_template.replace('{Title Placeholder}', title)
+        article_metadata_prompt = article_metadata_prompt_template.replace('{Content Placeholder}', article_content)
+
+        # Generate article metadata
+        article_metadata_response = genai_client.models.generate_content(
+            contents=article_metadata_prompt,
+            model=ARTICLE_METADATA_MODEL_NAME,
+        )
+
+        if not article_metadata_response or not article_metadata_response.text:
+            logger.error(f"Empty Excerpt and Sentiment Score response from Gemini for headline: {title}")
+            raise RuntimeError("Empty Excerpt and Sentiment Score response from LLM")
 
         # Parse the structured response
         try:
-            cleaned_json = clean_json_response(response.text)
-            
-            article_data = json.loads(cleaned_json)
-            # article_data = ArticleLLMResponseSchema.model_validate_json(cleaned_json)
-            
-            article_content = article_data.content.strip()
-            if (not article_content):
-                raise ValueError("Empty article content")
-            article_excerpt = article_data.excerpt.strip()
-            sentiment_score = article_data.sentiment_score
+            cleaned_json = clean_json_response(article_metadata_response.text)
+            parsed_metadata = json.loads(cleaned_json)
+            article_excerpt = parsed_metadata.excerpt.strip()
+            sentiment_score = parsed_metadata.sentiment_score
         except Exception as e:
-            logger.error(f"Failed to parse article response as JSON: {e}. Raw response: {response.text}")
-            raise ValueError(f"Failed to parse LLM response and fallback failed: {str(e)}")
+            logger.error(f"Failed to parse article metadata response as JSON: {e}. Raw response: {article_metadata_response.text}")
+            raise ValueError(f"Failed to parse article metadata response and fallback failed: {str(e)}")
 
         # Create GeneratedArticle object
         generated_article = GeneratedArticleDTO(
