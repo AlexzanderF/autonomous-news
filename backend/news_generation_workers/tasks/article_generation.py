@@ -73,8 +73,11 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
         except errors.APIError as api_err:
             logger.warning(f"Gemini API Error: {api_err}")
             if api_err.code == 429:
-                self.retry(exc=api_err, countdown=RETRY_DELAY)
-            raise api_err
+                raise self.retry(exc=api_err, countdown=RETRY_DELAY)
+            elif api_err.code == 503:
+                raise self.retry(exc=api_err, countdown=RETRY_DELAY)
+            else:
+                raise api_err
 
         if not article_response or not article_response.text:
             logger.error(f"Empty Article content response from Gemini for headline: {title}")
