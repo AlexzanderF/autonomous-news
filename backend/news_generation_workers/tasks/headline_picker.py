@@ -284,7 +284,6 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
             config=genai.types.GenerateContentConfig(
                 system_instruction=pick_headlines_prompt,
                 response_mime_type='application/json',
-                response_schema=List[ProcessedHeadlineDTO],
                 temperature=HEADLINES_PICKER_TEMPERATURE,
                 thinking_config=genai.types.ThinkingConfig(thinking_budget=HEADLINES_PICKER_THINKING_BUDGET)
             )

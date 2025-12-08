@@ -12,7 +12,7 @@ class ScrapedArticleDTO(BaseModel):
 
 class ProcessedHeadlineDTO(BaseModel):
     title: str
-    category: str
+    category: Optional[str] = None
 
 class GeneratedArticleDTO(BaseModel):
     title: str
