@@ -273,7 +273,7 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
         "Analyze the following JSON array of headlines and follow the instructions in the system prompt.\n"
         f"Maximum headlines to select: {max_headlines_count}\n"
         f"Return ONLY a JSON array of objects.\n"
-        f"Headlines JSON Input:\n{json.dumps(headlines_data, indent=2)}"
+        f"Headlines JSON Input:\n{json.dumps(headlines_data)}"
     )
 
     try:

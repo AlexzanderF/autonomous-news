@@ -4,12 +4,13 @@ Your task is to select **the single most appropriate thumbnail** from a list of 
 **Input Data:**  
 - **Article Title:** The title of the news article.  
 - **Article Content:** The whole content of the article.  
-- **Images:** A JSON array of image candidates.  
-  Each image object includes:  
-  - `"title"`: The image’s filename.  
-  - `"description"`: A short caption or summary of the image (if available).
-  - `"dimensions"`: The image’s dimensions (width x height).
-  - `"timestamp"`: The image’s upload timestamp (if available).
+- **Images:** A list of image candidates.  
+  Each line represetning an image includes:  
+  - `ID`: The image’s ID - integer.  
+  - `Title`: The image’s filename.  
+  - `Description`: A short caption or summary of the image (if available).
+  - `Dimensions`: The image’s dimensions (width x height).
+  - `Timestamp`: The image’s upload timestamp (if available).
 
 **Evaluation Process:**  
 1. Read and understand the article’s title and content to identify its **main subject, entities, and themes**.  
@@ -26,7 +27,7 @@ Your task is to select **the single most appropriate thumbnail** from a list of 
 
 *   **Scenario: Meetings / Diplomacy (e.g., "Trump meets Macron")**
     *   *Priority 1:* An image showing **both parties together** (shaking hands, sitting together).
-    *   *Priority 2:* **Recency is critical.** Check the `"timestamp"`. Always choose the image with the most recent date to ensure it depicts the most recent meeting (if such is available).
+    *   *Priority 2:* For meetings and events, check the `Timestamp`. Always choose the image with the most recent date to ensure it depicts the most recent meeting (if such is available).
     *   *Priority 3:* If no joint photo of the people exists, choose a composite image with the flags of the countries or organizations involved.
 
 *   **Scenario: International Relations (No specific person)**
@@ -49,5 +50,5 @@ Your task is to select **the single most appropriate thumbnail** from a list of 
 
 
 **Output format:**  
-Return only a single value which is the chosen image filename!
+Return only a single integer which is the chosen image ID!
 It needs to be excatly the same as it is in the input so I can programatically match it to the same value.

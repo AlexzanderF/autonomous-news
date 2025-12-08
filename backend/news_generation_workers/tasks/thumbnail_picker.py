@@ -98,8 +98,8 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
                 'message': f"No images found with search phrases: {search_phrases}"
             }
 
-        thumbnail_title = pick_thumbnail_with_llm(article.title, article.content, images)
-        if not thumbnail_title:
+        thumbnail_id_str = pick_thumbnail_with_llm(article.title, article.content, images)
+        if not thumbnail_id_str:
             logger.warning("Error picking thumbnail with LLM")
             return {
                 'status': 'error',
@@ -107,16 +107,20 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
             }
 
         thumbnail_url = None
-        for image in images:
-            if image['title'] == thumbnail_title:
-                thumbnail_url = image['image_url']
-                break
+        try:
+            thumbnail_idx = int(thumbnail_id_str)
+            if 0 <= thumbnail_idx < len(images):
+                thumbnail_url = images[thumbnail_idx]['image_url']
+            else:
+                logger.warning(f"Returned ID {thumbnail_idx} is out of bounds (0-{len(images)-1})")
+        except ValueError:
+            logger.warning(f"Returned ID '{thumbnail_id_str}' is not an integer")
 
         if not thumbnail_url:
-            logger.warning(f"Image with title {thumbnail_url} not found")
+            logger.warning(f"Image with ID {thumbnail_id_str} not found or invalid")
             return {
                 'status': 'error',
-                'message': f"Image with title {thumbnail_url} not found"
+                'message': f"Image with ID {thumbnail_id_str} not found or invalid"
             }
         
         # Update the article with the thumbnail URL and mark as published
@@ -176,14 +180,12 @@ def pick_thumbnail_with_llm(title: str, content: str, images: List[Dict[str, Any
     Pick a thumbnail from a list of images using LLM.
     """
 
-    input_data = [{
-        'title': image['title'],
-        'description': image['description'],
-        'dimensions': image['dimensions'],
-        'timestamp': image['timestamp']
-    } for image in images]
+    input_data = []
+    for idx, image in enumerate(images):
+        line = f"ID: {idx} Title: {image['title']} | Dimension: {image['dimensions']} | Desc: {image['description']}"
+        input_data.append(line)
 
-    user_message = f"Article Title: {title}\nArticle Content: {content}\nImages:\n{json.dumps(input_data, indent=2)}"
+    user_message = f"Article Title: {title}\nArticle Content: {content}\nImages candidates:\n{"n".join(input_data)}"
     system_prompt = load_prompt('llm_prompts/pick_thumbnail_prompt.md')
 
     genai_client = get_genai_client()
@@ -199,10 +201,14 @@ def pick_thumbnail_with_llm(title: str, content: str, images: List[Dict[str, Any
     )
 
     response_text = response.text.strip()
-    response_text = re.sub(r'^"(.*)"$', r'\1', response_text)
+    match = re.search(r'\d+', response_text)
 
     try:
-        return response_text
+        if match:
+            return match.group(0)
+
+        logger.warning(f"No integer ID found in LLM response: {response_text}")
+        return None
     except Exception as exc:
         logger.error(f"Unexpected error picking thumbnail: {exc}")
         return None
