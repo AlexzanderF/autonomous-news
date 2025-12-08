@@ -111,10 +111,7 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
 
     except Exception as exc:
         logger.error(f"Error generating article for headline '{title}': {exc}")
-        return {
-            'status': 'error',
-            'message': str(exc)
-        }
+        raise ValueError(f"Error generating article for headline '{title}': {exc}")
 
 
 # ============================================================================
