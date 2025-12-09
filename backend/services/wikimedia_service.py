@@ -89,6 +89,10 @@ class WikimediaService:
                 for result in search_results:
                     title = result.get('title')
                     image_info = result.get('imageinfo', [{}])[0]
+                    
+                    if image_info.get('mime') not in ALLOWED_MIME_TYPES:
+                        continue
+
                     image_url = image_info.get('url')
                     description = image_info.get('extmetadata', {}).get('ImageDescription', {}).get('value')
                     width = image_info.get('width')
