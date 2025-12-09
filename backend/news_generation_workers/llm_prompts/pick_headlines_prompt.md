@@ -27,21 +27,29 @@ Your task is to analyze a raw feed of RSS news headlines, cluster them by story,
 **Prioritization Logic (Significance Scoring):**
 
 *   **Tier 1: Global Breaking News (Highest Priority)**
-    *   *Criteria:* Major geopolitical events, wars, natural disasters, or unexpected crises.
-    *   *Entities:* World leaders (Presidents, Prime Ministers), Global orgs (UN, NATO, WHO).
+    *   *Criteria:* Major geopolitical events, political decisions, wars, natural disasters, unexpected crises, sanctions, major diplomatic realignments, global health crises.
+    *   *Entities:* World leaders and political entities (Presidents, Prime Ministers), Global orgs (UN, NATO, WHO), Major nations.
     *   *Action:* Always include these.
 
-*   **Tier 2: High-Impact Macro Trends**
-    *   *Criteria:* Economic shifts (Inflation, GDP, Rates), Major Tech breakthroughs (AI, Space), or Legal rulings.
-    *   *Entities:* Central Banks (Fed, ECB), Trillion-dollar companies (Apple, Nvidia), Supreme Courts.
+*   **Tier 2: Macroeconomics & Market Movers**
+    *   *Criteria:* Events that move global markets, central bank policies, commodities (Oil, Gold, etc.), economic data (Inflation, GDP, Rates, etc.) trade wars, economic shifts, major industry breakthroughs, or legal rulings.
+    *   *Entities:* Central Banks (Fed, ECB), Trillion-dollar and key for the industries companies (Apple, Nvidia, Walmart,etc.), Supreme Courts and financial institutions.
 
-*   **Tier 3: Viral & Cultural Discourse**
-    *   *Criteria:* Stories appearing across the highest number of unique sources in the input list.
-    *   *Logic:* If 5 different outlets cover a specific story, it is statistically significant regardless of the topic.
+*   **Tier 3: Industry-Shifting Technology, Science & Infrastructure**
+    *   *Criteria:* Breakthroughs that change human capability or industry standards, major advancements, regulatory decisions with a significant implications across large regions or whole world.
+    *   *Logic:* A story must be non-niche and widely covered to make it here.
+    *   *Entities:* Major companies, major scientific institutions, major infrastructure projects, major regulatory bodies.
 
-*   **Tier 4: Niche/Local (Lowest Priority - Filter Out)**
-    *   *Criteria:* Local crime, minor sports updates, or press releases.
-    *   *Action:* Do not include these unless the might affect the global macro dynamics and is of high significance.
+*   **Tier 4: The "High-Velocity" Exception (Conditional Priority)**
+    *   *Criteria:* Stories that do not fit Tiers 1-3 but are dominating the global news cycle by sheer volume and are of high interest to the global public, not only to specific regions or countries.
+    *   *Logic:* The story must appear in many distinct major sources in the input feed. This captures unexpected "Black Swan" cultural events and stories that local interest to become a global conversation.
+
+*   **Tier 5: Noise & Niche (EXCLUDE)**
+    *   *Criteria:* Stories with limited scope or low global impact.
+    *   *Examples:*
+        *   *Local/National:* Local crime, city council politics, minor weather events, etc..
+        *   *Business Niche:* Small/Mid-cap companies, partnerships between unknown entities, etc..
+        *   *Lifestyle:* Celebrity gossip, entertainment reviews, sports results, etc..
 
 **Allowed Categories:**
 - Politics
