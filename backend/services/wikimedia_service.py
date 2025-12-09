@@ -19,6 +19,7 @@ ALLOWED_MIME_TYPES = {
     'image/svg+xml',
     'image/svg'
 }
+DESCRIPTION_MAX_LENGTH = 500
 
 
 class WikimediaService:
@@ -95,6 +96,9 @@ class WikimediaService:
 
                     image_url = image_info.get('url')
                     description = image_info.get('extmetadata', {}).get('ImageDescription', {}).get('value')
+                    if description and len(description) > DESCRIPTION_MAX_LENGTH:
+                        description = description[:DESCRIPTION_MAX_LENGTH] + '...'
+
                     width = image_info.get('width')
                     height = image_info.get('height')
                     timestamp = image_info.get('timestamp')
