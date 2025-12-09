@@ -32,7 +32,7 @@ Your task is to analyze a raw feed of RSS news headlines, cluster them by story,
     *   *Action:* Always include these.
 
 *   **Tier 2: Macroeconomics & Market Movers**
-    *   *Criteria:* Events that move global markets, central bank policies, commodities (Oil, Gold, etc.), economic data (Inflation, GDP, Rates, etc.) trade wars, economic shifts, major industry breakthroughs, or legal rulings.
+    *   *Criteria:* Events that move global markets, central bank policies, commodities (Oil, Gold, etc.), economic data (Inflation, GDP, Rates, Bonds Yield, etc.) trade wars, economic shifts, major industry breakthroughs, or legal rulings.
     *   *Entities:* Central Banks (Fed, ECB), Trillion-dollar and key for the industries companies (Apple, Nvidia, Walmart,etc.), Supreme Courts and financial institutions.
 
 *   **Tier 3: Industry-Shifting Technology, Science & Infrastructure**
