@@ -19,11 +19,8 @@ export interface NewsItem {
   headline: string;
   summary: string;
   category: NewsCategory;
-  sentiment: Sentiment;
-  sourceCount: number;
   timestamp: string; // ISO string
-  imageUrl?: string;
-  biasScore: number; // 0 to 100 (0 = left, 100 = right, 50 = center - simplified for UI)
+  imageUrl: string;
   sentimentScore: number; // 0 to 100
 }
 
@@ -51,4 +48,22 @@ export interface GetArticleResponse {
   categories: CategoryDTO[];
   sources: SourceDTO[];
   sentiment_score: number;
+}
+
+export interface ArticleListItemDTO {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  thumbnail_url: string | null;
+  published_at: string;
+  categories: CategoryDTO[];
+  sentiment_score: number;
+}
+
+export interface PaginatedArticlesResponse {
+  items: ArticleListItemDTO[];
+  has_more: boolean;
+  next_cursor: number | null;
+  page_size: number;
 }

@@ -54,6 +54,7 @@ class ArticleListItemDTO(BaseModel):
     thumbnail_url: Optional[str] = None
     published_at: datetime
     categories: List[CategoryDTO] = []
+    sentiment_score: int
 
     class Config:
         from_attributes = True
@@ -69,7 +70,6 @@ class PaginatedArticlesResponse(BaseModel):
     - Consistent results even when new items are added
     """
     items: List[ArticleListItemDTO]
-    total: int = Field(..., description="Total number of articles")
     has_more: bool = Field(..., description="Whether there are more items to load")
     next_cursor: Optional[int] = Field(None, description="Cursor for next page (ID of last item)")
     

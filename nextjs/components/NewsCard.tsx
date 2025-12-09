@@ -2,27 +2,30 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { NewsItem, Sentiment } from '@/dtos';
-import { Globe, BarChart2, FileText } from 'lucide-react';
+import { NewsItem } from '@/dtos';
+import { FileText, Clock } from 'lucide-react';
+import Image from 'next/image';
+
+function formatTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (seconds < 60) return 'JUST NOW';
+  
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}M AGO`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h AGO`;
+
+  const days = Math.floor(hours / 24);
+  return `${days}d AGO`;
+}
 
 interface NewsCardProps {
   item: NewsItem;
 }
-
-const SentimentBadge: React.FC<{ sentiment: Sentiment }> = ({ sentiment }) => {
-  const colors = {
-    [Sentiment.POSITIVE]: 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10',
-    [Sentiment.NEGATIVE]: 'text-rose-400 border-rose-400/30 bg-rose-400/10',
-    [Sentiment.NEUTRAL]: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
-    [Sentiment.CONTROVERSIAL]: 'text-amber-400 border-amber-400/30 bg-amber-400/10',
-  };
-
-  return (
-    <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${colors[sentiment]}`}>
-      {sentiment}
-    </span>
-  );
-};
 
 const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
   return (
@@ -35,11 +38,11 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
         
         {/* Image */}
         <div className="h-48 w-full overflow-hidden relative z-0">
-           <img 
+           <Image
               src={item.imageUrl} 
               alt={item.headline} 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0 opacity-80 group-hover:opacity-100" 
-              loading="lazy"
+              className="w-full h-full object-cover" 
+              fill
            />
         </div>
 
@@ -49,7 +52,6 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
                <span className="text-[10px] font-mono text-cyan-500 tracking-widest border-b border-cyan-500/30 pb-0.5">
                   {item.category}
                </span>
-               <SentimentBadge sentiment={item.sentiment} />
           </div>
           
           <h3 className="text-lg font-bold leading-tight mb-3 text-slate-100 group-hover:text-cyan-50 transition-colors font-sans">
@@ -62,18 +64,10 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
 
           <div className="mt-auto pt-4 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500 font-mono">
              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1" title="Sources Analyzed">
-                   <Globe className="w-3 h-3" />
-                   <span>{item.sourceCount}</span>
+                <div className="flex items-center gap-1" title="Published">
+                   <Clock className="w-3 h-3" />
+                   <span>{formatTimeAgo(item.timestamp)}</span>
                 </div>
-                <div className="flex items-center gap-1" title="Reliability Score">
-                   <BarChart2 className="w-3 h-3" />
-                   <span>{item.sentimentScore}%</span>
-                </div>
-             </div>
-             <div className="opacity-0 group-hover:opacity-100 transition-opacity text-cyan-400 flex items-center gap-1">
-                <span>FULL REPORT</span>
-                <FileText className="w-3 h-3" />
              </div>
           </div>
         </div>
