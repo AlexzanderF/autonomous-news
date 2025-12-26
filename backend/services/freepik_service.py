@@ -3,9 +3,13 @@ import os
 import requests
 from typing import List, Dict, Any, Optional
 
+from services.redis_client import get_redis_client
+
 logger = logging.getLogger(__name__)
 
 FREEPIK_API_BASE = "https://api.freepik.com/v1"
+FREEPIK_RATE_LIMIT_CACHE_KEY = "freepik:rate_limit_until"
+DEFAULT_RATE_LIMIT_SECONDS = 60  # Default wait time if Retry-After header is missing
 
 
 class FreepikService:
@@ -26,6 +30,54 @@ class FreepikService:
         self.headers = {
             'x-freepik-api-key': self.api_key
         }
+        self._redis_client = None
+    
+    def _get_redis(self):
+        """Lazy-load Redis client."""
+        if self._redis_client is None:
+            self._redis_client = get_redis_client()
+        return self._redis_client
+    
+    def is_rate_limited(self) -> bool:
+        """
+        Check if the Freepik API is currently rate limited.
+        Returns True if rate limited, False otherwise.
+        """
+        try:
+            redis_client = self._get_redis()
+            return redis_client.exists(FREEPIK_RATE_LIMIT_CACHE_KEY) > 0  # If the key exists, we're still rate limited (TTL handles expiration)
+        except Exception as exc:
+            logger.warning(f"Failed to check rate limit status in Redis: {exc}")
+            return False  # Fail open - allow API calls if Redis is unavailable
+    
+    def _set_rate_limit(self, retry_after_seconds: int) -> None:
+        """
+        Store the rate limit in Redis with TTL set to retry_after_seconds.
+        The key will automatically expire when the rate limit window ends.
+        """
+        try:
+            redis_client = self._get_redis()
+            redis_client.setex(
+                FREEPIK_RATE_LIMIT_KEY,
+                retry_after_seconds,
+                "1"  # Value doesn't matter, we only check existence
+            )
+            logger.warning(f"Freepik API rate limit set for {retry_after_seconds} seconds")
+        except Exception as exc:
+            logger.error(f"Failed to set rate limit in Redis: {exc}")
+    
+    def get_rate_limit_remaining_seconds(self) -> int:
+        """
+        Get the remaining seconds until the rate limit expires.
+        Returns 0 if not rate limited.
+        """
+        try:
+            redis_client = self._get_redis()
+            ttl = redis_client.ttl(FREEPIK_RATE_LIMIT_KEY)
+            return max(0, ttl)
+        except Exception as exc:
+            logger.warning(f"Failed to get rate limit TTL from Redis: {exc}")
+            return 0
     
     def search_images_by_phrases_list(
         self,
@@ -46,6 +98,13 @@ class FreepikService:
             - dimensions: Image dimensions as "WxH" string
             - timestamp: Publication date if available
         """
+        
+        # Check if we're currently rate limited
+        if self.is_rate_limited():
+            remaining = self.get_rate_limit_remaining_seconds()
+            logger.info(f"Freepik API is rate limited. Skipping API calls. Rate limit expires in {remaining} seconds.")
+            return []
+        
         fetched_images = []
 
         for search_phrase in search_phrases:
@@ -67,8 +126,22 @@ class FreepikService:
                     headers=self.headers,
                     timeout=self.timeout
                 )
-                response.raise_for_status()
                 
+                # Handle rate limit response (HTTP 429)
+                if response.status_code == 429:
+                    retry_after = DEFAULT_RATE_LIMIT_SECONDS
+                    retry_after_header = response.headers.get('Retry-After')
+                    if retry_after_header:
+                        try:
+                            retry_after = int(retry_after_header)
+                        except ValueError:
+                            logger.warning(f"Invalid Retry-After header value: {retry_after_header}")
+                    
+                    self._set_rate_limit(retry_after)
+                    logger.warning(f"Freepik API rate limit hit. Will retry after {retry_after} seconds.")
+                    return fetched_images  # Return whatever we've collected so far
+                
+                response.raise_for_status()
                 data = response.json()
                 
                 resources = data.get('data', [])
