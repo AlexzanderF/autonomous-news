@@ -12,6 +12,7 @@ from .freepik_service import (
     FreepikService,
     FREEPIK_API_BASE,
 )
+from .redis_client import get_redis_client
 
 __all__ = [
     'WikimediaService',
@@ -22,4 +23,5 @@ __all__ = [
     'PEXELS_API_BASE',
     'FreepikService',
     'FREEPIK_API_BASE',
+    'get_redis_client',
 ]

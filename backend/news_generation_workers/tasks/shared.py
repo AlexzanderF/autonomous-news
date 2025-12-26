@@ -66,15 +66,8 @@ WORKER_DIR = Path(__file__).resolve().parent.parent
 # Client Factories
 # ============================================================================
 
-def get_redis_client() -> redis.Redis:
-    """Create and return a Redis client."""
-    return redis.Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        db=REDIS_DB,
-        password=REDIS_PASSWORD if REDIS_PASSWORD else None,
-        decode_responses=True
-    )
+# Import Redis client from services module (centralized implementation)
+from services.redis_client import get_redis_client
 
 
 def get_genai_client() -> genai.Client:
