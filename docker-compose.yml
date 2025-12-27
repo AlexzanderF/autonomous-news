@@ -1,6 +1,21 @@
 version: "3.9"
 
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /data/thumbnails:/data/thumbnails:ro
+    depends_on:
+      - fastapi
+      - nextjs
+    networks:
+      - devnet
+
   postgres:
     image: postgres:17
     container_name: postgres
@@ -37,6 +52,7 @@ services:
       - ./backend/news_generation_workers:/app/news_generation_workers
       - ./backend/db:/app/db
       - ./backend/services:/app/services
+      - /data/thumbnails:/data/thumbnails
     depends_on:
       - redis
       - postgres
@@ -80,8 +96,9 @@ services:
     environment:
       - PORT=8000
       - FRONTEND_URL=http://nextjs:3000
-    ports:
-      - "8000:8000"
+    # Port only exposed internally, nginx proxies to it
+    expose:
+      - "8000"
     volumes:
       - ./backend/api:/app/api
       - ./backend/db:/app/db
@@ -100,8 +117,9 @@ services:
     env_file: .env
     environment:
       - API_BASE_URL=http://fastapi:8000/api
-    ports:
-      - "3000:3000"
+    # Port only exposed internally, nginx proxies to it
+    expose:
+      - "3000"
     depends_on:
       - fastapi
     networks:
