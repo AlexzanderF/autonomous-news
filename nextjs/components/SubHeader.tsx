@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Calendar } from 'lucide-react';
+import { Calendar, TrendingUp } from 'lucide-react';
 
 interface NavItem {
   label: string;
@@ -16,6 +16,11 @@ const navItems: NavItem[] = [
   { label: 'Tech', href: '/?category=tech' },
   { label: 'Science', href: '/?category=science' },
   { label: 'Environment', href: '/?category=environment' },
+  { 
+    label: 'Analysis', 
+    href: '/analysis',
+    icon: <TrendingUp className="w-3.5 h-3.5" />
+  },
   { 
     label: 'Economic Calendar', 
     href: '/economic-calendar',
