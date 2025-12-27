@@ -5,6 +5,7 @@ import NewsCard from '@/components/NewsCard';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import { getArticles } from '@/services/article-service';
 import { ArticleListItemDTO, NewsItem, NewsCategory } from '@/dtos';
+import { getThumbnailUrl } from '@/utils/thumbnails';
 
 function mapArticleToNewsItem(article: ArticleListItemDTO): NewsItem {
     // Category mapping (take first or default)
@@ -26,7 +27,7 @@ function mapArticleToNewsItem(article: ArticleListItemDTO): NewsItem {
         summary: article.excerpt || '',
         category: category,
         timestamp: article.published_at,
-        imageUrl: article.thumbnail_url || `https://picsum.photos/800/600?random=${article.id}`,
+        imageUrl: getThumbnailUrl(article.thumbnail_url, article.id),
         sentimentScore: article.sentiment_score
     };
 }

@@ -2,6 +2,7 @@ import { getFinancialAnalysisArticles } from '@/services/financial-analysis-serv
 import { Clock, ImageOff } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getThumbnailUrl } from '@/utils/thumbnails';
 
 export default async function AnalysisListPage() {
   const articles = await getFinancialAnalysisArticles();
@@ -29,7 +30,7 @@ export default async function AnalysisListPage() {
               <div className="relative aspect-[16/9] w-full bg-slate-100">
                 {article.thumbnail_url ? (
                   <Image
-                    src={article.thumbnail_url}
+                    src={getThumbnailUrl(article.thumbnail_url)}
                     alt={article.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"

@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import TableOfContents from '@/components/TableOfContents';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import SentimentAnalysis from '@/components/SentimentAnalysis';
+import { getThumbnailUrl } from '@/utils/thumbnails';
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -93,7 +94,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             {article.thumbnail_url && (
               <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-10 border border-slate-200 shadow-sm">
                 <Image
-                  src={article.thumbnail_url}
+                  src={getThumbnailUrl(article.thumbnail_url, article.id)}
                   alt={article.title}
                   fill
                   className="object-cover"
