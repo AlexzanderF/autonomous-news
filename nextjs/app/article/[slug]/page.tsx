@@ -6,6 +6,7 @@ import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import TableOfContents from '@/components/TableOfContents';
 import AdPlaceholder from '@/components/AdPlaceholder';
+import SentimentAnalysis from '@/components/SentimentAnalysis';
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -23,7 +24,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   // Calculate sentiment score for display
   const sentimentScore = article.sentiment_score;
-  const widthPercentage = Math.abs(sentimentScore - 50);
 
   // Extract section headings from markdown for table of contents
   // Looking for lines that start with ### (h3 headers) which are section titles
@@ -131,57 +131,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <TableOfContents headings={headings} />
 
               {/* Sentiment Analysis */}
-              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                <div className="flex items-center gap-2 text-slate-700 mb-4">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                  </svg>
-                  <span className="font-mono font-bold tracking-wider text-sm uppercase">AI Sentiment Analysis</span>
-                </div>
-
-                <div className="mb-2">
-                  <div className="flex justify-between text-xs text-slate-600 mb-2 font-mono w-full px-1">
-                    <span>Negative</span>
-                    <span>Serious</span>
-                    <span>Neutral</span>
-                    <span>Optimistic</span>
-                    <span>Positive</span>
-                  </div>
-                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden relative">
-                    <div
-                      className="absolute top-0 h-full overflow-hidden rounded-full"
-                      style={{
-                        left: sentimentScore > 50 ? '50%' : `${50 - widthPercentage}%`,
-                        width: `${widthPercentage}%`,
-                      }}
-                    >
-                      <div
-                        className={`absolute top-0 h-full ${sentimentScore > 50
-                          ? 'left-0 bg-gradient-to-r from-slate-400 to-green-500'
-                          : 'right-0 bg-gradient-to-r from-red-500 to-slate-400'
-                          }`}
-                        style={{
-                          width: widthPercentage > 0 ? `${(50 / widthPercentage) * 100}%` : '0px',
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center mt-2 px-1">
-                  <span className="text-xs font-mono text-slate-500 font-bold">0</span>
-                  <div className="text-center font-mono text-l font-bold text-slate-900">
-                    {sentimentScore}
-                  </div>
-                  <span className="text-xs font-mono text-slate-400 font-bold">100</span>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-slate-200">
-                  <p className="text-[10px] text-slate-600 font-mono leading-relaxed uppercase">
-                    Reflects the overall direction and mood of the article.
-                  </p>
-                </div>
-              </div>
+              <SentimentAnalysis score={sentimentScore} />
 
               {/* Advertisement */}
               <AdPlaceholder />
