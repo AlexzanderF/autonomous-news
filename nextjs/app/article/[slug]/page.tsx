@@ -134,7 +134,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <SentimentAnalysis score={sentimentScore} />
 
               {/* Advertisement */}
-              <AdPlaceholder />
+              <AdPlaceholder width={250} height={600} />
             </div>
           </div>
         </div>
