@@ -5,7 +5,7 @@ import { Menu } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 h-16 flex items-center px-6 justify-between isolate">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 h-16 flex items-center px-12 justify-between isolate">
       <div className="flex items-center gap-3">
         <h1 className="text-xl font-bold tracking-wider text-slate-900 flex items-center">
           MT <span className="text-[10px] font-normal text-slate-500 tracking-[0.2em] ml-2 mt-1 whitespace-nowrap">MACRO THREADS</span>

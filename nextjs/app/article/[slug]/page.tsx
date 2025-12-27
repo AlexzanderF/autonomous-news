@@ -35,7 +35,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
 
   return (
-    <div className="min-h-screen pt-20 pb-12 px-4 md:px-8">
+    <div className="min-h-screen pt-28 pb-12 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         <Link
           href="/"

@@ -25,7 +25,7 @@ const navItems: NavItem[] = [
 
 const SubHeader: React.FC = () => {
   return (
-    <nav className="fixed top-16 left-0 right-0 z-40 bg-slate-900 h-10 flex items-center px-6">
+    <nav className="fixed top-16 left-0 right-0 z-40 bg-slate-900 h-10 flex items-center px-12">
       <div className="flex items-center gap-1">
         {navItems.map((item, index) => (
           <Link
