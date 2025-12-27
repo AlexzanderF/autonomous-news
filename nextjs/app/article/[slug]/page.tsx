@@ -119,7 +119,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
 
           <div className="lg:col-span-4 mt-12">
-            <div className="sticky top-24 space-y-6">
+            <div className="sticky top-32 space-y-6">
               {/* Table of Contents */}
               <TableOfContents headings={headings} />
 
