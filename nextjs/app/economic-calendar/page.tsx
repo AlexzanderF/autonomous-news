@@ -1,42 +1,58 @@
 'use client';
 
+import { useMemo } from 'react';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
 export default function EconomicCalendarPage() {
+    // Investing.com timezone mapping:
+    // The timeZone parameter uses specific IDs. Common ones:
+    // 8 = GMT+8, 15 = GMT+2 (Eastern European), 55 = UTC, etc.
+    // We'll map the browser's offset to the closest available timezone
+    const iframeSrc = useMemo(() => {
+        const offsetMinutes = new Date().getTimezoneOffset();
+        const offsetHours = -offsetMinutes / 60; // Convert to hours (negative because getTimezoneOffset returns opposite)
+        
+        // Investing.com timezone IDs follow a simple formula:
+        // 15 = UTC/GMT, and each hour offset adds/subtracts 1
+        // e.g., GMT+2 = 17, GMT-5 = 10
+        const timezoneId = 15 + Math.round(offsetHours);
+        
+        return `https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone,filters&countries=25,32,6,37,72,22,17,39,14,10,35,43,56,36,110,11,26,12,4,5&calType=week&timeZone=${timezoneId}&lang=1`;
+    }, []);
 
     return (
-        <div className="min-h-screen pt-28 pb-12 px-4 md:px-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="h-[calc(100vh-104px)] pt-28 pb-4 px-4 md:px-8 flex flex-col">
+            <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                    <div className="lg:col-span-8">
-                        <header className="mt-12 mb-8 border-b border-slate-200 pb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1 min-h-0">
+                    <div className="lg:col-span-8 flex flex-col min-h-0">
+                        <header className="mt-12 mb-8 border-b border-slate-200 pb-8 flex-shrink-0">
                             <h1 className="text-4xl md:text-5xl text-slate-900 leading-tight font-sans">
                                 Economic Calendar
                             </h1>
                         </header>
 
-                        <div className="calendar-widget">
+                        <div className="calendar-widget flex-1 min-h-0 flex flex-col">
                             <iframe
-                                src="https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone,filters&countries=25,32,6,37,72,22,17,39,14,10,35,43,56,36,110,11,26,12,4,5&calType=week&timeZone=8&lang=1&width=650"
-                                className="w-full"
-                                height="467"
+                                src={iframeSrc}
+                                className="w-full flex-1"
+                                width="100%"
                                 frameBorder="0"
                             />
-                            <div className="font-sans mt-2">
-                                <span className="text-[11px] text-slate-700 no-underline">
-                                    Real Time Economic Calendar provided by{' '}
-                                    <a
-                                        href="https://www.investing.com/"
-                                        rel="nofollow"
-                                        target="_blank"
-                                        className="text-[11px] text-blue-700 font-bold hover:underline"
-                                    >
-                                        Investing.com
-                                    </a>
-                                    .
-                                </span>
-                            </div>
+                        </div>
+                        <div className="font-sans mt-2 flex-shrink-0">
+                            <span className="text-[11px] text-slate-700 no-underline">
+                                Real Time Economic Calendar provided by{' '}
+                                <a
+                                    href="https://www.investing.com/"
+                                    rel="nofollow"
+                                    target="_blank"
+                                    className="text-[11px] text-blue-700 font-bold hover:underline"
+                                >
+                                    Investing.com
+                                </a>
+                                .
+                            </span>
                         </div>
                     </div>
 
