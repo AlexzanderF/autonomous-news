@@ -12,7 +12,7 @@ function formatTimeAgo(dateString: string): string {
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (seconds < 60) return 'Just Now';
-  
+
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}M ago`;
 
@@ -25,50 +25,51 @@ function formatTimeAgo(dateString: string): string {
 
 interface NewsCardProps {
   item: NewsItem;
+  isFeature?: boolean;
 }
 
-const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
+const NewsCard: React.FC<NewsCardProps> = ({ item, isFeature = false }) => {
   return (
     <Link href={`/article/${item.slug}`}>
-      <article 
-        className="group relative bg-slate-900/50 border border-slate-800 hover:border-cyan-500/50 transition-all duration-300 overflow-hidden hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] cursor-pointer flex flex-col h-full"
+      <article
+        className={`group relative bg-white border border-slate-200 hover:border-indigo-500/50 transition-all duration-300 overflow-hidden hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer h-full rounded-lg ${isFeature ? 'flex flex-col md:flex-row' : 'flex flex-col'
+          }`}
       >
-        {/* Image Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/80 to-slate-950 z-10 pointer-events-none" />
-        
+
+
         {/* Image */}
-        <div className="h-48 w-full overflow-hidden relative z-0">
-           <Image
-              src={item.imageUrl} 
-              alt={item.headline} 
-              className="w-full h-full object-cover" 
-              fill
-           />
+        <div className={`${isFeature ? 'h-64 md:h-auto md:w-1/2' : 'h-48 w-full'} overflow-hidden relative z-0 flex-shrink-0`}>
+          <Image
+            src={item.imageUrl}
+            alt={item.headline}
+            className="w-full h-full object-cover"
+            fill
+          />
         </div>
 
         {/* Content */}
-        <div className="relative z-20 p-5 flex flex-col flex-grow">
+        <div className={`relative z-20 p-5 flex flex-col flex-grow ${isFeature ? 'md:w-1/2 md:p-8' : ''}`}>
           <div className="flex justify-between items-start mb-3">
-               <span className="text-[10px] font-mono text-cyan-500 tracking-widest border-b border-cyan-500/30 pb-0.5">
-                  {item.category}
-               </span>
+            <span className="text-[10px] font-mono text-indigo-700 tracking-widest border-b border-indigo-500/30 pb-0.5">
+              {item.category}
+            </span>
           </div>
-          
-          <h3 className="text-lg font-bold leading-tight mb-3 text-slate-100 group-hover:text-cyan-50 transition-colors font-sans">
+
+          <h3 className={`font-bold leading-tight mb-3 text-slate-900 group-hover:text-indigo-700 transition-colors font-sans ${isFeature ? 'text-xl md:text-2xl' : 'text-lg'}`}>
             {item.headline}
           </h3>
-          
-          <p className="text-sm text-slate-400 line-clamp-3 mb-4 font-light leading-relaxed">
+
+          <p className={`text-slate-700 mb-4 font-light leading-relaxed ${isFeature ? 'text-base line-clamp-4 md:line-clamp-5' : 'text-sm line-clamp-3'}`}>
             {item.summary}
           </p>
 
-          <div className="mt-auto pt-4 border-t border-slate-800/50 flex items-center justify-between text-xs text-slate-500 font-mono">
-             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1" title="Published">
-                   <Clock className="w-3 h-3" />
-                   <span>{formatTimeAgo(item.timestamp)}</span>
-                </div>
-             </div>
+          <div className="mt-auto pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 font-mono">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span>{formatTimeAgo(item.timestamp)}</span>
+              </div>
+            </div>
           </div>
         </div>
       </article>

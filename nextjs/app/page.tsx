@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import NewsCard from '@/components/NewsCard';
-import { RefreshCw } from 'lucide-react';
+import AdPlaceholder from '@/components/AdPlaceholder';
 import { getArticles } from '@/services/article-service';
 import { ArticleListItemDTO, NewsItem, NewsCategory } from '@/dtos';
 
@@ -105,41 +105,94 @@ export default function Home() {
   }, [loadArticles, hasMore, loading]);
 
 
-  const handleRefresh = () => {
-      setCursor(undefined);
-      setHasMore(true);
-      loadArticles(true);
-  };
-
   return (
     <main className="pt-16">
       {/* Hero / Stats Section */}
-      {/* <GlobalPulse /> */}
 
       {/* Main Content Area */}
       <section className="max-w-7xl mx-auto px-6 py-8">
          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div className="flex items-end gap-4">
-                <h2 className="text-2xl font-bold text-white">Latest News</h2>
-            </div>
-            
-            <div className="flex items-center gap-3">
-                <button 
-                    onClick={handleRefresh}
-                    className="p-2 bg-slate-900 border border-slate-800 rounded hover:border-cyan-500/50 hover:text-cyan-400 transition-colors text-slate-400"
-                >
-                    <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-                </button>
+                <h2 className="text-2xl font-bold text-slate-900">Latest News</h2>
             </div>
          </div>
 
          {/* Masonry Grid Simulation */}
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map((news) => (
-                <div key={news.id} className="h-full">
-                    <NewsCard item={news} />
-                </div>
-            ))}
+            {(() => {
+              const elements: React.ReactNode[] = [];
+              let articleIndex = 0;
+              let rowIndex = 0;
+
+              // First article is always feature (full width)
+              if (articles.length > 0) {
+                elements.push(
+                  <div key={articles[0].id} className="md:col-span-2 lg:col-span-3 h-full">
+                    <NewsCard item={articles[0]} isFeature={true} />
+                  </div>
+                );
+                articleIndex = 1;
+                rowIndex = 1;
+              }
+
+              // Process remaining articles in alternating row pattern
+              let adRowCount = 0; // Track ad row count for alternating positions
+              while (articleIndex < articles.length) {
+                const isAdRow = rowIndex % 2 === 0; // Every second row after feature
+
+                if (isAdRow) {
+                  // Ad row: 1 article (2 cols) + 1 ad placeholder (1 col)
+                  // Alternate: odd adRowCount = ad left, even = ad right
+                  const adOnLeft = adRowCount % 2 === 0;
+                  
+                  if (articleIndex < articles.length) {
+                    const article = articles[articleIndex];
+                    
+                    if (adOnLeft) {
+                      // Ad first (left), then article (right)
+                      elements.push(
+                        <div key={`ad-${rowIndex}`} className="h-full">
+                          <AdPlaceholder />
+                        </div>
+                      );
+                      elements.push(
+                        <div key={article.id} className="md:col-span-2 lg:col-span-2 h-full">
+                          <NewsCard item={article} isFeature={true} />
+                        </div>
+                      );
+                    } else {
+                      // Article first (left), then ad (right)
+                      elements.push(
+                        <div key={article.id} className="md:col-span-2 lg:col-span-2 h-full">
+                          <NewsCard item={article} isFeature={true} />
+                        </div>
+                      );
+                      elements.push(
+                        <div key={`ad-${rowIndex}`} className="h-full">
+                          <AdPlaceholder />
+                        </div>
+                      );
+                    }
+                    articleIndex++;
+                  }
+                  adRowCount++;
+                } else {
+                  // Normal row: 3 articles (1 col each)
+                  for (let i = 0; i < 3 && articleIndex < articles.length; i++) {
+                    const article = articles[articleIndex];
+                    elements.push(
+                      <div key={article.id} className="h-full">
+                        <NewsCard item={article} />
+                      </div>
+                    );
+                    articleIndex++;
+                  }
+                }
+                rowIndex++;
+              }
+
+              return elements;
+            })()}
          </div>
          
          {/* Feed End / Loading Sentinel */}
@@ -149,12 +202,12 @@ export default function Home() {
          >
              {loading && (
                  <>
-                    <div className="w-px h-16 bg-gradient-to-b from-transparent via-slate-800 to-transparent"></div>
-                    <span className="text-[10px] font-mono tracking-widest opacity-50">LOADING ARTICLES...</span>
+                    <div className="w-px h-16 bg-gradient-to-b from-transparent via-slate-400 to-transparent"></div>
+                    <span className="text-[10px] font-mono tracking-widest opacity-70">LOADING ARTICLES...</span>
                  </>
              )}
              {!hasMore && articles.length > 0 && (
-                 <span className="text-[10px] font-mono tracking-widest opacity-30">END OF STREAM</span>
+                 <span className="text-[10px] font-mono tracking-widest opacity-50">END OF STREAM</span>
              )}
          </div>
       </section>

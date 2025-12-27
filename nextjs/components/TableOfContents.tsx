@@ -72,14 +72,14 @@ export default function TableOfContents({ headings }: TableOfContentsProps) {
           <button
             key={index}
             className={`group w-full text-left flex items-start pl-4 border-l-2 py-1 transition-all duration-300 ${activeHeading === heading
-              ? 'border-white'
-              : 'border-slate-800 hover:border-slate-600'
+              ? 'border-indigo-500'
+              : 'border-slate-200 hover:border-slate-400'
               }`}
           >
             <span
               className={`text-lg leading-tight transition-colors duration-300 ${activeHeading === heading
-                ? 'text-slate-100 font-medium'
-                : 'text-slate-500 group-hover:text-slate-300'
+                ? 'text-slate-950 font-medium'
+                : 'text-slate-600 group-hover:text-slate-800'
                 }`}
             >
               {heading}
