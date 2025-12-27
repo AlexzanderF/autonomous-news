@@ -13,6 +13,7 @@ from db import get_database_session, Article
 from services.wikimedia_service import WikimediaService
 from services.pexels_service import PexelsService
 from services.freepik_service import FreepikService
+from services.image_storage_service import ImageStorageService
 
 from celery_config import celery_app
 from .shared import (
@@ -95,33 +96,43 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
         if not thumbnail_id_str:
             raise ValueError("Error picking thumbnail with LLM")
 
-        thumbnail_url = None
+        provider_thumbnail_url = None
         try:
             thumbnail_idx = int(thumbnail_id_str)
             if 0 <= thumbnail_idx < len(images):
-                thumbnail_url = images[thumbnail_idx]['image_url']
+                provider_thumbnail_url = images[thumbnail_idx]['image_url']
             else:
                 logger.warning(f"Returned ID {thumbnail_idx} is out of bounds (0-{len(images)-1})")
         except Exception as e:
             raise e
 
-        if not thumbnail_url:
+        if not provider_thumbnail_url:
             raise ValueError(f"Image with ID {thumbnail_id_str} not found or invalid")
         
-        # Update the article with the thumbnail URL and mark as published
-        article.thumbnail_url = thumbnail_url
+        # Download and store the image locally to avoid 429 rate limits from providers
+        image_storage = ImageStorageService()
+        stored_filename = image_storage.download_and_store(article_id, provider_thumbnail_url)
+        
+        if not stored_filename:
+            logger.warning(f"Failed to store image locally, falling back to provider URL: {provider_thumbnail_url}")
+            stored_filename = provider_thumbnail_url  # Fallback to external URL
+        else:
+            logger.info(f"Image stored locally for article {article_id}: {stored_filename}")
+        
+        # Update the article with the thumbnail filename (or fallback URL) and mark as published
+        article.thumbnail_url = stored_filename
         article.updated_at = datetime.now(timezone.utc)
         article.status = 'published'
         article.published_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(article)
         
-        logger.info(f"Successfully added thumbnail to article ID {article_id}: {thumbnail_url}")
+        logger.info(f"Successfully added thumbnail to article ID {article_id}: {stored_filename}")
         
         return {
             'status': 'success',
             'article_id': article_id,
-            'thumbnail_url': thumbnail_url
+            'thumbnail_filename': stored_filename
         }
         
     except Exception as exc:
