@@ -31,6 +31,7 @@ from .shared import (
     REDIS_LAST_RUN_KEY,
     HEADLINES_PICKER_MODEL_NAME,
     HEADLINES_PICKER_THINKING_BUDGET,
+    HEADLINES_PICKER_THINKING_LEVEL,
     HEADLINES_PICKER_TEMPERATURE,
     clean_json_response
 )
@@ -285,7 +286,7 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
                 system_instruction=pick_headlines_prompt,
                 response_mime_type='application/json',
                 temperature=HEADLINES_PICKER_TEMPERATURE,
-                thinking_config=genai.types.ThinkingConfig(thinking_budget=HEADLINES_PICKER_THINKING_BUDGET)
+                thinking_config=genai.types.ThinkingConfig(thinking_level=HEADLINES_PICKER_THINKING_LEVEL)
             )
         )
 

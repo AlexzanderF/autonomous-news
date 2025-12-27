@@ -24,6 +24,7 @@ from .shared import (
     ARTICLE_GENERATION_MODEL_NAME,
     clean_json_response,
     ARTICLE_GENERATION_THINKING_BUDGET,
+    ARTICLE_GENERATION_THINKING_LEVEL,
     ARTICLE_GENERATION_TEMPERATURE,
     ARTICLE_METADATA_MODEL_NAME,
     MALFORMED_FUNCTION_REASON_STRING
@@ -67,7 +68,7 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
                     temperature=ARTICLE_GENERATION_TEMPERATURE,
                     tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
                     thinking_config=genai.types.ThinkingConfig(
-                        thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET
+                        thinking_level=ARTICLE_GENERATION_THINKING_LEVEL
                     )
                 )
             )
