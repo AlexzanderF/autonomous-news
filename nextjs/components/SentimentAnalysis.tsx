@@ -78,7 +78,7 @@ export default function SentimentAnalysis({ score }: SentimentAnalysisProps) {
 
           <div className="mt-4 pt-4 border-t border-slate-200">
             <p className="text-[10px] text-slate-600 font-mono leading-relaxed uppercase">
-              Reflects the overall direction and mood of the article.
+              A numerical index of the article&apos;s narrative tone.
             </p>
           </div>
         </div>
