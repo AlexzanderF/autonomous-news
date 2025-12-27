@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import AdPlaceholder from '@/components/AdPlaceholder';
 
 export default function EconomicCalendarPage() {
+    const [isLoading, setIsLoading] = useState(true);
+
     // Investing.com timezone mapping:
     // The timeZone parameter uses specific IDs. Common ones:
     // 8 = GMT+8, 15 = GMT+2 (Eastern European), 55 = UTC, etc.
@@ -32,12 +34,21 @@ export default function EconomicCalendarPage() {
                             </h1>
                         </header>
 
-                        <div className="calendar-widget flex-1 min-h-0 flex flex-col">
+                        <div className="calendar-widget flex-1 min-h-0 flex flex-col relative">
+                            {isLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+                                        <span className="text-slate-500 text-sm font-sans">Loading calendar...</span>
+                                    </div>
+                                </div>
+                            )}
                             <iframe
                                 src={iframeSrc}
                                 className="w-full flex-1"
                                 width="100%"
                                 frameBorder="0"
+                                onLoad={() => setIsLoading(false)}
                             />
                         </div>
                         <div className="font-sans mt-2 flex-shrink-0">
