@@ -116,7 +116,7 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      - API_BASE_URL=http://fastapi:8000/api
+      - NEXT_PUBLIC_API_BASE_URL=/api
     # Port only exposed internally, nginx proxies to it
     expose:
       - "3000"

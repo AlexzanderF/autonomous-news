@@ -2,7 +2,7 @@
  * Utility functions for handling thumbnail images.
  */
 
-import { THUMBNAIL_BASE_PATH, FALLBACK_IMAGE_URL } from '@/constants';
+import { THUMBNAIL_BASE_URL, FALLBACK_IMAGE_URL } from '@/constants';
 
 /**
  * Constructs the full URL for a thumbnail image.
@@ -13,8 +13,16 @@ import { THUMBNAIL_BASE_PATH, FALLBACK_IMAGE_URL } from '@/constants';
  * @returns Full URL to the thumbnail image
  * 
  * @example
+ * // Production (NEXT_PUBLIC_THUMBNAIL_BASE_URL not set):
  * getThumbnailUrl('article_123_abc.jpg') // returns '/thumbnails/article_123_abc.jpg'
+ * 
+ * // Development (NEXT_PUBLIC_THUMBNAIL_BASE_URL=http://my-vm.com/thumbnails):
+ * getThumbnailUrl('article_123_abc.jpg') // returns 'http://my-vm.com/thumbnails/article_123_abc.jpg'
+ * 
+ * // External URL (legacy data):
  * getThumbnailUrl('https://example.com/image.jpg') // returns 'https://example.com/image.jpg'
+ * 
+ * // No thumbnail:
  * getThumbnailUrl(null, 123) // returns 'https://picsum.photos/800/600?random=123'
  */
 export function getThumbnailUrl(thumbnailFilename: string | null | undefined, articleId?: number): string {
@@ -30,6 +38,6 @@ export function getThumbnailUrl(thumbnailFilename: string | null | undefined, ar
         return thumbnailFilename;
     }
     
-    // Local filename - construct path for Nginx
-    return `${THUMBNAIL_BASE_PATH}/${thumbnailFilename}`;
+    // Local filename - construct full URL using base URL from environment
+    return `${THUMBNAIL_BASE_URL}/${thumbnailFilename}`;
 }
