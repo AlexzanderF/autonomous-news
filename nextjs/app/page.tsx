@@ -110,7 +110,7 @@ export default function Home() {
       {/* Hero / Stats Section */}
 
       {/* Main Content Area */}
-      <section className="max-w-7xl mx-auto px-6 py-8">
+      <section className="max-w-7xl mx-auto px-4 md:px-6 py-12">
          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div className="flex items-end gap-4">
                 <h2 className="text-2xl font-bold text-slate-900">Latest News</h2>

@@ -35,18 +35,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
 
   return (
-    <div className="min-h-screen pt-28 pb-12 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto">
-        <Link
-          href="/"
-          className="group flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors mb-8 font-mono text-sm inline-flex"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>RETURN TO FEED</span>
-        </Link>
+    <div className="min-h-screen pt-28 pb-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 mt-12">
             <header className="mb-8 border-b border-slate-200 pb-8">
               <div className="flex items-center gap-3 mb-4">
                 {article.categories.map((category) => (
@@ -125,7 +118,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
           </div>
 
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-4 mt-12">
             <div className="sticky top-24 space-y-6">
               {/* Table of Contents */}
               <TableOfContents headings={headings} />

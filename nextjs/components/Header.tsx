@@ -2,14 +2,18 @@
 
 import React from 'react';
 import { Menu } from 'lucide-react';
+import Link from 'next/link';
 
 const Header: React.FC = () => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 h-16 flex items-center px-12 justify-between isolate">
-      <div className="flex items-center gap-3">
-        <h1 className="text-xl font-bold tracking-wider text-slate-900 flex items-center">
-          MT <span className="text-[10px] font-normal text-slate-500 tracking-[0.2em] ml-2 mt-1 whitespace-nowrap">MACRO THREADS</span>
-        </h1>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 h-16 flex items-center isolate">
+      <div className="max-w-7xl mx-auto w-full px-4 md:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+        <Link href="/">
+          <h1 className="text-xl font-bold tracking-wider text-slate-900 flex items-center">
+            MT <span className="text-[10px] font-normal text-slate-500 tracking-[0.2em] ml-2 mt-1 whitespace-nowrap">MACRO THREADS</span>
+          </h1>
+        </Link>
       </div>
 
       <div className="flex items-center gap-6">
@@ -29,6 +33,7 @@ const Header: React.FC = () => {
           <Menu className="w-5 h-5 text-slate-500 group-hover:text-slate-900" />
           <span className="text-sm font-medium uppercase tracking-wider">Menu</span>
         </button>
+        </div>
       </div>
     </header>
   );

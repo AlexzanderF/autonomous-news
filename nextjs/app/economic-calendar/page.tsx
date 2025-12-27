@@ -21,8 +21,8 @@ export default function EconomicCalendarPage() {
     }, []);
 
     return (
-        <div className="h-[calc(100vh-104px)] pt-28 pb-4 px-4 md:px-8 flex flex-col">
-            <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0">
+        <div className="h-[calc(100vh-104px)] pt-28 pb-4 flex flex-col">
+            <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col min-h-0 px-4 md:px-6">
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1 min-h-0">
                     <div className="lg:col-span-8 flex flex-col min-h-0">
