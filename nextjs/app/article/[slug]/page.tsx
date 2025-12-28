@@ -54,7 +54,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
 
   return (
-    <div className="min-h-screen pt-28 pb-12">
+    <div className="min-h-screen pb-12">
       <div className="w-full">
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">

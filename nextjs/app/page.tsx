@@ -17,7 +17,7 @@ export default async function Home() {
 
 
   return (
-    <main className="pt-20">
+    <main>
       {/* Hero / Stats Section */}
 
       {/* Main Content Area */}

@@ -8,7 +8,7 @@ export default async function AnalysisListPage() {
   const articles = await getFinancialAnalysisArticles();
 
   return (
-    <main className="pt-28">
+    <main>
       <section className="w-full py-12">
         <header className="mb-10">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">

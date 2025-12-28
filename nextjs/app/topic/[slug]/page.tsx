@@ -75,7 +75,7 @@ export default function TopicPage() {
   };
 
   return (
-    <main className="pt-28 pb-12">
+    <main className="pb-12">
       <div className="w-full py-12">
         {/* Page Header */}
         <header className="mb-10">
