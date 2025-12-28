@@ -1,24 +1,10 @@
-export enum Sentiment {
-  POSITIVE = 'POSITIVE',
-  NEGATIVE = 'NEGATIVE',
-  NEUTRAL = 'NEUTRAL',
-  CONTROVERSIAL = 'CONTROVERSIAL'
-}
-
-export enum NewsCategory {
-  TECH = 'TECHNOLOGY',
-  GEOPOLITICS = 'GEOPOLITICS',
-  FINANCE = 'FINANCE',
-  ENVIRONMENT = 'ENVIRONMENT',
-  SPACE = 'SPACE'
-}
 
 export interface NewsItem {
   id: string;
   slug: string; // URL-friendly identifier (unique in DB)
   headline: string;
   summary: string;
-  category: NewsCategory;
+  category: string; // Category name from API
   timestamp: string; // ISO string
   imageUrl: string;
   sentimentScore: number; // 0 to 100

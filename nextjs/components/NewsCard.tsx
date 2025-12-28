@@ -35,8 +35,6 @@ const NewsCard: React.FC<NewsCardProps> = ({ item, isFeature = false }) => {
         className={`group relative bg-white border border-slate-200 hover:border-indigo-500/50 transition-all duration-300 overflow-hidden hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer h-full rounded-lg ${isFeature ? 'flex flex-col md:flex-row' : 'flex flex-col'
           }`}
       >
-
-
         {/* Image */}
         <div className={`${isFeature ? 'h-64 md:h-auto md:w-1/2' : 'h-48 w-full'} overflow-hidden relative z-0 flex-shrink-0`}>
           <Image
@@ -52,7 +50,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ item, isFeature = false }) => {
         <div className={`relative z-20 p-5 flex flex-col flex-grow ${isFeature ? 'md:w-1/2 md:p-8' : ''}`}>
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] font-mono text-indigo-700 tracking-widest border-b border-indigo-500/30 pb-0.5">
-              {item.category}
+              {item.category?.toUpperCase()}
             </span>
           </div>
 

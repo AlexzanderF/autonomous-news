@@ -4,28 +4,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import NewsCard from '@/components/NewsCard';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import { getArticles } from '@/services/article-service';
-import { ArticleListItemDTO, NewsItem, NewsCategory } from '@/dtos';
+import { ArticleListItemDTO, NewsItem } from '@/dtos';
 import { getThumbnailUrl } from '@/utils/thumbnails';
 
 function mapArticleToNewsItem(article: ArticleListItemDTO): NewsItem {
-    // Category mapping (take first or default)
-    let category = NewsCategory.TECH; // Default
-    if (article.categories.length > 0) {
-        const catName = article.categories[0].name.toUpperCase();
-        // Simple mapping attempt
-        if (catName.includes('TECH')) category = NewsCategory.TECH;
-        else if (catName.includes('POLITIC') || catName.includes('GEO')) category = NewsCategory.GEOPOLITICS;
-        else if (catName.includes('FINANCE') || catName.includes('ECONOMY')) category = NewsCategory.FINANCE;
-        else if (catName.includes('ENV') || catName.includes('CLIMATE')) category = NewsCategory.ENVIRONMENT;
-        else if (catName.includes('SPACE')) category = NewsCategory.SPACE;
-    }
-
     return {
         id: article.id.toString(),
         slug: article.slug,
         headline: article.title,
         summary: article.excerpt || '',
-        category: category,
+        category: article.categories.length > 0 ? article.categories[0].name : 'Tech',
         timestamp: article.published_at,
         imageUrl: getThumbnailUrl(article.thumbnail, article.id),
         sentimentScore: article.sentiment_score

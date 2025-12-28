@@ -12,7 +12,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Politics', href: '/?category=politics' },
-  { label: 'Economy', href: '/?category=economy' },
+  { label: 'Markets & Economy', href: '/?category=economy' },
+  { label: 'Crypto', href: '/?category=crypto' },
+  { label: 'AI', href: '/?category=ai' },
   { label: 'Tech', href: '/?category=tech' },
   { label: 'Science', href: '/?category=science' },
   { label: 'Environment', href: '/?category=environment' },
