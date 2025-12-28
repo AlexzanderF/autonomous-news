@@ -32,7 +32,9 @@ export default function RootLayout({
       >
         <Header />
         <SubHeader />
-        {children}
+        <div className="w-full px-4 md:px-8 lg:px-12">
+          {children}
+        </div>
         <Footer />
       </body>
     </html>

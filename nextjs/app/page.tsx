@@ -54,7 +54,7 @@ export default function Home() {
       {/* Hero / Stats Section */}
 
       {/* Main Content Area */}
-      <section className="w-full px-4 md:px-8 lg:px-12 py-12">
+      <section className="w-full py-12">
 
          {/* Hero Section - 3 Column Layout */}
          {articles.length >= 3 && (
@@ -192,7 +192,7 @@ export default function Home() {
 
       {/* Featured Analysis Section - Dark Background */}
       {analysisArticles[1] && (
-        <section className="px-4 md:px-8 lg:px-12 py-12 bg-slate-900">
+        <section className="-mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 py-12 bg-slate-900">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-1 h-6 bg-emerald-500 rounded-full"></div>

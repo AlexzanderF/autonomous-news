@@ -27,7 +27,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
   return (
     <div className="min-h-screen pt-28 pb-12">
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
+      <div className="w-full">
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-8 mt-12">

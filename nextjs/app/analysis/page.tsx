@@ -9,7 +9,7 @@ export default async function AnalysisListPage() {
 
   return (
     <main className="pt-28">
-      <section className="max-w-7xl mx-auto px-4 md:px-6 py-12">
+      <section className="w-full py-12">
         <header className="mb-10">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
             Financial Analysis
