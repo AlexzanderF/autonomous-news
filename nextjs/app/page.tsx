@@ -24,22 +24,20 @@ function mapArticleToNewsItem(article: ArticleListItemDTO): NewsItem {
 
 export default function Home() {
   const [articles, setArticles] = useState<NewsItem[]>([]);
-  const [latestAnalysis, setLatestAnalysis] = useState<FinancialAnalysisArticle | null>(null);
+  const [analysisArticles, setAnalysisArticles] = useState<FinancialAnalysisArticle[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Initial load
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [articlesResponse, analysisArticles] = await Promise.all([
+        const [articlesResponse, analysisData] = await Promise.all([
           getArticles(undefined, 7), // Fetch 7 articles (3 for hero + 4 for row)
           getFinancialAnalysisArticles()
         ]);
         
         setArticles(articlesResponse.items.map(mapArticleToNewsItem));
-        if (analysisArticles.length > 0) {
-          setLatestAnalysis(analysisArticles[0]);
-        }
+        setAnalysisArticles(analysisData);
       } catch (error) {
         console.error("Failed to load data:", error);
       } finally {
@@ -134,19 +132,19 @@ export default function Home() {
                     <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
                       Latest Analysis
                     </span>
-                    {latestAnalysis && (
+                    {analysisArticles[0] && (
                       <span className="text-xs text-slate-400">
-                        | {new Date(latestAnalysis.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        | {new Date(analysisArticles[0].published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     )}
                   </div>
-                  {latestAnalysis ? (
-                    <a href={`/analysis/${latestAnalysis.slug}`} className="block group">
+                  {analysisArticles[0] ? (
+                    <a href={`/analysis/${analysisArticles[0].slug}`} className="block group">
                       <h4 className="text-base font-bold text-slate-900 leading-snug group-hover:text-emerald-700 transition-colors mb-2">
-                        {latestAnalysis.title}
+                        {analysisArticles[0].title}
                       </h4>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {latestAnalysis.tags?.slice(0, 2).map((tag, index) => (
+                        {analysisArticles[0].tags?.slice(0, 2).map((tag, index) => (
                           <span
                             key={index}
                             className="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-mono px-2 py-0.5 rounded uppercase tracking-wider"
@@ -179,6 +177,63 @@ export default function Home() {
              ))}
            </div>
          )}
+      </section>
+
+      {/* Featured Analysis Section - Dark Background */}
+      {analysisArticles[1] && (
+        <section className="px-4 md:px-8 lg:px-12 py-12 bg-slate-900">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-1 h-6 bg-emerald-500 rounded-full"></div>
+              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">
+                Featured Analysis
+              </span>
+            </div>
+            
+            <a href={`/analysis/${analysisArticles[1].slug}`} className="block group">
+              <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-4 group-hover:text-emerald-400 transition-colors">
+                {analysisArticles[1].title}
+              </h2>
+              
+              <p className="text-slate-400 text-base leading-relaxed mb-6 line-clamp-2">
+                {analysisArticles[1].content?.substring(0, 200)}...
+              </p>
+              
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-wrap gap-2">
+                  {analysisArticles[1].tags?.slice(0, 3).map((tag: string, index: number) => (
+                    <span
+                      key={index}
+                      className="bg-slate-800 text-emerald-400 border border-slate-700 text-[10px] font-mono px-3 py-1 rounded uppercase tracking-wider"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                
+                <span className="text-sm text-slate-500">
+                  {new Date(analysisArticles[1].published_at).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+            </a>
+            
+            {/* View All Analysis Link */}
+            <div className="mt-8 pt-6 border-t border-slate-700">
+              <a 
+                href="/analysis" 
+                className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-medium transition-colors group"
+              >
+                <span>View All Analysis</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
          {/* Loading State */}
          {loading && (
@@ -187,7 +242,6 @@ export default function Home() {
              <span className="text-[10px] font-mono tracking-widest opacity-70">LOADING...</span>
            </div>
          )}
-      </section>
     </main>
   );
 }
