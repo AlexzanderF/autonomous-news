@@ -114,9 +114,7 @@ services:
       dockerfile: Dockerfile
     container_name: nextjs
     restart: unless-stopped
-    env_file: .env
-    environment:
-      - NEXT_PUBLIC_API_BASE_URL=/api
+    env_file: ./nextjs/.env
     # Port only exposed internally, nginx proxies to it
     expose:
       - "3000"

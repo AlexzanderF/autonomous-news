@@ -1,18 +1,5 @@
 import { GetArticleResponse, PaginatedArticlesResponse } from "@/dtos";
-
-/**
- * Get the appropriate API base URL based on the environment.
- * - Server-side (SSR): Use internal Docker network URL to reach FastAPI
- * - Client-side (browser): Use relative path which Nginx proxies to FastAPI
- */
-function getApiBaseUrl(): string {
-    if (typeof window === 'undefined') {
-        // Server-side: use internal Docker URL
-        return process.env.API_BASE_URL || 'http://fastapi:8000/api';
-    }
-    // Client-side: use relative path (goes through Nginx)
-    return process.env.NEXT_PUBLIC_API_BASE_URL || '/api';
-}
+import { getApiBaseUrl } from "@/utils/api";
 
 const API_BASE_URL = getApiBaseUrl();
 
