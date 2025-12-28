@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+    // Skip Next.js image optimization for local thumbnails
+    // Nginx serves them with proper caching headers already
+    unoptimized: process.env.NODE_ENV === 'production',
   },
 };
 
