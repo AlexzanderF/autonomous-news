@@ -3,25 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { NewsItem } from '@/dtos';
-import { FileText, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import Image from 'next/image';
-
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (seconds < 60) return 'Just Now';
-
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}M ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
+import { formatTimeAgo } from '@/utils/date';
 
 interface NewsCardProps {
   item: NewsItem;
