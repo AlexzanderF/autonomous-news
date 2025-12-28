@@ -1,39 +1,19 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import NewsCard from '@/components/NewsCard';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import { getArticles } from '@/services/article-service';
 import { getFinancialAnalysisArticles } from '@/services/financial-analysis-service';
-import { NewsItem, FinancialAnalysisArticle } from '@/dtos';
 import { mapArticleToNewsItem } from '@/utils/article-mapper';
 
-export default function Home() {
-  const [articles, setArticles] = useState<NewsItem[]>([]);
-  const [analysisArticles, setAnalysisArticles] = useState<FinancialAnalysisArticle[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  // Initial load
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [articlesResponse, analysisData] = await Promise.all([
-          getArticles(undefined, 7), // Fetch 7 articles (3 for hero + 4 for row)
-          getFinancialAnalysisArticles()
-        ]);
-        
-        setArticles(articlesResponse.items.map(mapArticleToNewsItem));
-        setAnalysisArticles(analysisData);
-      } catch (error) {
-        console.error("Failed to load data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadData();
-  }, []);
+export default async function Home() {
+  // Fetch data on the server for SEO
+  const [articlesResponse, analysisData] = await Promise.all([
+    getArticles(undefined, 7), // Fetch 7 articles (3 for hero + 4 for row)
+    getFinancialAnalysisArticles()
+  ]);
+  
+  const articles = articlesResponse.items.map(mapArticleToNewsItem);
+  const analysisArticles = analysisData;
 
 
   return (
@@ -233,13 +213,6 @@ export default function Home() {
         </section>
       )}
 
-         {/* Loading State */}
-         {loading && (
-           <div className="flex flex-col items-center justify-center gap-4 text-slate-600 py-12">
-             <div className="w-px h-16 bg-gradient-to-b from-transparent via-slate-400 to-transparent"></div>
-             <span className="text-[10px] font-mono tracking-widest opacity-70">LOADING...</span>
-           </div>
-         )}
     </main>
   );
 }
