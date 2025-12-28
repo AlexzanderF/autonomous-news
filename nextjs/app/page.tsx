@@ -6,21 +6,8 @@ import NewsCard from '@/components/NewsCard';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import { getArticles } from '@/services/article-service';
 import { getFinancialAnalysisArticles } from '@/services/financial-analysis-service';
-import { ArticleListItemDTO, NewsItem, FinancialAnalysisArticle } from '@/dtos';
-import { getThumbnailUrl } from '@/utils/thumbnails';
-
-function mapArticleToNewsItem(article: ArticleListItemDTO): NewsItem {
-    return {
-        id: article.id.toString(),
-        slug: article.slug,
-        headline: article.title,
-        summary: article.excerpt || '',
-        category: article.categories.length > 0 ? article.categories[0].name : 'Tech',
-        timestamp: article.published_at,
-        imageUrl: getThumbnailUrl(article.thumbnail, article.id),
-        sentimentScore: article.sentiment_score
-    };
-}
+import { NewsItem, FinancialAnalysisArticle } from '@/dtos';
+import { mapArticleToNewsItem } from '@/utils/article-mapper';
 
 export default function Home() {
   const [articles, setArticles] = useState<NewsItem[]>([]);

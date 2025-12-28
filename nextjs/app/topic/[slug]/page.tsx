@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation';
 import NewsCard from '@/components/NewsCard';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import { getArticles } from '@/services/article-service';
-import { ArticleListItemDTO, NewsItem } from '@/dtos';
-import { getThumbnailUrl } from '@/utils/thumbnails';
+import { NewsItem } from '@/dtos';
+import { mapArticleToNewsItem } from '@/utils/article-mapper';
 
 const ARTICLES_PER_PAGE = 12;
 
@@ -20,19 +20,6 @@ const topicConfig: Record<string, { categoryName: string; displayTitle: string }
   'science': { categoryName: 'Science', displayTitle: 'Science' },
   'environment': { categoryName: 'Environment', displayTitle: 'Environment' },
 };
-
-function mapArticleToNewsItem(article: ArticleListItemDTO): NewsItem {
-  return {
-    id: article.id.toString(),
-    slug: article.slug,
-    headline: article.title,
-    summary: article.excerpt || '',
-    category: article.categories.length > 0 ? article.categories[0].name : 'General',
-    timestamp: article.published_at,
-    imageUrl: getThumbnailUrl(article.thumbnail, article.id),
-    sentimentScore: article.sentiment_score
-  };
-}
 
 export default function TopicPage() {
   const params = useParams();

@@ -1,13 +1,15 @@
 import { notFound } from 'next/navigation';
-import { getArticleBySlug } from '@/services/article-service';
-import { ArrowLeft, Share2, Clock } from 'lucide-react';
-import Link from 'next/link';
+import { getArticleBySlug, getArticles } from '@/services/article-service';
+import { Share2, Clock } from 'lucide-react';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import TableOfContents from '@/components/TableOfContents';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import SentimentAnalysis from '@/components/SentimentAnalysis';
 import { getThumbnailUrl } from '@/utils/thumbnails';
+import { NewsItem } from '@/dtos';
+import NewsCard from '@/components/NewsCard';
+import { mapArticleToNewsItem } from '@/utils/article-mapper';
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -33,6 +35,22 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     .filter(line => line.trim().startsWith('### '))
     .map(line => line.trim().replace(/^(### )|(\*\*)/g, ''))
     .filter(heading => heading.length > 0);
+
+  // Fetch related articles from the same category
+  let relatedArticles: NewsItem[] = [];
+  if (article.categories.length > 0) {
+    try {
+      const categoryName = article.categories[0].name;
+      const relatedResponse = await getArticles(undefined, 5, categoryName);
+      // Filter out the current article and take up to 4
+      relatedArticles = relatedResponse.items
+        .filter(item => item.slug !== slug)
+        .slice(0, 4)
+        .map(mapArticleToNewsItem);
+    } catch (error) {
+      console.error('Failed to fetch related articles:', error);
+    }
+  }
 
 
   return (
@@ -120,6 +138,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
           </div>
         </div>
+
+        {/* Related Articles Section */}
+        {relatedArticles.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-slate-200">
+            <h2 className="text-2xl font-bold text-slate-900 mb-8">More in {article.categories[0]?.name}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedArticles.map((relatedArticle) => (
+                <div key={relatedArticle.id} className="h-full">
+                  <NewsCard item={relatedArticle} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
