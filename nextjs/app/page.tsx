@@ -177,6 +177,17 @@ export default function Home() {
              ))}
            </div>
          )}
+
+          {/* View Latest News Link */}
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <a 
+              href="/latest" 
+              className="inline-flex items-center gap-2 text-indigo-700 hover:text-indigo-600 font-medium transition-colors group"
+            >
+              <span>View Latest News</span>
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </a>
+          </div>
       </section>
 
       {/* Featured Analysis Section - Dark Background */}
