@@ -12,7 +12,11 @@ class ScrapedArticleDTO(BaseModel):
 
 class ProcessedHeadlineDTO(BaseModel):
     title: str
-    category: Optional[str] = None
+    category: str
+
+class HeadlinePickerResponse(BaseModel):
+    """Structured response from the LLM for headline selection."""
+    headlines: List[ProcessedHeadlineDTO]
 
 class GeneratedArticleDTO(BaseModel):
     title: str

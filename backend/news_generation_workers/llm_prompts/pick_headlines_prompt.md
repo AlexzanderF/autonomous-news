@@ -60,17 +60,18 @@ Your task is to analyze a raw feed of RSS news headlines, cluster them by story,
 - Science
 - Environment
 
-**Output Format:**
-Return **only** a JSON array of objects. Do not include any introductory text or markdown formatting.
-
 **Example output:**
-[
-  {
-    "title": "Federal Reserve signals potential rate cuts later this year",
-    "category": "Finance"
-  },
-  {
-    "title": "SpaceX successfully catches Super Heavy booster",
-    "category": "Tech"
-  }
-]
+```json
+{
+  "headlines": [
+    {
+      "title": "Federal Reserve signals potential rate cuts later this year",
+      "category": "Economy"
+    },
+    {
+      "title": "SpaceX successfully catches Super Heavy booster",
+      "category": "Tech"
+    }
+  ]
+}
+```

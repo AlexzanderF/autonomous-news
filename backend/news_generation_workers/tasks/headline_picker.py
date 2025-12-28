@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from dto import ScrapedArticleDTO, ProcessedHeadlineDTO
+from dto import ScrapedArticleDTO, ProcessedHeadlineDTO, HeadlinePickerResponse
 
 # Import RSS scrapers
 from rss_scrapers.google_news_scraper import GoogleNewsScraper
@@ -33,7 +33,6 @@ from .shared import (
     HEADLINES_PICKER_THINKING_BUDGET,
     HEADLINES_PICKER_THINKING_LEVEL,
     HEADLINES_PICKER_TEMPERATURE,
-    clean_json_response
 )
 
 import os
@@ -254,7 +253,7 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
 
 
 def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_count: int = 40) -> List[ProcessedHeadlineDTO]:
-    """Use the selection prompt to pick top headlines for article generation."""
+    """Use the selection prompt to pick top headlines for article generation with structured output."""
     if not articles:
         return []
 
@@ -274,7 +273,6 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
     user_message = (
         "Analyze the following JSON array of headlines and follow the instructions in the system prompt.\n"
         f"Maximum headlines to select: {max_headlines_count}\n"
-        f"Return ONLY a JSON array of objects.\n"
         f"Headlines JSON Input:\n{json.dumps(headlines_data)}"
     )
 
@@ -285,23 +283,15 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
             config=genai.types.GenerateContentConfig(
                 system_instruction=pick_headlines_prompt,
                 response_mime_type='application/json',
+                response_schema=HeadlinePickerResponse,
                 temperature=HEADLINES_PICKER_TEMPERATURE,
                 thinking_config=genai.types.ThinkingConfig(thinking_level=HEADLINES_PICKER_THINKING_LEVEL)
             )
         )
 
-        try:
-            cleaned_json = clean_json_response(response.text)
-            parsed_response = json.loads(cleaned_json)
-        except json.JSONDecodeError as exc:
-            logger.error(f"Failed to parse JSON response: {exc}. Raw output: {response.text[:200]}...")
-            raise
-
-        if not isinstance(parsed_response, list):
-            logger.error("LLM response did not return a JSON array")
-            return []
-
-        processed_headlines: List[ProcessedHeadlineDTO] = [ProcessedHeadlineDTO(**headline) for headline in parsed_response]
+        # Parse the structured response using Pydantic
+        parsed_response = HeadlinePickerResponse.model_validate_json(response.text)
+        processed_headlines = parsed_response.headlines
 
         logger.info(
             "Headline selection complete: %d stories ready for article generation",
