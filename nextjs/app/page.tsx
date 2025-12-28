@@ -67,8 +67,8 @@ export default function Home() {
                      src={articles[0].imageUrl || '/placeholder-news.jpg'} 
                      alt={articles[0].headline}
                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                     sizes="(max-width: 768px) 100vw, 50vw"
+                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                    />
                  </div>
                  <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">

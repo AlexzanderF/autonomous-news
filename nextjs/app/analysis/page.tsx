@@ -19,12 +19,12 @@ export default async function AnalysisListPage() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {articles.map((article) => (
             <Link
               key={article.id}
               href={`/analysis/${article.slug}`}
-              className="group block bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-emerald-300 hover:shadow-lg transition-all duration-200"
+              className="group flex flex-col h-full bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-emerald-300 hover:shadow-lg transition-all duration-200"
             >
               {/* Thumbnail */}
               <div className="relative aspect-[16/9] w-full bg-slate-100">
@@ -34,7 +34,7 @@ export default async function AnalysisListPage() {
                     alt={article.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                   />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
@@ -45,7 +45,7 @@ export default async function AnalysisListPage() {
               </div>
 
               {/* Content */}
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 <div className="flex items-center gap-2 mb-3">
                   {article.tags?.slice(0, 2).map((tag, index) => (
                     <span
@@ -61,7 +61,7 @@ export default async function AnalysisListPage() {
                   {article.title}
                 </h2>
 
-                <div className="flex items-center gap-4 text-sm text-slate-500">
+                <div className="flex items-center gap-4 text-sm text-slate-500 mt-auto">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
                     {new Date(article.published_at).toLocaleDateString('en-US', {

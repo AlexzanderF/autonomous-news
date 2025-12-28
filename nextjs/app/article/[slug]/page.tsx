@@ -46,15 +46,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 {article.categories.map((category) => (
                   <span
                     key={category.id}
-                    className="bg-indigo-100 text-indigo-700 border border-indigo-200 text-[10px] font-mono px-2 py-1 rounded uppercase tracking-wider"
+                    className="text-xs font-semibold text-indigo-700 uppercase tracking-wide"
                   >
                     {category.name}
                   </span>
                 ))}
-                <span className="flex items-center gap-1 text-slate-600 text-xs font-mono">
-                  <Clock className="w-3 h-3" />
-                  {new Date(article.published_at).toLocaleTimeString()}
-                </span>
               </div>
 
               <h1 className="md:text-5xl text-slate-900 leading-tight mb-6 font-sans">
@@ -68,26 +64,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               )}
 
               <div className="flex items-center justify-between mt-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-full bg-slate-200 border-2 border-slate-50 flex items-center justify-center text-[10px] text-slate-600"
-                      >
-                        AF
-                      </div>
-                    ))}
-                  </div>
-                  <span className="text-slate-600 text-sm">
-                    Synthesized by Gemini
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <button className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <span className="flex items-center gap-1.5 text-slate-500 text-sm">
+                  <Clock className="w-4 h-4" />
+                  {new Date(article.published_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+                
+                <button className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                  <Share2 className="w-4 h-4" />
+                </button>
               </div>
             </header>
 
