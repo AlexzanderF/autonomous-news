@@ -136,9 +136,6 @@ export default function TopicPage() {
           {/* Sidebar - Right Side */}
           <div className="lg:col-span-3">
             <div className="sticky top-32">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-4 block">
-                Advertisement
-              </span>
               <AdPlaceholder width={250} height={600} />
             </div>
           </div>
