@@ -39,7 +39,7 @@ export async function getArticleBySlug(slug: string): Promise<GetArticleResponse
 /**
  * Fetch paginated articles from the Python API
  */
-export async function getArticles(cursor?: number, limit: number = 10): Promise<PaginatedArticlesResponse> {
+export async function getArticles(cursor?: number, limit: number = 10, category?: string): Promise<PaginatedArticlesResponse> {
     const params = new URLSearchParams({
         limit: limit.toString(),
         sort_field: 'published_at',
@@ -48,6 +48,10 @@ export async function getArticles(cursor?: number, limit: number = 10): Promise<
     
     if (cursor !== undefined) {
         params.append('cursor', cursor.toString());
+    }
+
+    if (category) {
+        params.append('category', category);
     }
 
     const url = `${API_BASE_URL}/articles/?${params.toString()}`;
