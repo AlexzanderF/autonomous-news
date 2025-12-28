@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ANI - Autonomous News Intelligence",
-  description: "Real-time autonomous news synthesis powered by Gemini AI with global source verification",
+  title: "MT - Macro Threads",
+  description: "Financial and macroeconomic news and analysis",
 };
 
 export default function RootLayout({
