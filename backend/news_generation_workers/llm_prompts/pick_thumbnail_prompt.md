@@ -49,6 +49,5 @@ Your task is to select **the single most appropriate thumbnail** from a list of 
     *   *Priority 2:* A generic but relevant symbolic image (e.g., "Soldiers in silhouette", "Police tape").
 
 
-**Output format:**  
-Return only a single integer which is the chosen image ID!
-It needs to be excatly the same as it is in the input so I can programatically match it to the same value.
+**Output instruction:**  
+The chosen image ID must exactly match one of the image IDs from the input list.

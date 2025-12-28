@@ -24,3 +24,7 @@ class GeneratedArticleDTO(BaseModel):
     status: str = "draft"
     source_urls: Optional[List[str]] = []
 
+
+class ThumbnailPickerResponse(BaseModel):
+    """Structured response from the LLM for thumbnail selection."""
+    id: int  # The selected image ID from the candidates list
