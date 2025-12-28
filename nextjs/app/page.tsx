@@ -27,7 +27,7 @@ function mapArticleToNewsItem(article: ArticleListItemDTO): NewsItem {
         summary: article.excerpt || '',
         category: category,
         timestamp: article.published_at,
-        imageUrl: getThumbnailUrl(article.thumbnail_url, article.id),
+        imageUrl: getThumbnailUrl(article.thumbnail, article.id),
         sentimentScore: article.sentiment_score
     };
 }

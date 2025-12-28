@@ -36,7 +36,7 @@ The bond market outlook for 2024 remains constructive, with potential for capita
         author: "MT Macro Threads Research",
         published_at: "2024-01-15T10:30:00Z",
         tags: ["Fixed Income", "Treasury", "Macro"],
-        thumbnail_url: undefined,
+        thumbnail: undefined,
     },
     {
         id: "2",
@@ -48,7 +48,7 @@ Equity markets have staged a remarkable recovery, but questions remain about sus
         author: "MT Macro Threads Research",
         published_at: "2024-01-10T14:00:00Z",
         tags: ["Equities", "S&P 500", "Market Outlook"],
-        thumbnail_url: undefined,
+        thumbnail: undefined,
     },
     {
         id: "3",
@@ -60,7 +60,7 @@ The Federal Reserve's January meeting will set the tone for monetary policy in 2
         author: "MT Macro Threads Research",
         published_at: "2024-01-08T09:15:00Z",
         tags: ["Federal Reserve", "Interest Rates", "Monetary Policy"],
-        thumbnail_url: undefined,
+        thumbnail: undefined,
     },
     {
         id: "4",
@@ -72,7 +72,7 @@ The US dollar's persistent strength continues to create headwinds for emerging m
         author: "MT Macro Threads Research",
         published_at: "2024-01-05T11:45:00Z",
         tags: ["USD", "Emerging Markets", "FX"],
-        thumbnail_url: undefined,
+        thumbnail: undefined,
     },
 ];
 

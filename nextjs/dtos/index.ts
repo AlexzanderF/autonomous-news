@@ -40,7 +40,7 @@ export interface GetArticleResponse {
   slug: string;
   excerpt: string | null;
   content: string;
-  thumbnail_url: string | null;
+  thumbnail: string | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -55,7 +55,7 @@ export interface ArticleListItemDTO {
   title: string;
   slug: string;
   excerpt: string | null;
-  thumbnail_url: string | null;
+  thumbnail: string | null;
   published_at: string;
   categories: CategoryDTO[];
   sentiment_score: number;
@@ -77,5 +77,5 @@ export interface FinancialAnalysisArticle {
   published_at: string;
   updated_at?: string;
   tags?: string[];
-  thumbnail_url?: string;
+  thumbnail?: string;
 }

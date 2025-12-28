@@ -91,10 +91,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
             </header>
 
-            {article.thumbnail_url && (
+            {article.thumbnail && (
               <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-10 border border-slate-200 shadow-sm">
                 <Image
-                  src={getThumbnailUrl(article.thumbnail_url, article.id)}
+                  src={getThumbnailUrl(article.thumbnail, article.id)}
                   alt={article.title}
                   fill
                   className="object-cover"

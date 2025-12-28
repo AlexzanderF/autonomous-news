@@ -124,3 +124,7 @@ class Article(Base):
         """Get list of category names for this article."""
         return [category.name for category in self.categories]
 
+    @property
+    def thumbnail(self):
+        """Get thumbnail with fallback to original URL if local file is missing."""
+        return self.thumbnail_url or self.thumbnail_original_url

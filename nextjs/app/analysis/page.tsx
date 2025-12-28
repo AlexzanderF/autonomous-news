@@ -28,9 +28,9 @@ export default async function AnalysisListPage() {
             >
               {/* Thumbnail */}
               <div className="relative aspect-[16/9] w-full bg-slate-100">
-                {article.thumbnail_url ? (
+                {article.thumbnail ? (
                   <Image
-                    src={getThumbnailUrl(article.thumbnail_url)}
+                    src={getThumbnailUrl(article.thumbnail)}
                     alt={article.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
