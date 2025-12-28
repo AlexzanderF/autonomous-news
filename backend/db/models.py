@@ -78,7 +78,8 @@ class Article(Base):
     slug = Column(String(500), nullable=False, unique=True)
     excerpt = Column(Text, nullable=True)  # Short description/summary
     content = Column(Text, nullable=False)  # Generated article content
-    thumbnail_url = Column(String(500), nullable=True)  # Wikimedia Commons or other image URL
+    thumbnail_url = Column(String(500), nullable=True)  # Local filename (e.g., 'article_123_abc.jpg')
+    thumbnail_original_url = Column(String(500), nullable=True)  # Original provider URL (Freepik, Pexels, etc.)
     sentiment_score = Column(Integer, nullable=False, default=0, server_default='0')  # Sentiment score (0-100)
     
     # SEO and metadata
