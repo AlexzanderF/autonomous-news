@@ -49,8 +49,8 @@ const NewsCard: React.FC<NewsCardProps> = ({ item, isFeature = false }) => {
         {/* Content */}
         <div className={`relative z-20 p-5 flex flex-col flex-grow ${isFeature ? 'md:w-1/2 md:p-8' : ''}`}>
           <div className="flex justify-between items-start mb-3">
-            <span className="text-[10px] font-mono text-indigo-700 tracking-widest border-b border-indigo-500/30 pb-0.5">
-              {item.category?.toUpperCase()}
+            <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+              {item.category}
             </span>
           </div>
 
