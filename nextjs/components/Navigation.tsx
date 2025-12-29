@@ -72,7 +72,7 @@ const Navigation: React.FC = () => {
                 key={item.label}
                 href={item.href}
                 className={`
-                  group relative flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium tracking-wide
+                  group relative flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-bold tracking-wide
                   text-white transition-all duration-150
                 `}
               >

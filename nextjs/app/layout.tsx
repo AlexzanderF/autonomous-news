@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo_Narrow } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import AdPlaceholder from "@/components/AdPlaceholder";
 import Navigation from "@/components/Navigation";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const archivoNarrow = Archivo_Narrow({
+  variable: "--font-archivo-narrow",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-indigo-500/30 selection:text-indigo-900`}
+        className={`${archivoNarrow.variable} antialiased min-h-screen bg-slate-50 text-slate-800 selection:bg-indigo-500/30 selection:text-indigo-900`}
       >
         {/* Full-width top ad banner - scrolls with content */}
         <div className="w-full bg-slate-100 border-b border-slate-200">
