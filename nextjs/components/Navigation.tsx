@@ -69,18 +69,18 @@ const Navigation: React.FC = () => {
       <nav className="bg-slate-900 h-10 flex items-center">
         <div className="w-full px-4 md:px-8 lg:px-12 flex items-center">
           <div className="flex items-center gap-1">
-            {navItems.map((item, index) => (
+            {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
                 className={`
-                  flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium tracking-wide
-                  text-white hover:text-slate-300 transition-colors duration-150
-                  ${index === 0 ? 'pl-0' : ''}
+                  group relative flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium tracking-wide
+                  text-white hover:bg-slate-700 rounded-sm transition-all duration-150
                 `}
               >
                 {item.icon}
                 <span>{item.label}</span>
+                <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-white group-hover:w-full transition-all duration-200" />
               </Link>
             ))}
           </div>
