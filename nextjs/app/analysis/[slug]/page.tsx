@@ -6,6 +6,9 @@ import TableOfContents from '@/components/TableOfContents';
 import ArticleContent from '@/components/ArticleContent';
 import { getThumbnailUrl } from '@/utils/thumbnails';
 
+// Force dynamic rendering to prevent API calls during build time
+export const dynamic = 'force-dynamic';
+
 interface AnalysisPageProps {
   params: Promise<{ slug: string }>;
 }

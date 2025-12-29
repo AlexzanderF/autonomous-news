@@ -11,6 +11,9 @@ import { NewsItem } from '@/dtos';
 import NewsCard from '@/components/NewsCard';
 import { mapArticleToNewsItem } from '@/utils/article-mapper';
 
+// Force dynamic rendering to prevent API calls during build time
+export const dynamic = 'force-dynamic';
+
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
 }
@@ -103,7 +106,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   src={getThumbnailUrl(article.thumbnail, article.id)}
                   alt={article.title}
                   fill
-                  className="object-cover"
+                  className="object-cover object-top"
                   priority
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                 />

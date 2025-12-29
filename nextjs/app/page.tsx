@@ -5,6 +5,9 @@ import { getArticles, ArticleType } from '@/services/article-service';
 import { mapArticleToNewsItem } from '@/utils/article-mapper';
 import { getThumbnailUrl } from '@/utils/thumbnails';
 
+// Force dynamic rendering to prevent API calls during build time
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   // Fetch data on the server for SEO
   const [articlesResponse, analysisResponse] = await Promise.all([
