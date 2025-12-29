@@ -12,8 +12,6 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Markets & Economy', href: '/topic/economy' },
-  { label: 'Crypto', href: '/topic/crypto' },
-  { label: 'AI', href: '/topic/ai' },
   { label: 'Politics', href: '/topic/politics' },
   { label: 'Tech', href: '/topic/tech' },
   { label: 'Science', href: '/topic/science' },

@@ -13,8 +13,6 @@ const ARTICLES_PER_PAGE = 12;
 // Map URL slugs to category names and display titles
 const topicConfig: Record<string, { categoryName: string; displayTitle: string }> = {
   'economy': { categoryName: 'Economy', displayTitle: 'Markets & Economy' },
-  'crypto': { categoryName: 'Crypto', displayTitle: 'Cryptocurrency' },
-  'ai': { categoryName: 'AI', displayTitle: 'Artificial Intelligence' },
   'politics': { categoryName: 'Politics', displayTitle: 'Politics' },
   'tech': { categoryName: 'Tech', displayTitle: 'Technology' },
   'science': { categoryName: 'Science', displayTitle: 'Science' },
