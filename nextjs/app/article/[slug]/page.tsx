@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { getArticleBySlug, getArticles, ArticleType } from '@/services/article-service';
 import { Share2, Clock } from 'lucide-react';
 import Image from 'next/image';
-import ReactMarkdown from 'react-markdown';
 import TableOfContents from '@/components/TableOfContents';
+import ArticleContent from '@/components/ArticleContent';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import SentimentAnalysis from '@/components/SentimentAnalysis';
 import { getThumbnailUrl } from '@/utils/thumbnails';
@@ -110,18 +110,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
             )}
 
-            <article className="max-w-none">
-              <div className="article-content text-slate-900 leading-relaxed">
-                <ReactMarkdown
-                  components={{
-                    h3: ({ node: _node, ...props }) => <h2 className="font-bold text-slate-900 mt-6 mb-6" {...props} />,
-                    p: ({ node: _node, ...props }) => <p className="mt-4" {...props} />
-                  }}
-                >
-                  {article.content}
-                </ReactMarkdown>
-              </div>
-            </article>
+            <ArticleContent content={article.content} />
 
           </div>
 

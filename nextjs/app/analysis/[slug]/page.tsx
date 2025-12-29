@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { getFinancialAnalysisBySlug } from '@/services/financial-analysis-service';
 import { Clock, User } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import TableOfContents from '@/components/TableOfContents';
 import AdPlaceholder from '@/components/AdPlaceholder';
+import ArticleContent from '@/components/ArticleContent';
 
 interface AnalysisPageProps {
   params: Promise<{ slug: string }>;
@@ -72,21 +72,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
               )}
             </header>
 
-            <article className="max-w-none">
-              <div className="article-content text-slate-900 leading-relaxed">
-                <ReactMarkdown
-                  components={{
-                    h3: ({ node: _node, ...props }) => <h2 className="font-bold text-slate-900 mt-6 mb-6" {...props} />,
-                    p: ({ node: _node, ...props }) => <p className="mt-4" {...props} />,
-                    ul: ({ node: _node, ...props }) => <ul className="mt-4 ml-6 list-disc space-y-2" {...props} />,
-                    ol: ({ node: _node, ...props }) => <ol className="mt-4 ml-6 list-decimal space-y-2" {...props} />,
-                    strong: ({ node: _node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />,
-                  }}
-                >
-                  {article.content}
-                </ReactMarkdown>
-              </div>
-            </article>
+            <ArticleContent content={article.content} />
 
           </div>
 
