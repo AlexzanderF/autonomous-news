@@ -75,12 +75,12 @@ const Navigation: React.FC = () => {
                 href={item.href}
                 className={`
                   group relative flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium tracking-wide
-                  text-white hover:bg-slate-700 rounded-sm transition-all duration-150
+                  text-white transition-all duration-150
                 `}
               >
                 {item.icon}
                 <span>{item.label}</span>
-                <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-white group-hover:w-full transition-all duration-200" />
+                <span className="absolute left-0 bottom-[-5px] w-0 h-[5px] bg-white group-hover:w-full transition-all duration-200" />
               </Link>
             ))}
           </div>
