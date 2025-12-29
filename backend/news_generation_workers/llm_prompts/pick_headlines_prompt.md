@@ -54,8 +54,6 @@ Your task is to analyze a raw feed of RSS news headlines, cluster them by story,
 **Allowed Categories:**
 - Politics
 - Economy
-- Crypto
-- AI
 - Tech
 - Science
 - Environment
