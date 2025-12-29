@@ -75,7 +75,7 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Topics Column */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
               Topics
             </h3>
             <ul className="space-y-2.5">
@@ -83,7 +83,7 @@ const Footer: React.FC = () => {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-300 hover:text-white transition-colors duration-150"
+                    className="text-sm font-bold text-slate-300 hover:text-white transition-colors duration-150"
                   >
                     {link.label}
                   </Link>
@@ -94,7 +94,7 @@ const Footer: React.FC = () => {
 
           {/* Resources Column */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
               Resources
             </h3>
             <ul className="space-y-2.5">
@@ -102,7 +102,7 @@ const Footer: React.FC = () => {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-300 hover:text-white transition-colors duration-150"
+                    className="text-sm font-bold text-slate-300 hover:text-white transition-colors duration-150"
                   >
                     {link.label}
                   </Link>
@@ -113,7 +113,7 @@ const Footer: React.FC = () => {
 
           {/* Legal Column */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
               Legal
             </h3>
             <ul className="space-y-2.5">
@@ -121,7 +121,7 @@ const Footer: React.FC = () => {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-300 hover:text-white transition-colors duration-150"
+                    className="text-sm font-bold text-slate-300 hover:text-white transition-colors duration-150"
                   >
                     {link.label}
                   </Link>
@@ -132,7 +132,7 @@ const Footer: React.FC = () => {
 
           {/* Newsletter / Brand Column */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
               Stay Informed
             </h3>
             <p className="text-sm text-slate-400 mb-4 leading-relaxed">
