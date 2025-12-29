@@ -108,6 +108,7 @@ def get_articles(
 @router.get("/{slug}", response_model=ArticleResponse)
 def get_article_by_slug(
     slug: str,
+    article_type: Optional[str] = Query(None, description="Filter by article type: 'news' or 'editorial'"),
     db: Session = Depends(get_db)
 ):
     """
@@ -115,18 +116,28 @@ def get_article_by_slug(
     
     Args:
         slug: Article slug (URL-friendly identifier)
+        article_type: Optional filter by type ('news' for generated, 'editorial' for handwritten)
         db: Database session (injected)
     
     Returns:
         Full article with content, categories, and sources
     """
-    article = db.query(Article).options(
+    query = db.query(Article).options(
         joinedload(Article.categories),
         joinedload(Article.llm_metadata).joinedload(ArticleLLMMetadata.sources)
     ).filter(
         Article.slug == slug,
         Article.status == 'published'
-    ).first()
+    )
+    
+    # Apply article type filter if provided
+    if article_type:
+        if article_type.lower() == 'news':
+            query = query.filter(Article.article_type == ArticleType.GENERATED_NEWS)
+        elif article_type.lower() == 'editorial':
+            query = query.filter(Article.article_type == ArticleType.EDITORIAL)
+    
+    article = query.first()
     
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")

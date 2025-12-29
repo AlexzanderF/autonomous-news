@@ -31,6 +31,7 @@ class ArticleResponse(BaseModel):
     content: str
     thumbnail: Optional[str] = None  # Uses model's computed property with fallback
     status: str
+    article_type: str  # 'generated_news' or 'editorial'
     created_at: datetime
     updated_at: datetime
     published_at: datetime
@@ -54,6 +55,7 @@ class ArticleResponse(BaseModel):
             'content': article.content,
             'thumbnail': article.thumbnail,
             'status': article.status,
+            'article_type': article.article_type.value if article.article_type else 'generated_news',
             'created_at': article.created_at,
             'updated_at': article.updated_at,
             'published_at': article.published_at,
