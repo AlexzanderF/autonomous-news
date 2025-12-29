@@ -20,6 +20,7 @@ ALLOWED_MIME_TYPES = {
     'image/svg'
 }
 DESCRIPTION_MAX_LENGTH = 500
+THUMBNAIL_MAX_WIDTH = 1280  # 16:9 at 720p resolution
 
 
 class WikimediaService:
@@ -66,7 +67,8 @@ class WikimediaService:
                     'gsrnamespace': namespace,
                     'gsrlimit': limit,
                     'prop': 'imageinfo',
-                    'iiprop': 'url|mime|size|mediatype|extmetadata|timestamp'
+                    'iiprop': 'url|mime|size|mediatype|extmetadata|timestamp|thumbmime',
+                    'iiurlwidth': THUMBNAIL_MAX_WIDTH
                 }
                 
                 response = requests.get(
@@ -94,13 +96,34 @@ class WikimediaService:
                     if image_info.get('mime') not in ALLOWED_MIME_TYPES:
                         continue
 
-                    image_url = image_info.get('url')
+                    # Original image URL and dimensions
+                    original_url = image_info.get('url')
+                    original_width = image_info.get('width')
+                    original_height = image_info.get('height')
+                    
+                    # Thumbnail URL (scaled to max THUMBNAIL_MAX_WIDTH via iiurlwidth parameter)
+                    thumb_url = image_info.get('thumburl')
+                    thumb_width = image_info.get('thumbwidth')
+                    thumb_height = image_info.get('thumbheight')
+                    
+                    # Always prefer thumbnail when available (capped at THUMBNAIL_MAX_WIDTH)
+                    # Thumbnail is only generated when original is larger than requested width
+                    if thumb_url:
+                        image_url = thumb_url
+                        width = thumb_width
+                        height = thumb_height
+                        logger.debug(f"Using thumbnail ({thumb_width}x{thumb_height}) instead of original ({original_width}x{original_height}) for: {title}")
+                    else:
+                        # No thumbnail means original is already <= THUMBNAIL_MAX_WIDTH, use it directly
+                        image_url = original_url
+                        width = original_width
+                        height = original_height
+                        logger.debug(f"Using original image ({original_width}x{original_height}), no thumbnail needed for: {title}")
+                    
                     description = image_info.get('extmetadata', {}).get('ImageDescription', {}).get('value')
                     if description and len(description) > DESCRIPTION_MAX_LENGTH:
                         description = description[:DESCRIPTION_MAX_LENGTH] + '...'
 
-                    width = image_info.get('width')
-                    height = image_info.get('height')
                     timestamp = image_info.get('timestamp')
 
                     if title and image_url: 
