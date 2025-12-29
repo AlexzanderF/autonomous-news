@@ -8,8 +8,8 @@ import os
 # Add parent directory to path to import db module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from db import Article, Category, get_db
-from api.dto import ArticleResponse, PaginatedArticlesResponse
+from db import Article, Category, ArticleType, ArticleLLMMetadata, get_db
+from api.dto import ArticleResponse, ArticleListItemDTO, PaginatedArticlesResponse
 from api.enum import SortField, SortOrder
 
 router = APIRouter(prefix="/articles", tags=["articles"])
@@ -21,6 +21,7 @@ def get_articles(
     sort_field: SortField = Query(SortField.id, description="Field to sort by"),
     sort_direction: SortOrder = Query(SortOrder.desc, description="Sort direction (asc or desc)"),
     category: Optional[str] = Query(None, description="Filter by category name"),
+    article_type: Optional[str] = Query(None, description="Filter by article type: 'news' or 'editorial'"),
     db: Session = Depends(get_db)
 ):
     """
@@ -33,6 +34,7 @@ def get_articles(
         sort_field: Field to sort by (id, published_at, title, created_at)
         sort_direction: Sort direction (asc or desc)
         category: Optional category filter
+        article_type: Optional filter by type ('news' for generated, 'editorial' for handwritten)
         db: Database session (injected)
     
     Returns:
@@ -41,7 +43,7 @@ def get_articles(
     # Build base query
     query = db.query(Article).options(
         joinedload(Article.categories),
-        joinedload(Article.sources)
+        joinedload(Article.llm_metadata)
     ).filter(
         Article.status == 'published'
     )
@@ -49,6 +51,13 @@ def get_articles(
     # Apply category filter if provided
     if category:
         query = query.join(Article.categories).filter(Category.name == category)
+    
+    # Apply article type filter if provided
+    if article_type:
+        if article_type.lower() == 'news':
+            query = query.filter(Article.article_type == ArticleType.GENERATED_NEWS)
+        elif article_type.lower() == 'editorial':
+            query = query.filter(Article.article_type == ArticleType.EDITORIAL)
     
     # Apply cursor-based pagination
     if cursor is not None:
@@ -85,8 +94,11 @@ def get_articles(
     # Get next cursor (ID of last item) if there are more items
     next_cursor = articles[-1].id if articles and has_more else None
     
+    # Convert to DTOs with flattened LLM metadata
+    items = [ArticleListItemDTO.from_orm_with_llm(article) for article in articles]
+    
     return PaginatedArticlesResponse(
-        items=articles,
+        items=items,
         has_more=has_more,
         next_cursor=next_cursor,
         page_size=limit,
@@ -110,7 +122,7 @@ def get_article_by_slug(
     """
     article = db.query(Article).options(
         joinedload(Article.categories),
-        joinedload(Article.sources)
+        joinedload(Article.llm_metadata).joinedload(ArticleLLMMetadata.sources)
     ).filter(
         Article.slug == slug,
         Article.status == 'published'
@@ -119,4 +131,4 @@ def get_article_by_slug(
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     
-    return article
+    return ArticleResponse.from_orm_with_llm(article)

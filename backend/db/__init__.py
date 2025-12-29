@@ -1,4 +1,4 @@
-from .models import Base, Article, Category, Source, article_categories, article_sources
+from .models import Base, Article, Category, Source, ArticleType, ArticleLLMMetadata, article_categories, llm_metadata_sources
 from .db import (
     engine,
     SessionLocal,
@@ -12,9 +12,11 @@ __all__ = [
     'Base',
     'Article', 
     'Category', 
-    'Source', 
+    'Source',
+    'ArticleType',
+    'ArticleLLMMetadata',
     'article_categories',
-    'article_sources',
+    'llm_metadata_sources',
     # Database connection and session management
     'engine',
     'SessionLocal',

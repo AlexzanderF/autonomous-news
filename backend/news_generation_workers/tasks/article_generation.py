@@ -14,7 +14,7 @@ from .thumbnail_picker import add_thumbnail_to_article
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from dto import GeneratedArticleDTO
-from db import Article, Category, get_database_session
+from db import Article, Category, ArticleLLMMetadata, get_database_session
 
 from celery_config import celery_app
 from .shared import (
@@ -187,8 +187,6 @@ def store_generated_article(article: GeneratedArticleDTO) -> Optional[int]:
             slug=slug,
             content=article.content,
             excerpt=article.excerpt,
-            sentiment_score=article.sentiment_score,
-            ai_model_used=ARTICLE_GENERATION_MODEL_NAME,
             status=article.status,
             created_at=article.generated_at,
             updated_at=article.generated_at
@@ -201,6 +199,14 @@ def store_generated_article(article: GeneratedArticleDTO) -> Optional[int]:
 
         # Associate with category
         db_article.categories.append(category)
+        
+        # Create LLM metadata record
+        llm_metadata = ArticleLLMMetadata(
+            article_id=db_article.id,
+            ai_model_used=ARTICLE_GENERATION_MODEL_NAME,
+            sentiment_score=article.sentiment_score
+        )
+        db.add(llm_metadata)
 
         db.commit()
 

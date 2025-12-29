@@ -31,16 +31,39 @@ class ArticleResponse(BaseModel):
     content: str
     thumbnail: Optional[str] = None  # Uses model's computed property with fallback
     status: str
-    ai_model_used: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     published_at: datetime
     categories: List[CategoryDTO] = []
-    sources: List[SourceDTO] = []
+    # LLM metadata fields (populated from llm_metadata relationship)
+    ai_model_used: Optional[str] = None
     sentiment_score: Optional[int] = None
+    sources: List[SourceDTO] = []
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_orm_with_llm(cls, article):
+        """Create response from Article ORM object, flattening llm_metadata."""
+        data = {
+            'id': article.id,
+            'title': article.title,
+            'slug': article.slug,
+            'excerpt': article.excerpt,
+            'content': article.content,
+            'thumbnail': article.thumbnail,
+            'status': article.status,
+            'created_at': article.created_at,
+            'updated_at': article.updated_at,
+            'published_at': article.published_at,
+            'categories': article.categories,
+        }
+        if article.llm_metadata:
+            data['ai_model_used'] = article.llm_metadata.ai_model_used
+            data['sentiment_score'] = article.llm_metadata.sentiment_score
+            data['sources'] = article.llm_metadata.sources
+        return cls(**data)
 
 
 class ArticleListItemDTO(BaseModel):
@@ -55,10 +78,27 @@ class ArticleListItemDTO(BaseModel):
     thumbnail: Optional[str] = None  # Uses model's computed property with fallback
     published_at: datetime
     categories: List[CategoryDTO] = []
-    sentiment_score: int
+    # LLM metadata fields (populated from llm_metadata relationship)
+    sentiment_score: Optional[int] = None
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_orm_with_llm(cls, article):
+        """Create response from Article ORM object, flattening llm_metadata."""
+        data = {
+            'id': article.id,
+            'title': article.title,
+            'slug': article.slug,
+            'excerpt': article.excerpt,
+            'thumbnail': article.thumbnail,
+            'published_at': article.published_at,
+            'categories': article.categories,
+        }
+        if article.llm_metadata:
+            data['sentiment_score'] = article.llm_metadata.sentiment_score
+        return cls(**data)
 
 
 class PaginatedArticlesResponse(BaseModel):
