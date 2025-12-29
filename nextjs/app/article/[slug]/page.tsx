@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getArticleBySlug, getArticles } from '@/services/article-service';
+import { getArticleBySlug, getArticles, ArticleType } from '@/services/article-service';
 import { Share2, Clock } from 'lucide-react';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
@@ -41,7 +41,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (article.categories.length > 0) {
     try {
       const categoryName = article.categories[0].name;
-      const relatedResponse = await getArticles(undefined, 5, categoryName);
+      const relatedResponse = await getArticles({ limit: 5, category: categoryName, articleType: ArticleType.NEWS });
       // Filter out the current article and take up to 4
       relatedArticles = relatedResponse.items
         .filter(item => item.slug !== slug)

@@ -1,14 +1,14 @@
 import Image from 'next/image';
 import NewsCard from '@/components/NewsCard';
 import AdPlaceholder from '@/components/AdPlaceholder';
-import { getArticles } from '@/services/article-service';
+import { getArticles, ArticleType } from '@/services/article-service';
 import { getFinancialAnalysisArticles } from '@/services/financial-analysis-service';
 import { mapArticleToNewsItem } from '@/utils/article-mapper';
 
 export default async function Home() {
   // Fetch data on the server for SEO
   const [articlesResponse, analysisData] = await Promise.all([
-    getArticles(undefined, 7), // Fetch 7 articles (3 for hero + 4 for row)
+    getArticles({ limit: 7, articleType: ArticleType.NEWS }), // Fetch 7 news articles (3 for hero + 4 for row)
     getFinancialAnalysisArticles()
   ]);
   
@@ -35,7 +35,7 @@ export default async function Home() {
                      alt={articles[0].headline}
                      fill
                      sizes="(max-width: 768px) 100vw, 50vw"
-                     className="object-cover transition-transform duration-300 group-hover:scale-105"
+                     className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
                    />
                  </div>
                  <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
@@ -60,7 +60,7 @@ export default async function Home() {
                      alt={articles[1].headline}
                      fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
                    />
                  </div>
                  <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
@@ -79,7 +79,7 @@ export default async function Home() {
                      alt={articles[2].headline}
                      fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
                    />
                  </div>
                  <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">

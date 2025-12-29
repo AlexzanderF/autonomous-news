@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import NewsCard from '@/components/NewsCard';
 import AdPlaceholder from '@/components/AdPlaceholder';
-import { getArticles } from '@/services/article-service';
+import { getArticles, ArticleType } from '@/services/article-service';
 import { NewsItem } from '@/dtos';
 import { mapArticleToNewsItem } from '@/utils/article-mapper';
 
@@ -43,7 +43,7 @@ export default function TopicPage() {
       setArticles([]);
       setCursor(null);
       try {
-        const response = await getArticles(undefined, ARTICLES_PER_PAGE, config.categoryName);
+        const response = await getArticles({ limit: ARTICLES_PER_PAGE, category: config.categoryName, articleType: ArticleType.NEWS });
         setArticles(response.items.map(mapArticleToNewsItem));
         setCursor(response.next_cursor);
         setHasMore(response.has_more);
@@ -63,7 +63,7 @@ export default function TopicPage() {
     
     setLoadingMore(true);
     try {
-      const response = await getArticles(cursor, ARTICLES_PER_PAGE, config.categoryName);
+      const response = await getArticles({ cursor, limit: ARTICLES_PER_PAGE, category: config.categoryName, articleType: ArticleType.NEWS });
       setArticles(prev => [...prev, ...response.items.map(mapArticleToNewsItem)]);
       setCursor(response.next_cursor);
       setHasMore(response.has_more);
