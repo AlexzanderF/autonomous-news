@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
-import { getFinancialAnalysisBySlug } from '@/services/financial-analysis-service';
-import { Clock, User } from 'lucide-react';
+import { getArticleBySlug, ArticleType } from '@/services/article-service';
+import { Clock } from 'lucide-react';
+import Image from 'next/image';
 import TableOfContents from '@/components/TableOfContents';
-import AdPlaceholder from '@/components/AdPlaceholder';
 import ArticleContent from '@/components/ArticleContent';
+import { getThumbnailUrl } from '@/utils/thumbnails';
 
 interface AnalysisPageProps {
   params: Promise<{ slug: string }>;
@@ -11,9 +12,12 @@ interface AnalysisPageProps {
 
 export default async function AnalysisPage({ params }: AnalysisPageProps) {
   const { slug } = await params;
-  const article = await getFinancialAnalysisBySlug(slug);
+  let article;
 
-  if (!article) {
+  try {
+    // Fetch only editorial articles for the analysis page
+    article = await getArticleBySlug(slug, ArticleType.EDITORIAL);
+  } catch {
     notFound();
   }
 
@@ -33,12 +37,12 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
           <div className="lg:col-span-8 mt-12">
             <header className="mb-8 border-b border-slate-200 pb-8">
               <div className="flex items-center gap-3 mb-4">
-                {article.tags?.map((tag, index) => (
+                {article.categories.map((category) => (
                   <span
-                    key={index}
+                    key={category.id}
                     className="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-mono px-2 py-1 rounded uppercase tracking-wider"
                   >
-                    {tag}
+                    {category.name}
                   </span>
                 ))}
                 <span className="flex items-center gap-1 text-slate-600 text-xs font-mono">
@@ -55,22 +59,25 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
                 {article.title}
               </h1>
 
-              {article.author && (
-                <div className="flex items-center gap-3 mt-6">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 border-2 border-emerald-200 flex items-center justify-center">
-                    <User className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <span className="text-slate-900 font-medium block">
-                      {article.author}
-                    </span>
-                    <span className="text-slate-500 text-sm">
-                      Financial Analyst
-                    </span>
-                  </div>
-                </div>
+              {article.excerpt && (
+                <p className="text-xl text-slate-700 font-light border-l-2 border-emerald-500 pl-4">
+                  {article.excerpt}
+                </p>
               )}
             </header>
+
+            {article.thumbnail && (
+              <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-10 border border-slate-200 shadow-sm">
+                <Image
+                  src={getThumbnailUrl(article.thumbnail, article.id)}
+                  alt={article.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                />
+              </div>
+            )}
 
             <ArticleContent content={article.content} />
 

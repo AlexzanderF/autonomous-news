@@ -13,8 +13,13 @@ export type ArticleType = typeof ArticleType[keyof typeof ArticleType];
 /**
  * Fetch an article by its slug from the Python API
  */
-export async function getArticleBySlug(slug: string): Promise<GetArticleResponse> {
-    const url = `${API_BASE_URL}/articles/${slug}`;
+export async function getArticleBySlug(slug: string, articleType?: ArticleType): Promise<GetArticleResponse> {
+    const params = new URLSearchParams();
+    if (articleType) {
+        params.append('article_type', articleType);
+    }
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/articles/${slug}${queryString ? `?${queryString}` : ''}`;
 
     const res = await fetch(url, {
         next: { revalidate: 60 }, // Revalidate every 60 seconds

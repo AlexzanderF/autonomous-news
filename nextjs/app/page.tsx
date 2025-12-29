@@ -2,18 +2,18 @@ import Image from 'next/image';
 import NewsCard from '@/components/NewsCard';
 import AdPlaceholder from '@/components/AdPlaceholder';
 import { getArticles, ArticleType } from '@/services/article-service';
-import { getFinancialAnalysisArticles } from '@/services/financial-analysis-service';
 import { mapArticleToNewsItem } from '@/utils/article-mapper';
+import { getThumbnailUrl } from '@/utils/thumbnails';
 
 export default async function Home() {
   // Fetch data on the server for SEO
-  const [articlesResponse, analysisData] = await Promise.all([
+  const [articlesResponse, analysisResponse] = await Promise.all([
     getArticles({ limit: 7, articleType: ArticleType.NEWS }), // Fetch 7 news articles (3 for hero + 4 for row)
-    getFinancialAnalysisArticles()
+    getArticles({ limit: 2, articleType: ArticleType.EDITORIAL }) // Fetch 2 editorial articles for analysis sections
   ]);
   
   const articles = articlesResponse.items.map(mapArticleToNewsItem);
-  const analysisArticles = analysisData;
+  const analysisArticles = analysisResponse.items;
 
 
   return (
@@ -35,7 +35,7 @@ export default async function Home() {
                      alt={articles[0].headline}
                      fill
                      sizes="(max-width: 768px) 100vw, 50vw"
-                     className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                     className="object-cover object-top transition-transform duration-300"
                    />
                  </div>
                  <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
@@ -60,7 +60,7 @@ export default async function Home() {
                      alt={articles[1].headline}
                      fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover object-top transition-transform duration-300"
                    />
                  </div>
                  <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
@@ -79,7 +79,7 @@ export default async function Home() {
                      alt={articles[2].headline}
                      fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                      className="object-cover object-top transition-transform duration-300"
                    />
                  </div>
                  <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
@@ -92,8 +92,8 @@ export default async function Home() {
              </div>
 
               {/* Right Column - Latest Analysis + Ad */}
-              <div className="lg:col-span-3 flex flex-col gap-4">
-                {/* Latest Analysis Section */}
+              <div className="lg:col-span-3 flex flex-col">
+                {/* Latest Analysis Header + Title */}
                 <div className="border-t-2 border-emerald-500 pt-3">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
@@ -110,13 +110,13 @@ export default async function Home() {
                       <h4 className="text-base font-bold text-slate-900 leading-snug group-hover:text-emerald-700 transition-colors mb-2">
                         {analysisArticles[0].title}
                       </h4>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {analysisArticles[0].tags?.slice(0, 2).map((tag, index) => (
+                      <div className="flex flex-wrap gap-1">
+                        {analysisArticles[0].categories?.slice(0, 2).map((category) => (
                           <span
-                            key={index}
+                            key={category.id}
                             className="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-mono px-2 py-0.5 rounded uppercase tracking-wider"
                           >
-                            {tag}
+                            {category.name}
                           </span>
                         ))}
                       </div>
@@ -126,8 +126,20 @@ export default async function Home() {
                   )}
                 </div>
 
-                {/* Advertisement */}
-                <div className="mt-auto">
+                {/* Thumbnail + Ad pushed to bottom */}
+                <div className="mt-auto flex flex-col gap-4">
+                  {analysisArticles[0]?.thumbnail && (
+                    <a href={`/analysis/${analysisArticles[0].slug}`} className="block group">
+                      <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
+                        <Image 
+                          src={getThumbnailUrl(analysisArticles[0].thumbnail, analysisArticles[0].id)} 
+                          alt={analysisArticles[0].title}
+                          fill
+                          className="object-cover transition-transform duration-300"
+                        />
+                      </div>
+                    </a>
+                  )}
                   <AdPlaceholder />
                 </div>
               </div>
@@ -160,55 +172,56 @@ export default async function Home() {
       {/* Featured Analysis Section - Dark Background */}
       {analysisArticles[1] && (
         <section className="-mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 py-12 bg-slate-900">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-1 h-6 bg-emerald-500 rounded-full"></div>
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">
-                Featured Analysis
-              </span>
-            </div>
-            
-            <a href={`/analysis/${analysisArticles[1].slug}`} className="block group">
-              <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-4 group-hover:text-emerald-400 transition-colors">
-                {analysisArticles[1].title}
-              </h2>
-              
-              <p className="text-slate-400 text-base leading-relaxed mb-6 line-clamp-2">
-                {analysisArticles[1].content?.substring(0, 200)}...
-              </p>
-              
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex flex-wrap gap-2">
-                  {analysisArticles[1].tags?.slice(0, 3).map((tag: string, index: number) => (
-                    <span
-                      key={index}
-                      className="bg-slate-800 text-emerald-400 border border-slate-700 text-[10px] font-mono px-3 py-1 rounded uppercase tracking-wider"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+          <a href={`/analysis/${analysisArticles[1].slug}`} className="block group">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              {/* Left Column - Text Content */}
+              <div className="order-2 lg:order-1">
+                {/* Featured Analysis Badge */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-6 bg-emerald-500 rounded-full"></div>
+                  <span className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">
+                    Featured Analysis
+                  </span>
                 </div>
                 
-                <span className="text-sm text-slate-500">
-                  {new Date(analysisArticles[1].published_at).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
+                {/* Title */}
+                <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight mt-3 mb-4 group-hover:text-emerald-400 transition-colors">
+                  {analysisArticles[1].title}
+                </h2>
+                
+                {/* Excerpt/Subtitle */}
+                {analysisArticles[1].excerpt && (
+                  <p className="text-slate-400 text-lg leading-relaxed">
+                    {analysisArticles[1].excerpt}
+                  </p>
+                )}
               </div>
-            </a>
-            
-            {/* View All Analysis Link */}
-            <div className="mt-8 pt-6 border-t border-slate-700">
-              <a 
-                href="/analysis" 
-                className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-medium transition-colors group"
-              >
-                <span>View All Analysis</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </a>
+              
+              {/* Right Column - Thumbnail */}
+              <div className="order-1 lg:order-2">
+                {analysisArticles[1].thumbnail && (
+                  <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
+                    <Image 
+                      src={getThumbnailUrl(analysisArticles[1].thumbnail, analysisArticles[1].id)} 
+                      alt={analysisArticles[1].title}
+                      fill
+                      className="object-cover transition-transform duration-300"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
+          </a>
+          
+          {/* View All Analysis Link */}
+          <div className="mt-8 pt-6 border-t border-slate-700">
+            <a 
+              href="/analysis" 
+              className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-medium transition-colors group"
+            >
+              <span>View All Analysis</span>
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </a>
           </div>
         </section>
       )}

@@ -28,6 +28,7 @@ export interface GetArticleResponse {
   content: string;
   thumbnail: string | null;
   status: string;
+  article_type: string;
   created_at: string;
   updated_at: string;
   published_at: string;

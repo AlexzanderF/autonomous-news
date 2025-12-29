@@ -11,9 +11,11 @@ export default function ArticleContent({ content }: ArticleContentProps) {
         <ReactMarkdown
           components={{
             h3: ({ node: _node, ...props }) => <h2 className="font-bold text-slate-900 mt-6 mb-6" {...props} />,
+            h4: ({ node: _node, ...props }) => <h3 className="font-bold text-slate-900 mt-6 mb-6" {...props} />,
             p: ({ node: _node, ...props }) => <p className="mt-4" {...props} />,
             ul: ({ node: _node, ...props }) => <ul className="my-4 list-disc list-outside pl-5 space-y-2" {...props} />,
             ol: ({ node: _node, ...props }) => <ol className="my-4 list-decimal list-outside pl-5 space-y-2" {...props} />,
+            hr: ({ node: _node, ...props }) => <hr className="my-8 border-slate-300" {...props} />,
           }}
         >
           {content}
