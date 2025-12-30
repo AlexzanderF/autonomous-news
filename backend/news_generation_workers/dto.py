@@ -13,6 +13,7 @@ class ScrapedArticleDTO(BaseModel):
 class ProcessedHeadlineDTO(BaseModel):
     title: str
     category: str
+    is_featured: bool = False
 
 class HeadlinePickerResponse(BaseModel):
     """Structured response from the LLM for headline selection."""
@@ -27,6 +28,7 @@ class GeneratedArticleDTO(BaseModel):
     generated_at: datetime
     status: str = "draft"
     source_urls: Optional[List[str]] = []
+    is_featured: bool = False
 
 
 class ThumbnailPickerResponse(BaseModel):

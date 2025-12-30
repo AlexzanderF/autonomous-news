@@ -103,7 +103,8 @@ def run_headline_picker_cycle(self: Task) -> Dict[str, Any]:
             try:
                 generate_article_from_headline.delay(
                     title=headline.title,
-                    category=headline.category
+                    category=headline.category,
+                    is_featured=headline.is_featured
                 )
                 queued_count += 1
             except Exception as exc:

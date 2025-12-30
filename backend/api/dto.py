@@ -32,6 +32,7 @@ class ArticleResponse(BaseModel):
     thumbnail: Optional[str] = None  # Uses model's computed property with fallback
     status: str
     article_type: str  # 'generated_news' or 'editorial'
+    is_featured: bool = False
     created_at: datetime
     updated_at: datetime
     published_at: datetime
@@ -56,6 +57,7 @@ class ArticleResponse(BaseModel):
             'thumbnail': article.thumbnail,
             'status': article.status,
             'article_type': article.article_type.value if article.article_type else 'generated_news',
+            'is_featured': article.is_featured,
             'created_at': article.created_at,
             'updated_at': article.updated_at,
             'published_at': article.published_at,
@@ -82,6 +84,7 @@ class ArticleListItemDTO(BaseModel):
     categories: List[CategoryDTO] = []
     # LLM metadata fields (populated from llm_metadata relationship)
     sentiment_score: Optional[int] = None
+    is_featured: bool = False
 
     class Config:
         from_attributes = True
@@ -97,6 +100,7 @@ class ArticleListItemDTO(BaseModel):
             'thumbnail': article.thumbnail,
             'published_at': article.published_at,
             'categories': article.categories,
+            'is_featured': article.is_featured,
         }
         if article.llm_metadata:
             data['sentiment_score'] = article.llm_metadata.sentiment_score

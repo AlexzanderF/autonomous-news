@@ -22,6 +22,7 @@ def get_articles(
     sort_direction: SortOrder = Query(SortOrder.desc, description="Sort direction (asc or desc)"),
     category: Optional[str] = Query(None, description="Filter by category name"),
     article_type: Optional[str] = Query(None, description="Filter by article type: 'news' or 'editorial'"),
+    is_featured: Optional[bool] = Query(None, description="Filter by featured status"),
     db: Session = Depends(get_db)
 ):
     """
@@ -35,6 +36,7 @@ def get_articles(
         sort_direction: Sort direction (asc or desc)
         category: Optional category filter
         article_type: Optional filter by type ('news' for generated, 'editorial' for handwritten)
+        is_featured: Optional filter by featured status (true/false)
         db: Database session (injected)
     
     Returns:
@@ -58,6 +60,10 @@ def get_articles(
             query = query.filter(Article.article_type == ArticleType.GENERATED_NEWS)
         elif article_type.lower() == 'editorial':
             query = query.filter(Article.article_type == ArticleType.EDITORIAL)
+    
+    # Apply featured filter if provided
+    if is_featured is not None:
+        query = query.filter(Article.is_featured == is_featured)
     
     # Apply cursor-based pagination
     if cursor is not None:

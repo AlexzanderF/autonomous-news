@@ -42,7 +42,7 @@ RETRY_DELAY = 60
     max_retries=3,
     default_retry_delay=RETRY_DELAY,
 )
-def generate_article_from_headline(self: Task, title: str, category: str) -> Dict[str, Any]:
+def generate_article_from_headline(self: Task, title: str, category: str, is_featured: bool = False) -> Dict[str, Any]:
     """
     Generate a full news article from a headline using Gemini with search/grounding.
     This task is queued automatically when headlines are selected.
@@ -132,7 +132,8 @@ def generate_article_from_headline(self: Task, title: str, category: str) -> Dic
             excerpt=article_excerpt,
             sentiment_score=sentiment_score,
             generated_at=datetime.now(timezone.utc),
-            status="draft"
+            status="draft",
+            is_featured=is_featured
         )
 
         logger.info(f"Successfully generated article for: {title[:50]}... (Length: {len(article_content)} chars)")
@@ -188,6 +189,7 @@ def store_generated_article(article: GeneratedArticleDTO) -> Optional[int]:
             content=article.content,
             excerpt=article.excerpt,
             status=article.status,
+            is_featured=article.is_featured,
             created_at=article.generated_at,
             updated_at=article.generated_at
         )

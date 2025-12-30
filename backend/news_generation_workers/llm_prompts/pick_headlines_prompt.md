@@ -58,17 +58,29 @@ Your task is to analyze a raw feed of RSS news headlines, cluster them by story,
 - Science
 - Environment
 
+**Featured Selection:**
+From the final selection, mark up to 7 headlines as `is_featured: true`.
+These should be the absolute top-tier stories deserving homepage hero section placement:
+- Breaking Tier 1 news with the highest global impact
+- Stories covered intensively by multiple major outlets  
+- Stories that are most likely to generate high traffic and engagement
+- Stories that are interesting to the most amount and variety of audiences
+
+The remaining stories must have `is_featured: false`.
+
 **Example output:**
 ```json
 {
   "headlines": [
     {
       "title": "Federal Reserve signals potential rate cuts later this year",
-      "category": "Economy"
+      "category": "Economy",
+      "is_featured": true
     },
     {
       "title": "SpaceX successfully catches Super Heavy booster",
-      "category": "Tech"
+      "category": "Tech",
+      "is_featured": false
     }
   ]
 }

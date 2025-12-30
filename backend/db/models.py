@@ -113,6 +113,8 @@ class Article(Base):
         server_default=ArticleType.GENERATED_NEWS.value
     )
     
+    is_featured = Column(Boolean, default=False, nullable=False, server_default='false')
+    
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -127,6 +129,7 @@ class Article(Base):
         Index('idx_articles_published_at', 'published_at'),
         Index('idx_articles_slug', 'slug'),
         Index('idx_articles_article_type', 'article_type'),
+        Index('idx_articles_is_featured', 'is_featured'),
     )
 
     def __repr__(self):
