@@ -15,6 +15,7 @@ Excerpt and thumbnail columns are left NULL.
 
 import argparse
 import sys
+import uuid
 from pathlib import Path
 from datetime import datetime, timezone
 from slugify import slugify
@@ -90,14 +91,17 @@ def upload_article(file_path: Path, category_name: str = None) -> int:
         slug = generate_unique_slug(db, title)
         now = datetime.now(timezone.utc)
         
+        # Generate thumbnail filename for manual upload
+        thumbnail_filename = f"editorial_article_{uuid.uuid4()}.png"
+
         # Create the Article record
         article = Article(
             title=title,
             slug=slug,
             content=content,
-            excerpt=None,  # Left NULL as requested
-            thumbnail_url=None,  # Left NULL as requested
-            thumbnail_original_url=None,  # Left NULL as requested
+            excerpt=None,
+            thumbnail_url=thumbnail_filename,
+            thumbnail_original_url=None,
             status='published',
             article_type=ArticleType.EDITORIAL,  # Handwritten articles are editorials
             created_at=now,
@@ -121,6 +125,9 @@ def upload_article(file_path: Path, category_name: str = None) -> int:
         print(f"   Slug: {article.slug}")
         print(f"   Category: {category_name or 'None'}")
         print(f"   Content length: {len(content)} characters")
+        print(f"")
+        print(f"📷 Thumbnail filename: {thumbnail_filename}")
+        print(f"   Use this filename when uploading your thumbnail image.")
         
         return article.id
         
