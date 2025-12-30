@@ -9,10 +9,11 @@ import { getThumbnailUrl } from '@/utils/thumbnails';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  // Fetch featured articles and editorial articles in parallel
-  const [featuredResponse, analysisResponse] = await Promise.all([
-    getArticles({ limit: 7, articleType: ArticleType.NEWS, isFeatured: true }), // Try to get 7 featured articles
-    getArticles({ limit: 3, articleType: ArticleType.EDITORIAL }) // Fetch 3 editorial articles
+  // Fetch featured articles, editorial articles, and featured editorial in parallel
+  const [featuredResponse, analysisResponse, featuredAnalysisResponse] = await Promise.all([
+    getArticles({ limit: 7, articleType: ArticleType.NEWS, isFeatured: true }), // Try to get 7 featured news articles
+    getArticles({ limit: 2, articleType: ArticleType.EDITORIAL, isFeatured: false }), // Fetch 2 non-featured editorial articles for sidebar
+    getArticles({ limit: 1, articleType: ArticleType.EDITORIAL, isFeatured: true }) // Fetch 1 featured editorial for hero section
   ]);
   
   let newsArticles = featuredResponse.items;
@@ -38,7 +39,8 @@ export default async function Home() {
   
   const articles = newsArticles.map(mapArticleToNewsItem);
   const analysisArticles = analysisResponse.items;
-  const featuredAnalysisArticle = analysisArticles[0];
+  // Use featured editorial if available, otherwise fall back to first analysis article
+  const featuredAnalysisArticle = featuredAnalysisResponse.items[0] || analysisArticles[0];
 
 
   return (
