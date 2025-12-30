@@ -40,13 +40,14 @@ interface GetArticlesOptions {
     limit?: number;
     category?: string;
     articleType?: ArticleType;
+    isFeatured?: boolean;
 }
 
 /**
  * Fetch paginated articles from the Python API
  */
 export async function getArticles(options: GetArticlesOptions = {}): Promise<PaginatedArticlesResponse> {
-    const { cursor, limit = 10, category, articleType } = options;
+    const { cursor, limit = 10, category, articleType, isFeatured } = options;
     
     const params = new URLSearchParams({
         limit: limit.toString(),
@@ -64,6 +65,10 @@ export async function getArticles(options: GetArticlesOptions = {}): Promise<Pag
 
     if (articleType) {
         params.append('article_type', articleType);
+    }
+
+    if (isFeatured !== undefined) {
+        params.append('is_featured', isFeatured.toString());
     }
 
     const url = `${API_BASE_URL}/articles/?${params.toString()}`;

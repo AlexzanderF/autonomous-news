@@ -9,13 +9,34 @@ import { getThumbnailUrl } from '@/utils/thumbnails';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  // Fetch data on the server for SEO
-  const [articlesResponse, analysisResponse] = await Promise.all([
-    getArticles({ limit: 7, articleType: ArticleType.NEWS }), // Fetch 7 news articles (3 for hero + 4 for row)
-    getArticles({ limit: 3, articleType: ArticleType.EDITORIAL }) // Fetch 4 editorial articles (3 for latest + 1 for featured)
+  // Fetch featured articles and editorial articles in parallel
+  const [featuredResponse, analysisResponse] = await Promise.all([
+    getArticles({ limit: 7, articleType: ArticleType.NEWS, isFeatured: true }), // Try to get 7 featured articles
+    getArticles({ limit: 3, articleType: ArticleType.EDITORIAL }) // Fetch 3 editorial articles
   ]);
   
-  const articles = articlesResponse.items.map(mapArticleToNewsItem);
+  let newsArticles = featuredResponse.items;
+  
+  // If we have fewer than 7 featured articles, fill the rest with newest non-featured articles
+  if (newsArticles.length < 7) {
+    const neededCount = 7 - newsArticles.length;
+    const featuredIds = new Set(newsArticles.map(a => a.id));
+    
+    const newestResponse = await getArticles({ 
+      limit: neededCount + 5, // Fetch extra in case some overlap
+      articleType: ArticleType.NEWS,
+      isFeatured: false 
+    });
+    
+    // Add non-featured articles that aren't already in our list
+    const additionalArticles = newestResponse.items
+      .filter(a => !featuredIds.has(a.id))
+      .slice(0, neededCount);
+    
+    newsArticles = [...newsArticles, ...additionalArticles];
+  }
+  
+  const articles = newsArticles.map(mapArticleToNewsItem);
   const analysisArticles = analysisResponse.items;
   const featuredAnalysisArticle = analysisArticles[0];
 

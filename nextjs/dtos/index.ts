@@ -46,6 +46,7 @@ export interface ArticleListItemDTO {
   published_at: string;
   categories: CategoryDTO[];
   sentiment_score: number;
+  is_featured: boolean;
 }
 
 export interface PaginatedArticlesResponse {
