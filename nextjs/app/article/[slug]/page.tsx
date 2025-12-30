@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getArticleBySlug, getArticles, ArticleType } from '@/services/article-service';
 import { Share2, Clock } from 'lucide-react';
-import Image from 'next/image';
+import SmartImage from '@/components/SmartImage';
 import TableOfContents from '@/components/TableOfContents';
 import ArticleContent from '@/components/ArticleContent';
 import AdPlaceholder from '@/components/AdPlaceholder';
@@ -101,12 +101,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </header>
 
             {article.thumbnail && (
-              <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-10 border border-slate-200 shadow-sm">
-                <Image
+              <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-10 border border-slate-200 shadow-sm bg-slate-100">
+                <SmartImage
                   src={getThumbnailUrl(article.thumbnail, article.id)}
                   alt={article.title}
                   fill
-                  className="object-cover object-top"
                   priority
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                 />

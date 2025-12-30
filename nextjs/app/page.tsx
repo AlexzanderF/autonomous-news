@@ -1,4 +1,5 @@
-import Image from 'next/image';
+import SmartImage from '@/components/SmartImage';
+import Link from 'next/link';
 import NewsCard from '@/components/NewsCard';
 
 import { getArticles, ArticleType } from '@/services/article-service';
@@ -56,14 +57,13 @@ export default async function Home() {
               {/* Left Column - 2 Stacked Articles */}
               <div className="lg:col-span-4 flex flex-col gap-6 lg:border-r lg:border-slate-300 lg:pr-6">
                 {/* First stacked article with image */}
-                <a href={`/article/${articles[1].slug}`} className="block group">
-                  <div className="relative aspect-[2/1] mb-3 overflow-hidden">
-                    <Image 
+                <Link href={`/article/${articles[1].slug}`} className="block group">
+                  <div className="relative aspect-[2/1] mb-3 overflow-hidden bg-slate-100">
+                    <SmartImage 
                       src={articles[1].imageUrl || '/placeholder-news.jpg'} 
                       alt={articles[1].headline}
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover object-top transition-transform duration-300"
                     />
                   </div>
                   <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
@@ -72,17 +72,16 @@ export default async function Home() {
                   <h3 className="text-2xl font-bold text-slate-900 mt-1 mb-2 leading-tight group-hover:text-indigo-700 transition-colors">
                     {articles[1].headline}
                   </h3>
-                </a>
+                </Link>
 
                 {/* Second stacked article with image */}
-                <a href={`/article/${articles[2].slug}`} className="block group">
-                  <div className="relative aspect-[2/1] mb-3 overflow-hidden">
-                    <Image 
+                <Link href={`/article/${articles[2].slug}`} className="block group">
+                  <div className="relative aspect-[2/1] mb-3 overflow-hidden bg-slate-100">
+                    <SmartImage 
                       src={articles[2].imageUrl || '/placeholder-news.jpg'} 
                       alt={articles[2].headline}
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover object-top transition-transform duration-300"
                     />
                   </div>
                   <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
@@ -91,19 +90,18 @@ export default async function Home() {
                   <h3 className="text-2xl font-bold text-slate-900 mt-1 mb-2 leading-tight group-hover:text-indigo-700 transition-colors">
                     {articles[2].headline}
                   </h3>
-                </a>
+                </Link>
               </div>
 
               {/* Middle Column - Main Featured Article */}
               <div className="lg:col-span-5 lg:border-r lg:border-slate-300 lg:pr-6">
-                <a href={`/article/${articles[0].slug}`} className="block group">
-                  <div className="relative aspect-[16/10] mb-3 overflow-hidden">
-                    <Image 
+                <Link href={`/article/${articles[0].slug}`} className="block group">
+                  <div className="relative aspect-[16/10] mb-3 overflow-hidden bg-slate-100">
+                    <SmartImage 
                       src={articles[0].imageUrl || '/placeholder-news.jpg'} 
                       alt={articles[0].headline}
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover object-top transition-transform duration-300"
                     />
                   </div>
                   <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
@@ -115,7 +113,7 @@ export default async function Home() {
                   <p className="text-slate-600 text-sm leading-relaxed line-clamp-3">
                     {articles[0].summary}
                   </p>
-                </a>
+                </Link>
               </div>
 
                {/* Right Column - Latest Analysis */}
@@ -130,15 +128,14 @@ export default async function Home() {
                    {/* Show 3 Latest Analysis Articles */}
                    <div className="flex flex-col">
                      {analysisArticles.slice(0, 2).map((article, index) => (
-                       <div key={article.id}>
-                         <a href={`/analysis/${article.slug}`} className="block group py-3">
+                       <div key={article.id} className="h-full">
+                         <Link href={`/analysis/${article.slug}`} className="block group py-3">
                            {article.thumbnail && (
-                             <div className="relative aspect-[16/9] overflow-hidden rounded-lg mb-2">
-                               <Image 
+                             <div className="relative aspect-[16/9] overflow-hidden rounded-lg mb-2 bg-slate-100">
+                               <SmartImage 
                                  src={getThumbnailUrl(article.thumbnail, article.id)} 
                                  alt={article.title}
                                  fill
-                                 className="object-cover transition-transform duration-300"
                                />
                              </div>
                            )}
@@ -158,7 +155,7 @@ export default async function Home() {
                                </span>
                              ))}
                            </div>
-                         </a>
+                         </Link>
                          {index < 1 && (
                            <div className="border-b border-slate-300 mt-3" />
                          )}
@@ -177,7 +174,7 @@ export default async function Home() {
          {articles.length >= 7 && (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
              {articles.slice(3, 7).map((article) => (
-               <div key={article.id} className="h-full">
+               <div key={article.id}>
                  <NewsCard item={article} />
                </div>
              ))}
@@ -189,7 +186,7 @@ export default async function Home() {
       {/* Featured Analysis Section - Dark Background */}
       {featuredAnalysisArticle && (
         <section className="-mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 py-12 bg-slate-900">
-          <a href={`/analysis/${featuredAnalysisArticle.slug}`} className="block group">
+          <Link href={`/analysis/${featuredAnalysisArticle.slug}`} className="block group">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               {/* Left Column - Text Content */}
               <div className="order-2 lg:order-1">
@@ -217,28 +214,27 @@ export default async function Home() {
               {/* Right Column - Thumbnail */}
               <div className="order-1 lg:order-2">
                 {featuredAnalysisArticle.thumbnail && (
-                  <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
-                    <Image 
+                  <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-slate-900/50">
+                    <SmartImage 
                       src={getThumbnailUrl(featuredAnalysisArticle.thumbnail, featuredAnalysisArticle.id)} 
                       alt={featuredAnalysisArticle.title}
                       fill
-                      className="object-cover transition-transform duration-300"
                     />
                   </div>
                 )}
               </div>
             </div>
-          </a>
+          </Link>
           
           {/* View All Analysis Link */}
           <div className="mt-8 pt-6 border-t border-slate-700">
-            <a 
+            <Link 
               href="/analysis" 
               className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-medium transition-colors group"
             >
               <span>View All Analysis</span>
               <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </a>
+            </Link>
           </div>
         </section>
       )}
