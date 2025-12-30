@@ -55,15 +55,3 @@ export interface PaginatedArticlesResponse {
   next_cursor: number | null;
   page_size: number;
 }
-
-export interface FinancialAnalysisArticle {
-  id: string;
-  slug: string;
-  title: string;
-  content: string; // Markdown content
-  author?: string;
-  published_at: string;
-  updated_at?: string;
-  tags?: string[];
-  thumbnail?: string;
-}
