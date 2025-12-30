@@ -92,7 +92,7 @@ def upload_article(file_path: Path, category_name: str = None) -> int:
         now = datetime.now(timezone.utc)
         
         # Generate thumbnail filename for manual upload
-        thumbnail_filename = f"editorial_article_{uuid.uuid4()}.png"
+        thumbnail_filename = f"editorial_article_{uuid.uuid4().hex}.png"
 
         # Create the Article record
         article = Article(
