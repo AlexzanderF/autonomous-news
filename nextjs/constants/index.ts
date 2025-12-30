@@ -3,6 +3,12 @@
  */
 
 /**
+ * Site identity - centralized for easy updates
+ */
+export const SITE_NAME = "The Macronomics";
+export const SITE_DESCRIPTION = "Financial and macroeconomic news and analysis";
+
+/**
  * Base URL for thumbnail images.
  * 
  * In production (Docker): Uses relative path '/thumbnails' (Nginx serves them)

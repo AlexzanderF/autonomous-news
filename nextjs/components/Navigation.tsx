@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Menu, Calendar, TrendingUp } from 'lucide-react';
+import { SITE_NAME } from '@/constants';
 
 interface NavItem {
   label: string;
@@ -37,7 +38,7 @@ const Navigation: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link href="/">
               <h1 className="text-xl font-bold tracking-wider text-slate-900 flex items-center">
-                MT <span className="text-[10px] font-normal text-slate-500 tracking-[0.2em] ml-2 mt-1 whitespace-nowrap">MACRO THREADS</span>
+                <span className="text-[10px] font-normal text-slate-500 tracking-[0.2em] ml-2 mt-1 whitespace-nowrap">{SITE_NAME.toUpperCase()}</span>
               </h1>
             </Link>
           </div>

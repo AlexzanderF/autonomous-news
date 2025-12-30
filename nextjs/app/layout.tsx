@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/Footer";
 import AdPlaceholder from "@/components/AdPlaceholder";
 import Navigation from "@/components/Navigation";
+import { SITE_NAME, SITE_DESCRIPTION } from "@/constants";
 
 const archivoNarrow = Archivo_Narrow({
   variable: "--font-archivo-narrow",
@@ -12,8 +13,8 @@ const archivoNarrow = Archivo_Narrow({
 });
 
 export const metadata: Metadata = {
-  title: "MT - Macro Threads",
-  description: "Financial and macroeconomic news and analysis",
+  title: SITE_NAME,
+  description: SITE_DESCRIPTION,
 };
 
 export default function RootLayout({

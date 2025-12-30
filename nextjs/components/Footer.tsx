@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Linkedin, Facebook, Instagram } from 'lucide-react';
+import { SITE_NAME } from '@/constants';
 
 // Custom X (Twitter) icon component
 const XIcon = ({ className }: { className?: string }) => (
@@ -175,7 +176,7 @@ const Footer: React.FC = () => {
 
             {/* Copyright */}
             <div className="text-xs text-slate-500 text-center md:text-right">
-              <p>© Macro Threads {currentYear}. All rights reserved.</p>
+              <p>© {SITE_NAME} {currentYear}. All rights reserved.</p>
             </div>
           </div>
         </div>
