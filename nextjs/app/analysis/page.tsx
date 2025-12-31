@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { getThumbnailUrl } from '@/utils/thumbnails';
 import { getArticles, ArticleType } from '@/services/article-service';
 import { ArticleListItemDTO } from '@/dtos';
-import AdPlaceholder from '@/components/AdPlaceholder';
+import AdSense from '@/components/AdSense';
 
 const ARTICLES_PER_PAGE = 12;
 
@@ -165,7 +165,7 @@ export default function AnalysisListPage() {
           {/* Sidebar - Right Side */}
           <div className="lg:col-span-3 mt-6 lg:mt-0">
             <div className="sticky top-32">
-              <AdPlaceholder width={250} height={250} />
+              <AdSense format="rectangle" />
             </div>
           </div>
         </div>

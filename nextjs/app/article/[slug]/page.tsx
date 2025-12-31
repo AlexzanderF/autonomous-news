@@ -4,7 +4,7 @@ import { Share2, Clock } from 'lucide-react';
 import SmartImage from '@/components/SmartImage';
 import TableOfContents from '@/components/TableOfContents';
 import ArticleContent from '@/components/ArticleContent';
-import AdPlaceholder from '@/components/AdPlaceholder';
+import AdSense from '@/components/AdSense';
 import SentimentAnalysis from '@/components/SentimentAnalysis';
 import { getThumbnailUrl } from '@/utils/thumbnails';
 import { NewsItem } from '@/dtos';
@@ -134,7 +134,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
 
               {/* Advertisement */}
-              <AdPlaceholder width={250} height={250} />
+              <AdSense format="rectangle" />
             </div>
           </div>
         </div>

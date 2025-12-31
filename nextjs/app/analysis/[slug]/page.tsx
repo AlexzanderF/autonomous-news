@@ -4,6 +4,7 @@ import { Clock, Share2 } from 'lucide-react';
 import SmartImage from '@/components/SmartImage';
 import TableOfContents from '@/components/TableOfContents';
 import ArticleContent from '@/components/ArticleContent';
+import AdSense from '@/components/AdSense';
 import { getThumbnailUrl } from '@/utils/thumbnails';
 
 // Force dynamic rendering to prevent API calls during build time
@@ -100,7 +101,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
               </div>
 
               {/* Advertisement */}
-              {/* <AdPlaceholder width={250} height={250} /> */}
+              <AdSense format="rectangle" />
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import AdPlaceholder from '@/components/AdPlaceholder';
+import AdSense from '@/components/AdSense';
 
 export default function EconomicCalendarPage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -70,7 +70,7 @@ export default function EconomicCalendarPage() {
                     <div className="lg:col-span-4 flex-shrink-0">
                         <div className="sticky top-24 mt-0 lg:mt-12 pb-8 lg:pb-0">
                             {/* Advertisement */}
-                            <AdPlaceholder width={250} height={250} />
+                            <AdSense format="rectangle" />
                         </div>
                     </div>
                 </div>
