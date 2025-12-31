@@ -55,7 +55,7 @@ export default async function Home() {
          {articles.length >= 3 && (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 pb-8 mb-8 border-b border-slate-300">
               {/* Left Column - 2 Stacked Articles */}
-              <div className="lg:col-span-4 flex flex-col gap-6 lg:border-r lg:border-slate-300 lg:pr-6">
+              <div className="order-2 lg:order-none lg:col-span-4 flex flex-col gap-6 lg:border-r lg:border-slate-300 lg:pr-6">
                 {/* First stacked article with image */}
                 <Link href={`/article/${articles[1].slug}`} className="block group">
                   <div className="relative aspect-[2/1] mb-3 overflow-hidden bg-slate-100">
@@ -94,7 +94,7 @@ export default async function Home() {
               </div>
 
               {/* Middle Column - Main Featured Article */}
-              <div className="lg:col-span-5 lg:border-r lg:border-slate-300 lg:pr-6 lg:text-center">
+              <div className="order-1 lg:order-none lg:col-span-5 lg:border-r lg:border-slate-300 lg:pr-6 lg:text-center">
                 <Link href={`/article/${articles[0].slug}`} className="block group">
                   <div className="relative aspect-[16/10] mb-3 overflow-hidden bg-slate-100">
                     <SmartImage 
@@ -117,7 +117,7 @@ export default async function Home() {
               </div>
 
                {/* Right Column - Latest Analysis */}
-               <div className="lg:col-span-3 mt-8 lg:mt-0">
+               <div className="order-3 lg:order-none lg:col-span-3 mt-8 lg:mt-0">
                  {/* Latest Analysis Header */}
                  <div className="border-t-2 border-emerald-500 pt-3">
                    <div className="flex items-center gap-2 mb-3">
@@ -172,12 +172,22 @@ export default async function Home() {
 
          {/* Row of 4 News Cards */}
          {articles.length >= 7 && (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+           <div>
+             {/* Mobile-only Trending News Header */}
+             <div className="lg:hidden border-t-2 border-indigo-500 pt-3 mb-3">
+               <div className="flex items-center gap-2">
+                 <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                   Trending News
+                 </span>
+               </div>
+             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 py-3 lg:py-0">
              {articles.slice(3, 7).map((article) => (
                <div key={article.id}>
                  <NewsCard item={article} />
                </div>
              ))}
+             </div>
            </div>
          )}
 
