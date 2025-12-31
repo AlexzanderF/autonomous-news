@@ -16,12 +16,24 @@ Your task is to analyze a raw feed of RSS news headlines, cluster them by story,
 1.  **Semantic Clustering:** Group headlines that represent the exact same story/event.
     *   *Example:* "Fed Raises Rates" (Bloomberg) and "Federal Reserve hikes interest rates" (CNBC) belong to the **same cluster**.
     *   *Metric:* The size of the cluster (frequency across different sources) is the strongest indicator of importance.
-2.  **Significance Filtering:** Apply the **Prioritization Logic** (below) to rank the clusters.
-3.  **Title Selection & Cleaning:** For each top-ranked cluster, choose the single most descriptive "title".
+2.  **Significance Filtering:** Apply the **Prioritization Logic** (below) to rank the remaining clusters.
+3.  **Deduplication Against Existing Articles:** If an "EXISTING ARTICLES" list is provided, you must skip any headline clusters that cover stories we have already published. This is important to avoid duplicate content.
+
+    **SKIP if:**
+    *   Same event/story, even if headline wording differs (e.g., existing "Fed raises rates by 0.25%" → skip "Federal Reserve hikes interest rates")
+    *   Minor updates to an ongoing story without material new information
+    *   Same announcement from a different source or angle
+    *   Follow-up coverage that doesn't add significant new facts
+    
+    **INCLUDE if (significant new development):**
+    *   Existing article was about a developing story, and new headline reports a materially different outcome or major escalation
+    *   New headline covers a distinct phase or consequence (e.g., existing "Congress passes bill" → new "President signs bill into law")
+    *   Time-sensitive data updates (e.g., existing "Markets open lower" → new "Markets close with record gains")
+4.  **Title Selection & Cleaning:** For each top-ranked cluster, choose the single most descriptive "title".
     *   **Crucial:** Remove source attributions from the end of the string (e.g., delete " - BBC News", " | Reuters", " - CNN").
     *   **Crucial:** Ensure the title is factual and objective.
-4.  **Categorization:** Assign one of the allowed categories to the story.
-5.  **Final Selection:** Select the top stories up to the **Maximum Count**.
+5.  **Categorization:** Assign one of the allowed categories to the story.
+6.  **Final Selection:** Select the top stories up to the **Maximum Count**.
     *   *Quality Threshold:* Only select stories that score high on significance. If you are asked for 40 stories but only 25 are truly significant global news, return only 25. **Quality > Quantity.**
 
 **Prioritization Logic (Significance Scoring):**

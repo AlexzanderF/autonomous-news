@@ -35,6 +35,8 @@ from .shared import (
     HEADLINES_PICKER_TEMPERATURE,
 )
 
+from db import Article, get_database_session
+
 import os
 
 # ============================================================================
@@ -186,6 +188,32 @@ def set_last_run_timestamp(redis_client: redis.Redis, timestamp: datetime) -> bo
         return False
 
 
+def fetch_recent_article_titles(hours: int = 24) -> List[str]:
+    """
+    Fetch article titles from the database for deduplication.
+    Returns titles from the last N hours to help LLM avoid selecting duplicate stories.
+    """
+    db = None
+    try:
+        db = get_database_session()
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours)
+        
+        recent_articles = db.query(Article.title).filter(
+            Article.created_at >= cutoff_time
+        ).all()
+        
+        titles = [article.title for article in recent_articles]
+        logger.info(f"Fetched {len(titles)} recent article titles for deduplication")
+        return titles
+        
+    except Exception as exc:
+        logger.warning(f"Failed to fetch recent article titles: {exc}")
+        return []
+    finally:
+        if db:
+            db.close()
+
+
 def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
     """Fetch headlines from all RSS scrapers."""
     logger.info(f"Fetching headlines from all sources after {after_date}")
@@ -263,6 +291,9 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
     pick_headlines_prompt = load_prompt('llm_prompts/pick_headlines_prompt.md')
     genai_client = get_genai_client()
 
+    # Fetch existing article titles for deduplication
+    existing_titles = fetch_recent_article_titles(hours=12)
+
     headlines_data: List[Dict[str, str]] = []
     for article in articles:
         headlines_data.append({
@@ -271,11 +302,22 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
             'date': article.date.isoformat(),
         })
 
-    user_message = (
-        "Analyze the following JSON array of headlines and follow the instructions in the system prompt.\n"
-        f"Maximum headlines to select: {max_headlines_count}\n"
-        f"Headlines JSON Input:\n{json.dumps(headlines_data)}"
-    )
+    # Build user message with existing titles for deduplication
+    user_message_parts = [
+        "Analyze the following JSON array of headlines and follow the instructions in the system prompt.",
+        f"Maximum headlines to select: {max_headlines_count}",
+    ]
+    
+    if existing_titles:
+        user_message_parts.append(
+            f"\n**EXISTING ARTICLES (DO NOT SELECT DUPLICATES):**\n"
+            f"The following {len(existing_titles)} articles already exist in our database. "
+            f"Do NOT select any headlines that cover the same story or event as these existing articles:\n"
+            f"{json.dumps(existing_titles)}"
+        )
+    
+    user_message_parts.append(f"\nHeadlines JSON Input:\n{json.dumps(headlines_data)}")
+    user_message = "\n".join(user_message_parts)
 
     try:
         response = genai_client.models.generate_content(
