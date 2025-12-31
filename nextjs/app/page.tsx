@@ -94,7 +94,7 @@ export default async function Home() {
               </div>
 
               {/* Middle Column - Main Featured Article */}
-              <div className="lg:col-span-5 lg:border-r lg:border-slate-300 lg:pr-6">
+              <div className="lg:col-span-5 lg:border-r lg:border-slate-300 lg:pr-6 lg:text-center">
                 <Link href={`/article/${articles[0].slug}`} className="block group">
                   <div className="relative aspect-[16/10] mb-3 overflow-hidden bg-slate-100">
                     <SmartImage 
