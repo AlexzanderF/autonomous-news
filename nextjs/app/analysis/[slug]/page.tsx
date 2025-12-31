@@ -77,7 +77,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
             </header>
 
             {article.thumbnail && (
-              <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-10 border border-slate-200 shadow-sm bg-slate-100">
+              <div className="relative aspect-video w-full overflow-hidden mb-10 border border-slate-200 shadow-sm bg-slate-100">
                 <SmartImage
                   src={getThumbnailUrl(article.thumbnail, article.id)}
                   alt={article.title}
