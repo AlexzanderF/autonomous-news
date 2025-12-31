@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu, Calendar, TrendingUp } from 'lucide-react';
-import { SITE_NAME } from '@/constants';
 
 interface NavItem {
   label: string;
@@ -37,9 +37,14 @@ const Navigation: React.FC = () => {
         <div className="w-full px-4 md:px-8 lg:px-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/">
-              <h1 className="text-xl font-bold tracking-wider text-slate-900 flex items-center">
-                <span className="text-[10px] font-normal text-slate-500 tracking-[0.2em] ml-2 mt-1 whitespace-nowrap">{SITE_NAME.toUpperCase()}</span>
-              </h1>
+              <Image 
+                src="/logo-white-background.svg" 
+                alt="The Macronomics" 
+                width={240} 
+                height={56}
+                className="h-22 w-auto -ml-5"
+                priority
+              />
             </Link>
           </div>
 
