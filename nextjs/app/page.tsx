@@ -5,16 +5,18 @@ import NewsCard from '@/components/NewsCard';
 import { getArticles, ArticleType } from '@/services/article-service';
 import { mapArticleToNewsItem } from '@/utils/article-mapper';
 import { getThumbnailUrl } from '@/utils/thumbnails';
+import { formatTimeAgo } from '@/utils/date';
 
 // Force dynamic rendering to prevent API calls during build time
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  // Fetch featured articles, editorial articles, and featured editorial in parallel
-  const [featuredResponse, analysisResponse, featuredAnalysisResponse] = await Promise.all([
+  // Fetch featured articles, editorial articles, featured editorial, and markets news in parallel
+  const [featuredResponse, analysisResponse, featuredAnalysisResponse, marketsResponse] = await Promise.all([
     getArticles({ limit: 7, articleType: ArticleType.NEWS, isFeatured: true }), // Try to get 7 featured news articles
     getArticles({ limit: 2, articleType: ArticleType.EDITORIAL, isFeatured: false }), // Fetch 2 non-featured editorial articles for sidebar
-    getArticles({ limit: 1, articleType: ArticleType.EDITORIAL, isFeatured: true }) // Fetch 1 featured editorial for hero section
+    getArticles({ limit: 1, articleType: ArticleType.EDITORIAL, isFeatured: true }), // Fetch 1 featured editorial for hero section
+    getArticles({ limit: 9, articleType: ArticleType.NEWS, category: 'Economy' }) // Fetch markets & economy articles
   ]);
   
   let newsArticles = featuredResponse.items;
@@ -40,6 +42,7 @@ export default async function Home() {
   
   const articles = newsArticles.map(mapArticleToNewsItem);
   const analysisArticles = analysisResponse.items;
+  const marketsArticles = marketsResponse.items;
   // Use featured editorial if available, otherwise fall back to first analysis article
   const featuredAnalysisArticle = featuredAnalysisResponse.items[0] || analysisArticles[0];
 
@@ -243,8 +246,116 @@ export default async function Home() {
               className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-medium transition-colors group"
             >
               <span>View All Analysis</span>
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
+              <span className="inline-block text-2xl group-hover:translate-x-1 transition-transform">›</span>
             </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Markets & Economy Section */}
+      {marketsArticles.length >= 1 && (
+        <section className="pt-12 pb-10 border-t border-b border-slate-200">
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-900">
+              Markets & Economy
+            </h2>
+            <Link 
+              href="/topic/economy" 
+              className="inline-flex items-center gap-2 text-indigo-700 hover:text-indigo-600 font-medium transition-colors group"
+            >
+              <span>View All</span>
+              <span className="inline-block text-2xl group-hover:translate-x-1 transition-transform">›</span>
+            </Link>
+          </div>
+
+          {/* 3 Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column - Large Featured Card (similar to hero middle) */}
+            <div className="lg:col-span-5">
+              {marketsArticles[0] && (
+                <Link href={`/article/${marketsArticles[0].slug}`} className="block group">
+                  {/* Image */}
+                  {marketsArticles[0].thumbnail && (
+                    <div className="relative aspect-[16/10] mb-4 overflow-hidden bg-slate-100">
+                      <SmartImage 
+                        src={getThumbnailUrl(marketsArticles[0].thumbnail, marketsArticles[0].id)} 
+                        alt={marketsArticles[0].title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 40vw"
+                      />
+                    </div>
+                  )}
+                  {/* Category Tag */}
+                  <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                    Markets & Economy
+                  </span>
+                  {/* Title */}
+                  <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mt-2 mb-3 leading-tight group-hover:text-indigo-700 transition-colors">
+                    {marketsArticles[0].title}
+                  </h3>
+                  {/* Excerpt */}
+                  {marketsArticles[0].excerpt && (
+                    <p className="text-slate-600 text-sm leading-relaxed line-clamp-3 mb-2">
+                      {marketsArticles[0].excerpt}
+                    </p>
+                  )}
+                  {/* Timestamp */}
+                  <span className="text-xs text-slate-400">
+                    {formatTimeAgo(marketsArticles[0].published_at)}
+                  </span>
+                </Link>
+              )}
+            </div>
+
+            {/* Middle Column - 3 Stacked Articles with Category & Timestamp */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
+              {marketsArticles.slice(1, 4).map((article, index) => (
+                <div key={article.id} className={index < 2 ? 'pb-6 border-b border-slate-200' : ''}>
+                  <Link href={`/article/${article.slug}`} className="block group">
+                    {/* Category Tag */}
+                    <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                      Markets & Economy
+                    </span>
+                    <h4 className="text-xl font-bold text-slate-900 leading-snug group-hover:text-indigo-700 transition-colors mt-1 mb-2">
+                      {article.title}
+                    </h4>
+                    {article.excerpt && (
+                      <p className="text-slate-600 text-sm leading-relaxed line-clamp-3 mb-2">
+                        {article.excerpt}
+                      </p>
+                    )}
+                    {/* Timestamp */}
+                    <span className="text-xs text-slate-400">
+                      {formatTimeAgo(article.published_at)}
+                    </span>
+                  </Link>
+                </div>
+              ))}
+            </div>
+
+            {/* Right Column - 5 Stacked Articles with Category Tags */}
+            <div className="lg:col-span-3">
+              <div className="grid grid-cols-1 gap-4">
+                {marketsArticles.slice(4, 9).map((article, index) => (
+                  <div key={article.id} className={index < 4 ? 'pb-4 border-b border-slate-200' : ''}>
+                    <Link href={`/article/${article.slug}`} className="block group">
+                      {/* Category Tag */}
+                      <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                        Markets & Economy
+                      </span>
+                      <h4 className="text-base font-bold text-slate-900 leading-snug group-hover:text-indigo-700 transition-colors mt-1">
+                        {article.title}
+                      </h4>
+                      {/* Timestamp - desktop only */}
+                      <span className="hidden lg:inline text-xs text-slate-400 mt-1">
+                        {formatTimeAgo(article.published_at)}
+                      </span>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       )}
