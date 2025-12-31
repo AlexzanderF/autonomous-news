@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getArticleBySlug, ArticleType } from '@/services/article-service';
-import { Clock } from 'lucide-react';
+import { Clock, Share2 } from 'lucide-react';
 import SmartImage from '@/components/SmartImage';
 import TableOfContents from '@/components/TableOfContents';
 import ArticleContent from '@/components/ArticleContent';
@@ -36,9 +36,9 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
     <div className="min-h-screen pb-12">
       <div className="w-full">
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
           <div className="lg:col-span-8 mt-12">
-            <header className="mb-8 border-b border-slate-200 pb-8">
+            <header className="mb-4 lg:mb-8 border-b border-slate-200 pb-4 lg:pb-8">
               <div className="flex items-center gap-3 mb-4">
                 {article.categories.map((category) => (
                   <span
@@ -48,14 +48,6 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
                     {category.name}
                   </span>
                 ))}
-                <span className="flex items-center gap-1 text-slate-600 text-xs font-mono">
-                  <Clock className="w-3 h-3" />
-                  {new Date(article.published_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
               </div>
 
               <h1 className="md:text-5xl text-slate-900 leading-tight mb-6 font-sans">
@@ -67,6 +59,21 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
                   {article.excerpt}
                 </p>
               )}
+
+              <div className="flex items-center justify-between mt-6">
+                <span className="flex items-center gap-1.5 text-slate-500 text-sm">
+                  <Clock className="w-4 h-4" />
+                  {new Date(article.published_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+
+                <button className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                  <Share2 className="w-4 h-4" />
+                </button>
+              </div>
             </header>
 
             {article.thumbnail && (
@@ -85,13 +92,15 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
           </div>
 
-          <div className="lg:col-span-4 mt-12">
+          <div className="lg:col-span-4 mt-4 lg:mt-12">
             <div className="sticky top-32 space-y-6">
-              {/* Table of Contents */}
-              <TableOfContents headings={headings} />
+              {/* Table of Contents - hidden on mobile */}
+              <div className="hidden lg:block">
+                <TableOfContents headings={headings} />
+              </div>
 
               {/* Advertisement */}
-              {/* <AdPlaceholder width={250} height={600} /> */}
+              {/* <AdPlaceholder width={250} height={250} /> */}
             </div>
           </div>
         </div>

@@ -107,7 +107,7 @@ export default async function Home() {
                   <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
                     {articles[0].category}
                   </span>
-                  <h2 className="text-4xl font-bold text-slate-900 mt-2 mb-3 leading-tight group-hover:text-indigo-700 transition-colors">
+                  <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mt-2 mb-3 leading-tight group-hover:text-indigo-700 transition-colors">
                     {articles[0].headline}
                   </h2>
                   <p className="text-slate-600 text-sm leading-relaxed line-clamp-3">
@@ -117,7 +117,7 @@ export default async function Home() {
               </div>
 
                {/* Right Column - Latest Analysis */}
-               <div className="lg:col-span-3">
+               <div className="lg:col-span-3 mt-8 lg:mt-0">
                  {/* Latest Analysis Header */}
                  <div className="border-t-2 border-emerald-500 pt-3">
                    <div className="flex items-center gap-2 mb-3">

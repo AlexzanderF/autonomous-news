@@ -23,18 +23,18 @@ export default function EconomicCalendarPage() {
     }, []);
 
     return (
-        <div className="h-[calc(100vh-104px)] pb-4 flex flex-col">
+        <div className="min-h-[calc(100dvh-96px)] md:h-[calc(100vh-104px)] pb-4 flex flex-col">
             <div className="w-full flex-1 flex flex-col min-h-0">
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 flex-1 min-h-0">
+                <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-12 flex-1 min-h-0">
                     <div className="lg:col-span-8 flex flex-col min-h-0">
-                        <header className="mt-12 mb-8 border-b border-slate-200 pb-8 flex-shrink-0">
-                            <h1 className="text-4xl md:text-5xl text-slate-900 leading-tight font-sans">
+                        <header className="mt-4 md:mt-12 mb-4 md:mb-8 border-b border-slate-200 pb-2 md:pb-8 flex-shrink-0">
+                            <h1 className="text-3xl md:text-5xl text-slate-900 leading-tight font-sans">
                                 Economic Calendar
                             </h1>
                         </header>
 
-                        <div className="calendar-widget flex-1 min-h-0 flex flex-col relative">
+                        <div className="calendar-widget flex-1 min-h-[500px] md:min-h-0 flex flex-col relative">
                             {isLoading && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
                                     <div className="flex flex-col items-center gap-3">
@@ -51,7 +51,7 @@ export default function EconomicCalendarPage() {
                                 onLoad={() => setIsLoading(false)}
                             />
                         </div>
-                        <div className="font-sans mt-2 flex-shrink-0">
+                        <div className="font-sans mt-2 mb-4 flex-shrink-0">
                             <span className="text-[11px] text-slate-700 no-underline">
                                 Real Time Economic Calendar provided by{' '}
                                 <a
@@ -67,10 +67,10 @@ export default function EconomicCalendarPage() {
                         </div>
                     </div>
 
-                    <div className="lg:col-span-4">
-                        <div className="sticky top-24 mt-12 space-y-6">
+                    <div className="lg:col-span-4 flex-shrink-0">
+                        <div className="sticky top-24 mt-0 lg:mt-12 pb-8 lg:pb-0">
                             {/* Advertisement */}
-                            <AdPlaceholder width={250} height={600} />
+                            <AdPlaceholder width={250} height={250} />
                         </div>
                     </div>
                 </div>

@@ -60,9 +60,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     <div className="min-h-screen pb-12">
       <div className="w-full">
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
           <div className="lg:col-span-8 mt-12">
-            <header className="mb-8 border-b border-slate-200 pb-8">
+            <header className="mb-4 lg:mb-8 border-b border-slate-200 pb-4 lg:pb-8">
               <div className="flex items-center gap-3 mb-4">
                 {article.categories.map((category) => (
                   <span
@@ -100,6 +100,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
             </header>
 
+            {/* Mobile-only Sentiment Analysis - shown at the beginning on mobile */}
+            <div className="lg:hidden mb-4">
+              <SentimentAnalysis score={sentimentScore} />
+            </div>
+
             {article.thumbnail && (
               <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-10 border border-slate-200 shadow-sm bg-slate-100">
                 <SmartImage
@@ -116,16 +121,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
           </div>
 
-          <div className="lg:col-span-4 mt-12">
+          <div className="lg:col-span-4 mt-4 lg:mt-12">
             <div className="sticky top-32 space-y-6">
-              {/* Table of Contents */}
-              <TableOfContents headings={headings} />
+              {/* Table of Contents - hidden on mobile */}
+              <div className="hidden lg:block">
+                <TableOfContents headings={headings} />
+              </div>
 
-              {/* Sentiment Analysis */}
-              <SentimentAnalysis score={sentimentScore} />
+              {/* Sentiment Analysis - hidden on mobile (shown at beginning instead) */}
+              <div className="hidden lg:block">
+                <SentimentAnalysis score={sentimentScore} />
+              </div>
 
               {/* Advertisement */}
-              <AdPlaceholder width={250} height={600} />
+              <AdPlaceholder width={250} height={250} />
             </div>
           </div>
         </div>

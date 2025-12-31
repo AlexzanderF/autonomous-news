@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Linkedin, Facebook, Instagram } from 'lucide-react';
+import { Linkedin, Facebook, Instagram, ChevronDown } from 'lucide-react';
 import { SITE_NAME } from '@/constants';
 
 // Custom X (Twitter) icon component
@@ -48,8 +48,54 @@ const socialLinks = [
   { icon: Instagram, href: '#', label: 'Instagram' },
 ];
 
+// Accordion Section Component for Mobile
+interface AccordionSectionProps {
+  title: string;
+  links: FooterLink[];
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+const AccordionSection: React.FC<AccordionSectionProps> = ({ title, links, isOpen, onToggle }) => (
+  <div className="border-b border-slate-700/50">
+    {/* Mobile: Clickable header */}
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between py-4 text-left"
+    >
+      <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+        {title}
+      </h3>
+      <ChevronDown 
+        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+      />
+    </button>
+    
+    {/* Links - collapsible */}
+    <ul className={`list-none space-y-2.5 overflow-hidden transition-all duration-200 ${
+      isOpen ? 'max-h-96 pb-4' : 'max-h-0'
+    }`}>
+      {links.map((link) => (
+        <li key={link.label}>
+          <Link
+            href={link.href}
+            className="text-sm font-bold text-slate-300 hover:text-white transition-colors duration-150"
+          >
+            {link.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
 
   return (
     <footer className="bg-slate-900 text-slate-300 mt-16">
@@ -72,14 +118,15 @@ const Footer: React.FC = () => {
       </div>
 
       {/* Main Footer Content */}
-      <div className="w-full px-4 md:px-8 lg:px-12 py-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="w-full px-4 md:px-8 lg:px-12 py-6 md:py-10">
+        {/* Desktop: Original 4-column grid */}
+        <div className="hidden md:grid md:grid-cols-4 gap-8">
           {/* Topics Column */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
               Topics
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="list-none space-y-2.5">
               {navigationLinks.map((link) => (
                 <li key={link.label}>
                   <Link
@@ -98,7 +145,7 @@ const Footer: React.FC = () => {
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
               Resources
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="list-none space-y-2.5">
               {resourceLinks.map((link) => (
                 <li key={link.label}>
                   <Link
@@ -117,7 +164,7 @@ const Footer: React.FC = () => {
             <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
               Legal
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="list-none space-y-2.5">
               {legalLinks.map((link) => (
                 <li key={link.label}>
                   <Link
@@ -151,6 +198,48 @@ const Footer: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Mobile: Accordion sections */}
+        <div className="md:hidden">
+          <AccordionSection
+            title="Topics"
+            links={navigationLinks}
+            isOpen={openSection === 'topics'}
+            onToggle={() => toggleSection('topics')}
+          />
+          <AccordionSection
+            title="Resources"
+            links={resourceLinks}
+            isOpen={openSection === 'resources'}
+            onToggle={() => toggleSection('resources')}
+          />
+          <AccordionSection
+            title="Legal"
+            links={legalLinks}
+            isOpen={openSection === 'legal'}
+            onToggle={() => toggleSection('legal')}
+          />
+
+          {/* Newsletter at the end on mobile */}
+          <div className="pt-6">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
+              Stay Informed
+            </h3>
+            <p className="text-sm text-slate-400 mb-4 leading-relaxed">
+              Get the latest insights delivered to your inbox.
+            </p>
+            <div className="flex">
+              <input
+                type="email"
+                placeholder="Your email"
+                className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-l text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+              <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-r transition-colors">
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Bottom Bar */}
@@ -158,7 +247,7 @@ const Footer: React.FC = () => {
         <div className="w-full px-4 md:px-8 lg:px-12 py-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Legal Links Row */}
-            <div className="flex flex-wrap items-center gap-4 text-xs">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
               {legalLinks.map((link, index) => (
                 <React.Fragment key={link.label}>
                   <Link

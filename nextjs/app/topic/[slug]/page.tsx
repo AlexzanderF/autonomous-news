@@ -74,9 +74,9 @@ export default function TopicPage() {
 
   return (
     <main className="pb-12">
-      <div className="w-full py-12">
+      <div className="w-full py-6 lg:py-12">
         {/* Page Header */}
-        <header className="mb-10">
+        <header className="mb-6 lg:mb-10">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
             {config.displayTitle}
           </h1>
@@ -86,7 +86,7 @@ export default function TopicPage() {
         </header>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
           {/* Articles Grid - Left Side */}
           <div className="lg:col-span-9 lg:border-r lg:border-slate-200 lg:pr-8">
             {loading ? (
@@ -132,9 +132,9 @@ export default function TopicPage() {
           </div>
 
           {/* Sidebar - Right Side */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 mt-6 lg:mt-0">
             <div className="sticky top-32">
-              <AdPlaceholder width={250} height={600} />
+              <AdPlaceholder width={250} height={250} />
             </div>
           </div>
         </div>

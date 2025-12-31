@@ -27,8 +27,8 @@ export default function RootLayout({
       <body
         className={`${archivoNarrow.variable} antialiased min-h-screen bg-slate-50 text-slate-800 selection:bg-indigo-500/30 selection:text-indigo-900`}
       >
-        {/* Full-width top ad banner - scrolls with content */}
-        <div className="w-full bg-slate-100 border-b border-slate-200">
+        {/* Full-width top ad banner - hidden on mobile, scrolls with content */}
+        <div className="hidden md:block w-full bg-slate-100 border-b border-slate-200">
           <div className="max-w-4xl mx-auto px-4 py-3">
             <AdPlaceholder width={728} height={250} />
           </div>
