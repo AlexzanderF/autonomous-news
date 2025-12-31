@@ -16,13 +16,14 @@ const SmartImage: React.FC<SmartImageProps> = ({
   const [isVertical, setIsVertical] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const handleLoadingComplete = (img: HTMLImageElement) => {
+  const handleLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget;
     if (img.naturalHeight > img.naturalWidth) {
       setIsVertical(true);
     }
     setIsLoaded(true);
-    if (props.onLoadingComplete) {
-      props.onLoadingComplete(img);
+    if (props.onLoad) {
+      props.onLoad(event);
     }
   };
 
@@ -46,7 +47,7 @@ const SmartImage: React.FC<SmartImageProps> = ({
         {...props}
         alt={alt}
         className={`${className} ${isLoaded && isVertical ? 'object-contain' : 'object-cover'} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoadingComplete={handleLoadingComplete}
+        onLoad={handleLoad}
       />
     </div>
   );
