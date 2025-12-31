@@ -42,7 +42,7 @@ const Navigation: React.FC = () => {
                 alt="The Macronomics" 
                 width={240} 
                 height={56}
-                className="h-22 w-auto -ml-5"
+                className="h-24 w-auto -ml-5"
                 priority
               />
             </Link>
