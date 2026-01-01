@@ -52,7 +52,7 @@ export default async function Home() {
       {/* Hero / Stats Section */}
 
       {/* Main Content Area */}
-      <section className="w-full py-12">
+      <section className="w-full py-6 md:py-12">
 
          {/* Hero Section - 3 Column Layout */}
          {articles.length >= 3 && (
