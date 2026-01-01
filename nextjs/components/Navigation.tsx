@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, Calendar, TrendingUp, User } from 'lucide-react';
+import { SITE_NAME } from '@/constants';
 
 interface NavItem {
   label: string;
@@ -28,6 +29,9 @@ const navItems: NavItem[] = [
     icon: <Calendar className="w-3.5 h-3.5" />
   },
 ];
+
+const LOGO_WIDTH = 150;
+const LOGO_HEIGHT = 50;
 
 const Navigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -116,9 +120,9 @@ const Navigation: React.FC = () => {
               <Link href="/">
                 <Image
                   src="/logo-white-background.svg"
-                  alt="The Macronomics"
-                  width={150}
-                  height={50}
+                  alt={SITE_NAME}
+                  width={LOGO_WIDTH}
+                  height={LOGO_HEIGHT}
                   className="brightness-0 saturate-100"
                   style={{ filter: 'brightness(0) saturate(100%) invert(12%) sepia(20%) saturate(746%) hue-rotate(182deg) brightness(95%) contrast(92%)' }}
                   priority
@@ -194,9 +198,9 @@ const Navigation: React.FC = () => {
             <Link href="/" onClick={closeMenu}>
               <Image
                 src="/logo-white-background.svg"
-                alt="The Macronomics"
-                width={150}
-                height={50}
+                alt={SITE_NAME}
+                width={LOGO_WIDTH}
+                height={LOGO_HEIGHT}
                 className="brightness-0 saturate-100"
                 style={{ filter: 'brightness(0) saturate(100%) invert(98%) sepia(4%) saturate(365%) hue-rotate(176deg) brightness(102%) contrast(96%)' }}
                 priority

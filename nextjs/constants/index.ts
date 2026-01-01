@@ -5,7 +5,7 @@
 /**
  * Site identity - centralized for easy updates
  */
-export const SITE_NAME = "The Macronomics";
+export const SITE_NAME = "MacroGlance";
 export const SITE_DESCRIPTION = "Financial and macroeconomic news and analysis";
 
 /**
