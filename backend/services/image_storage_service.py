@@ -8,6 +8,7 @@ Provides self-hosted URLs to avoid rate limiting from image providers.
 import os
 import logging
 import hashlib
+import time
 import requests
 from pathlib import Path
 from typing import Optional
@@ -24,6 +25,11 @@ SUPPORTED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 
 # Request timeout for downloading images
 DOWNLOAD_TIMEOUT = 30
+
+# Retry configuration for rate limiting (429 errors)
+MAX_RETRIES = 3
+INITIAL_RETRY_DELAY = 10.0
+RETRY_BACKOFF_MULTIPLIER = 2.0
 
 
 class ImageStorageService:
@@ -77,6 +83,58 @@ class ImageStorageService:
             return extension
         return '.jpg'  # Default fallback
     
+    def _download_with_retry(self, url: str, context: str = "") -> requests.Response:
+        """
+        Download a URL with retry logic for 429 rate limit errors.
+        Uses exponential backoff between retries.
+        
+        Args:
+            url: The URL to download
+            context: Optional context string for logging (e.g., "article 123")
+            
+        Returns:
+            Response object from successful request
+            
+        Raises:
+            requests.HTTPError: If all retries are exhausted or non-429 error occurs
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
+            'Accept': 'image/*'
+        }
+        
+        delay = INITIAL_RETRY_DELAY
+        
+        for attempt in range(MAX_RETRIES + 1):
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=DOWNLOAD_TIMEOUT,
+                stream=True
+            )
+            
+            if response.status_code == 429:
+                if attempt < MAX_RETRIES:
+                    logger.warning(
+                        f"Rate limit (429) downloading {context} "
+                        f"on attempt {attempt + 1}/{MAX_RETRIES + 1}. Retrying in {delay:.1f}s..."
+                    )
+                    time.sleep(delay)
+                    delay *= RETRY_BACKOFF_MULTIPLIER
+                    continue
+                else:
+                    logger.error(
+                        f"Rate limit (429) downloading {context} - "
+                        f"all {MAX_RETRIES + 1} attempts exhausted"
+                    )
+                    response.raise_for_status()
+            
+            response.raise_for_status()
+            return response
+        
+        # Should not reach here, but just in case
+        raise requests.RequestException("Unexpected error in retry logic")
+    
     def download_and_store(self, article_id: int, image_url: str) -> Optional[str]:
         """
         Download an image from the given URL and store it locally.
@@ -92,19 +150,7 @@ class ImageStorageService:
         try:
             logger.info(f"Downloading image for article {article_id}: {image_url}")
             
-            # Download the image
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
-                'Accept': 'image/*'
-            }
-            
-            response = requests.get(
-                image_url,
-                headers=headers,
-                timeout=DOWNLOAD_TIMEOUT,
-                stream=True
-            )
-            response.raise_for_status()
+            response = self._download_with_retry(image_url, f"image for article {article_id}")
             
             # Verify we got an image
             content_type = response.headers.get('Content-Type', '')
