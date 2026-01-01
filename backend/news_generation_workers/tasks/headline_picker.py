@@ -18,9 +18,10 @@ from rss_scrapers.bbc_scraper import BBCScraper
 from rss_scrapers.the_guardian_scraper import TheGuardianScraper
 from rss_scrapers.dw_scraper import DWScraper
 from rss_scrapers.france24_scraper import France24Scraper
-from rss_scrapers.al_jazeera_scraper import AlJazeeraScraper
 from rss_scrapers.politico_scraper import PoliticoScraper
 from rss_scrapers.bloomberg_scraper import BloombergScraper
+from rss_scrapers.yahoo_finance_scraper import YahooFinanceScraper
+from rss_scrapers.ft_scraper import FinancialTimesScraper
 
 from celery_config import celery_app
 from .shared import (
@@ -221,22 +222,52 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
 
     try:
         # Google News
-        google_articles_world = GoogleNewsScraper().scrape_top_world_headlines(after_date=after_date)
+        googleNewsScraper = GoogleNewsScraper()
+        google_articles_world = googleNewsScraper.scrape_top_world_headlines(after_date=after_date)
         all_articles.extend(google_articles_world)
         logger.info(f"Fetched {len(google_articles_world)} Google News World news")
 
-        google_articles_business = GoogleNewsScraper().scrape_top_business_headlines(after_date=after_date)
+        google_articles_business = googleNewsScraper.scrape_top_business_headlines(after_date=after_date)
         all_articles.extend(google_articles_business)
         logger.info(f"Fetched {len(google_articles_business)} Google News Business Headlines")
 
-        google_articles_technology = GoogleNewsScraper().scrape_top_technology_headlines(after_date=after_date)
+        google_articles_technology = googleNewsScraper.scrape_top_technology_headlines(after_date=after_date)
         all_articles.extend(google_articles_technology)
         logger.info(f"Fetched {len(google_articles_technology)} Google News Technology Headlines")
 
         # WSJ
-        wsj_articles = WSJScraper().scrape_world_news(after_date=after_date)
-        all_articles.extend(wsj_articles)
-        logger.info(f"Fetched {len(wsj_articles)} WSJ articles")
+        wsjScraper = WSJScraper()
+        wsj_articles_world = wsjScraper.scrape_world_news(after_date=after_date)
+        all_articles.extend(wsj_articles_world)
+        logger.info(f"Fetched {len(wsj_articles_world)} WSJ World news")
+
+        wsj_articles_market = wsjScraper.scrape_market_news(after_date=after_date)
+        all_articles.extend(wsj_articles_market)
+        logger.info(f"Fetched {len(wsj_articles_market)} WSJ Market news")
+
+        wsj_articles_economy = wsjScraper.scrape_economy_news(after_date=after_date)
+        all_articles.extend(wsj_articles_economy)
+        logger.info(f"Fetched {len(wsj_articles_economy)} WSJ Economy news")
+
+        # Yahoo Finance
+        yahoo_articles = YahooFinanceScraper().scrape_news(after_date=after_date)
+        all_articles.extend(yahoo_articles)
+        logger.info(f"Fetched {len(yahoo_articles)} Yahoo Finance news")
+
+        # Bloomberg
+        bloombergScraper = BloombergScraper()
+        bloomberg_articles = bloombergScraper.scrape_news(after_date=after_date)
+        all_articles.extend(bloomberg_articles)
+        logger.info(f"Fetched {len(bloomberg_articles)} Bloomberg articles")
+
+        bloomberg_articles = bloombergScraper.scrape_economics_news(after_date=after_date)
+        all_articles.extend(bloomberg_articles)
+        logger.info(f"Fetched {len(bloomberg_articles)} Bloomberg Economy news")
+
+        # Financial Times
+        financial_times_articles = FinancialTimesScraper().scrape_news(after_date=after_date)
+        all_articles.extend(financial_times_articles)
+        logger.info(f"Fetched {len(financial_times_articles)} Financial Times articles")
 
         # BBC
         bbc_articles = BBCScraper().scrape_international_news(after_date=after_date)
@@ -247,11 +278,6 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
         guardian_articles = TheGuardianScraper().scrape_world_news(after_date=after_date)
         all_articles.extend(guardian_articles)
         logger.info(f"Fetched {len(guardian_articles)} Guardian articles")
-
-        # Bloomberg
-        bloomberg_articles = BloombergScraper().scrape_news(after_date=after_date)
-        all_articles.extend(bloomberg_articles)
-        logger.info(f"Fetched {len(bloomberg_articles)} Bloomberg articles")
 
         # DW
         dw_articles = DWScraper().scrape_top_news(after_date=after_date)
@@ -268,10 +294,6 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
         all_articles.extend(politico_articles)
         logger.info(f"Fetched {len(politico_articles)} Politico articles")
 
-        # Al Jazeera
-        al_jazeera_articles = AlJazeeraScraper().scrape_all_news(after_date=after_date)
-        all_articles.extend(al_jazeera_articles)
-        logger.info(f"Fetched {len(al_jazeera_articles)} Al Jazeera articles")
 
     except Exception as e:
         logger.error(f"Error fetching headlines: {str(e)}")
