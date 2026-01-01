@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, Calendar, TrendingUp, User } from 'lucide-react';
@@ -32,6 +32,9 @@ const navItems: NavItem[] = [
 const Navigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const scrollPositionRef = useRef(0);
+  const lastScrollYRef = useRef(0);
 
   // Handle menu close with animation
   const closeMenu = () => {
@@ -42,27 +45,54 @@ const Navigation: React.FC = () => {
     }, 280); // Slightly less than animation duration to feel snappy
   };
 
+  // Hide header on scroll down, show on scroll up (mobile only)
+  useEffect(() => {
+    const SCROLL_THRESHOLD = 20; // Minimum scroll distance to trigger hide/show
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+
+      // Only trigger if scroll distance exceeds threshold
+      if (Math.abs(scrollDelta) >= SCROLL_THRESHOLD) {
+        if (scrollDelta > 0 && currentScrollY > 100) {
+          // Scrolling down & past initial area - hide header
+          setHeaderVisible(false);
+        } else if (scrollDelta < 0) {
+          // Scrolling up - show header
+          setHeaderVisible(true);
+        }
+        lastScrollYRef.current = currentScrollY;
+      }
+
+      // Always show header at top of page
+      if (currentScrollY < 100) {
+        setHeaderVisible(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
-      // Store current scroll position
-      const scrollY = window.scrollY;
+      // Store current scroll position in ref before locking
+      scrollPositionRef.current = window.scrollY;
       document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
+      document.body.style.top = `-${scrollPositionRef.current}px`;
       document.body.style.left = '0';
       document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
     } else {
-      // Restore scroll position
-      const scrollY = document.body.style.top;
+      // Restore scroll position from ref
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.right = '';
       document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
+      window.scrollTo(0, scrollPositionRef.current);
     }
     return () => {
       document.body.style.position = '';
@@ -74,7 +104,11 @@ const Navigation: React.FC = () => {
   }, [mobileMenuOpen]);
 
   return (
-    <div className="sticky top-0 z-50">
+    <div 
+      className={`sticky top-0 z-50 transition-transform duration-500 md:translate-y-0 ${
+        headerVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}
+    >
       {/* Main Header */}
       <header className="bg-white border-b border-slate-200 h-14 md:h-16 flex items-center isolate">
         <div className="w-full px-4 md:px-8 lg:px-12 flex items-center justify-between">
@@ -85,7 +119,7 @@ const Navigation: React.FC = () => {
                 alt="The Macronomics"
                 width={240}
                 height={56}
-                className="h-18 md:h-24 w-auto -ml-3 md:-ml-5"
+                // className="h-18 md:h-24 w-auto -ml-3 md:-ml-5"
                 priority
               />
             </Link>
