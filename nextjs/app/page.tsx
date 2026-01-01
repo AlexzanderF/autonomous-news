@@ -309,9 +309,9 @@ export default async function Home() {
             </div>
 
             {/* Middle Column - 3 Stacked Articles with Category & Timestamp */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
+            <div className="lg:col-span-4 flex flex-col gap-4">
               {marketsArticles.slice(1, 4).map((article, index) => (
-                <div key={article.id} className={index < 2 ? 'pb-6 border-b border-slate-200' : ''}>
+                <div key={article.id} className={index < 2 ? 'pb-4 border-b border-slate-200' : ''}>
                   <Link href={`/article/${article.slug}`} className="block group">
                     {/* Category Tag */}
                     <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
