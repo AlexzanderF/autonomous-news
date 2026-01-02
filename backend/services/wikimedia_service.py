@@ -6,10 +6,7 @@ logger = logging.getLogger(__name__)
 
 WIKIMEDIA_API_BASE = "https://commons.wikimedia.org/w/api.php"
 WIKIMEDIA_HEADERS = {
-    'User-Agent': (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    )
+    'User-Agent': 'AutonomousNewsBot/1.0'
 }
 ALLOWED_MIME_TYPES = {
     'image/jpeg',
@@ -19,7 +16,9 @@ ALLOWED_MIME_TYPES = {
     'image/svg'
 }
 DESCRIPTION_MAX_LENGTH = 500
-THUMBNAIL_MAX_WIDTH = 1280  # 16:9 at 720p resolution
+# Use Wikimedia pre-rendered thumbnail sizes to avoid 429 errors on dynamic generation
+# Safe sizes across configs: 1024 appears in both $wgUploadThumbnailRenderMap AND power-of-2 downloads
+THUMBNAIL_MAX_WIDTH = 1024
 
 
 class WikimediaService:
