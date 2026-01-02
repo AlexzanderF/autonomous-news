@@ -19,7 +19,12 @@ export default async function Home() {
     getArticles({ limit: 9, articleType: ArticleType.NEWS, category: 'Economy' }) // Fetch markets & economy articles
   ]);
   
-  let newsArticles = featuredResponse.items;
+  // Sort by published_at ascending (oldest first) 
+  // Since the LLM prompt probably picks the most important articles first 
+  // and they get inserted in the DB first
+  let newsArticles = [...featuredResponse.items].sort((a, b) => 
+    new Date(a.published_at).getTime() - new Date(b.published_at).getTime()
+  );
   
   // If we have fewer than 7 featured articles, fill the rest with newest non-featured articles
   if (newsArticles.length < 7) {
