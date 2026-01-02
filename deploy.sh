@@ -14,7 +14,10 @@ git pull --rebase
 echo "🏗️  Building and starting containers..."
 docker compose up -d --build celery-worker nextjs fastapi
 
-echo "🔁 Restarting services..."
-docker compose restart nextjs fastapi nginx celery-worker
+echo "⏳ Waiting for containers to be ready..."
+sleep 10  # Give containers time to start up
+
+echo "🔁 Restarting nginx to pick up fresh upstreams..."
+docker compose restart nginx
 
 echo "✅ Deployment complete!"
