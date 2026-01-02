@@ -5,7 +5,6 @@ from typing import List, Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 WIKIMEDIA_API_BASE = "https://commons.wikimedia.org/w/api.php"
-WIKIMEDIA_IMAGE_URL_TEMPLATE = "https://commons.wikimedia.org/wiki/Special:FilePath/{filename}"
 WIKIMEDIA_HEADERS = {
     'User-Agent': (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -141,13 +140,3 @@ class WikimediaService:
                 logger.error(f"Unexpected error finding image: {exc}")
 
         return fetched_images
-    
-    def get_image_url(self, filename: str) -> str:
-        """
-        Generate a direct URL to a Wikimedia Commons image.
-        Args:
-            filename: The filename on Wikimedia Commons
-        Returns:
-            Direct URL to the image file
-        """
-        return WIKIMEDIA_IMAGE_URL_TEMPLATE.format(filename=filename)
