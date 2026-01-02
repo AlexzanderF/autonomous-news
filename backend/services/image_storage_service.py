@@ -27,8 +27,8 @@ SUPPORTED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 DOWNLOAD_TIMEOUT = 30
 
 # Retry configuration for rate limiting (429 errors)
-MAX_RETRIES = 3
-INITIAL_RETRY_DELAY = 10.0
+MAX_RETRIES = 2
+INITIAL_RETRY_DELAY = 30.0  # Wikimedia recommends longer waits for 429
 RETRY_BACKOFF_MULTIPLIER = 2.0
 
 
@@ -150,7 +150,14 @@ class ImageStorageService:
         try:
             logger.info(f"Downloading image for article {article_id}: {image_url}")
             
-            response = self._download_with_retry(image_url, f"image for article {article_id}")
+            # For Wikimedia URLs, add ?download= param to signal intentional download
+            # This may help with CDN rate limiting vs hotlinking detection
+            download_url = image_url
+            if 'wikimedia.org' in image_url or 'wikipedia.org' in image_url:
+                separator = '&' if '?' in image_url else '?'
+                download_url = f"{image_url}{separator}download="
+            
+            response = self._download_with_retry(download_url, f"image for article {article_id}")
             
             # Verify we got an image
             content_type = response.headers.get('Content-Type', '')
