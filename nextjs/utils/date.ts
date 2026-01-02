@@ -11,7 +11,7 @@ export function formatTimeAgo(dateString: string): string {
   if (seconds < 60) return 'Just Now';
 
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}M ago`;
+  if (minutes < 60) return `${minutes}m ago`;
 
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
