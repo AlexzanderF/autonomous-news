@@ -18,9 +18,9 @@ mkdir -p "$DATA_PATH/www/.well-known/acme-challenge"
 
 # Clean any stale certbot state that might cause issues
 echo "Cleaning any stale certbot configuration..."
-rm -rf "$DATA_PATH/conf/live/$DOMAIN"
-rm -rf "$DATA_PATH/conf/archive/$DOMAIN"
-rm -rf "$DATA_PATH/conf/renewal/$DOMAIN.conf"
+sudo rm -rf "$DATA_PATH/conf/live/$DOMAIN"
+sudo rm -rf "$DATA_PATH/conf/archive/$DOMAIN"
+sudo rm -rf "$DATA_PATH/conf/renewal/$DOMAIN.conf"
 
 # Download recommended TLS parameters
 if [ ! -e "$DATA_PATH/conf/options-ssl-nginx.conf" ]; then
@@ -70,9 +70,10 @@ echo ""
 
 # Remove the temporary certificate before requesting the real one
 # (certbot needs the directory to not exist)
-rm -rf "$DATA_PATH/conf/live/$DOMAIN"
-rm -rf "$DATA_PATH/conf/archive/$DOMAIN"
-rm -rf "$DATA_PATH/conf/renewal/$DOMAIN.conf"
+# Using sudo because certbot creates files as root inside Docker
+sudo rm -rf "$DATA_PATH/conf/live/$DOMAIN"
+sudo rm -rf "$DATA_PATH/conf/archive/$DOMAIN"
+sudo rm -rf "$DATA_PATH/conf/renewal/$DOMAIN.conf"
 
 docker compose run --rm --entrypoint "" certbot \
     certbot certonly --webroot \
