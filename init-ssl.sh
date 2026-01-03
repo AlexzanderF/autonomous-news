@@ -68,6 +68,12 @@ echo "Requesting Let's Encrypt certificate for $DOMAIN..."
 echo "Running: certbot certonly --webroot -w /var/www/certbot -d $DOMAIN -d www.$DOMAIN"
 echo ""
 
+# Remove the temporary certificate before requesting the real one
+# (certbot needs the directory to not exist)
+rm -rf "$DATA_PATH/conf/live/$DOMAIN"
+rm -rf "$DATA_PATH/conf/archive/$DOMAIN"
+rm -rf "$DATA_PATH/conf/renewal/$DOMAIN.conf"
+
 docker compose run --rm --entrypoint "" certbot \
     certbot certonly --webroot \
     --webroot-path=/var/www/certbot \
