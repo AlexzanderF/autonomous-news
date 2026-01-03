@@ -14,6 +14,7 @@ echo "=== SSL Certificate Setup for $DOMAIN ==="
 echo "Creating directories..."
 mkdir -p "$DATA_PATH/conf"
 mkdir -p "$DATA_PATH/www"
+mkdir -p "$DATA_PATH/www/.well-known/acme-challenge"
 
 # Download recommended TLS parameters
 if [ ! -e "$DATA_PATH/conf/options-ssl-nginx.conf" ]; then
@@ -25,12 +26,10 @@ fi
 # Create a temporary self-signed certificate so nginx can start
 echo "Creating temporary self-signed certificate..."
 mkdir -p "$DATA_PATH/conf/live/$DOMAIN"
-if [ ! -e "$DATA_PATH/conf/live/$DOMAIN/fullchain.pem" ]; then
-    openssl req -x509 -nodes -newkey rsa:4096 -days 1 \
-        -keyout "$DATA_PATH/conf/live/$DOMAIN/privkey.pem" \
-        -out "$DATA_PATH/conf/live/$DOMAIN/fullchain.pem" \
-        -subj "/CN=localhost"
-fi
+openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+    -keyout "$DATA_PATH/conf/live/$DOMAIN/privkey.pem" \
+    -out "$DATA_PATH/conf/live/$DOMAIN/fullchain.pem" \
+    -subj "/CN=localhost" 2>/dev/null
 
 echo "Starting nginx..."
 docker compose up -d nginx
@@ -38,11 +37,18 @@ docker compose up -d nginx
 echo "Waiting for nginx to be ready..."
 sleep 5
 
-# Delete temporary certificate
-echo "Removing temporary certificate..."
-rm -rf "$DATA_PATH/conf/live/$DOMAIN"
+# Test if ACME challenge path is accessible
+echo "Testing ACME challenge path..."
+echo "test" > "$DATA_PATH/www/.well-known/acme-challenge/test"
+if curl -s -o /dev/null -w "%{http_code}" "http://$DOMAIN/.well-known/acme-challenge/test" | grep -q "200"; then
+    echo "✓ ACME challenge path is accessible"
+else
+    echo "✗ WARNING: ACME challenge path may not be accessible"
+    echo "  Make sure DNS is pointing to this server and port 80 is open"
+fi
+rm -f "$DATA_PATH/www/.well-known/acme-challenge/test"
 
-# Build email argument (use --register-unsafely-without-email if no email provided)
+# Build email argument
 if [ -n "$EMAIL" ]; then
     EMAIL_ARG="--email $EMAIL"
 else
@@ -50,12 +56,14 @@ else
 fi
 
 # Request real certificate from Let's Encrypt
+# Note: We keep the temp cert so nginx stays running during this process
 echo "Requesting Let's Encrypt certificate for $DOMAIN..."
 docker compose run --rm certbot certonly --webroot \
     --webroot-path=/var/www/certbot \
     $EMAIL_ARG \
     --agree-tos \
     --no-eff-email \
+    --force-renewal \
     -d "$DOMAIN" \
     -d "www.$DOMAIN"
 
@@ -68,5 +76,5 @@ echo "SSL certificate obtained for $DOMAIN"
 echo "Certificate will auto-renew via the certbot container."
 echo ""
 echo "Next steps:"
-echo "1. Test HTTPS: https://$DOMAIN"
+echo "1. Test HTTPS: https://www.$DOMAIN"
 echo "2. Run 'docker compose up -d' to start all services"
