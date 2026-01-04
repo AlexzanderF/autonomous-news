@@ -58,7 +58,7 @@ class FreepikService:
         try:
             redis_client = self._get_redis()
             redis_client.setex(
-                FREEPIK_RATE_LIMIT_KEY,
+                FREEPIK_RATE_LIMIT_CACHE_KEY,
                 retry_after_seconds,
                 "1"  # Value doesn't matter, we only check existence
             )
@@ -73,7 +73,7 @@ class FreepikService:
         """
         try:
             redis_client = self._get_redis()
-            ttl = redis_client.ttl(FREEPIK_RATE_LIMIT_KEY)
+            ttl = redis_client.ttl(FREEPIK_RATE_LIMIT_CACHE_KEY)
             return max(0, ttl)
         except Exception as exc:
             logger.warning(f"Failed to get rate limit TTL from Redis: {exc}")
