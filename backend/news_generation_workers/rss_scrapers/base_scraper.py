@@ -57,17 +57,26 @@ class BaseRSSScraper(ABC):
         """
         Parse article date string to datetime object.
         
-        :param date_str: Date string in RFC 2822 format (e.g., "Tue, 16 Sep 2025 23:52:43 +0000").
+        Supports both RFC 2822 format (e.g., "Tue, 16 Sep 2025 23:52:43 +0000")
+        and ISO 8601 format (e.g., "2026-01-02T18:09:46Z") used by Yahoo Finance.
+        
+        :param date_str: Date string in RFC 2822 or ISO 8601 format.
         :return: Parsed datetime object, or current datetime as fallback.
         """
         if not date_str:
             return datetime.now(timezone.utc)
         
         try:
-            # Parse RFC 2822 date format (returns timezone-aware datetime)
+            # Try RFC 2822 date format first (returns timezone-aware datetime)
             return email.utils.parsedate_to_datetime(date_str)
         except (ValueError, TypeError):
-            # If date parsing fails, use current datetime as fallback
+            pass
+        
+        try:
+            # Fallback to ISO 8601 format (used by Yahoo Finance and others)
+            return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        except (ValueError, TypeError):
+            # If all parsing fails, use current datetime as fallback
             return datetime.now(timezone.utc)
     
     def _fetch_rss_feed(self, url: str, params: Optional[dict] = None) -> str:
