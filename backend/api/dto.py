@@ -30,6 +30,7 @@ class ArticleResponse(BaseModel):
     excerpt: Optional[str] = None
     content: str
     thumbnail: Optional[str] = None  # Uses model's computed property with fallback
+    thumbnail_attribution: Optional[dict] = None  # Thumbnail attribution as dict: {license, license_url, author, source}
     status: str
     article_type: str  # 'generated_news' or 'editorial'
     is_featured: bool = False
@@ -55,6 +56,7 @@ class ArticleResponse(BaseModel):
             'excerpt': article.excerpt,
             'content': article.content,
             'thumbnail': article.thumbnail,
+            'thumbnail_attribution': article.thumbnail_attribution,  # JSONB auto-deserializes to dict
             'status': article.status,
             'article_type': article.article_type.value if article.article_type else 'generated_news',
             'is_featured': article.is_featured,

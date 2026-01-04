@@ -119,6 +119,11 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
         # Update the article with both the local filename and original provider URL
         article.thumbnail_url = stored_filename
         article.thumbnail_original_url = provider_thumbnail_url  # Store original for reference
+
+        # Store attribution info for Creative Commons compliance (pre-built by image service)
+        if selected_image.get('thumbnail_attribution'):
+            article.thumbnail_attribution = selected_image['thumbnail_attribution']
+
         article.updated_at = datetime.now(timezone.utc)
         article.status = 'published'
         article.published_at = datetime.now(timezone.utc)

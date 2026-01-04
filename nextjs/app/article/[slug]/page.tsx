@@ -6,6 +6,7 @@ import TableOfContents from '@/components/TableOfContents';
 import ArticleContent from '@/components/ArticleContent';
 import AdSense from '@/components/AdSense';
 import SentimentAnalysis from '@/components/SentimentAnalysis';
+import ImageAttribution from '@/components/ImageAttribution';
 import { getThumbnailUrl } from '@/utils/thumbnails';
 import { NewsItem } from '@/dtos';
 import NewsCard from '@/components/NewsCard';
@@ -106,15 +107,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
 
             {article.thumbnail && (
-              <div className="relative aspect-video w-full overflow-hidden mb-10 border border-slate-200 shadow-sm bg-slate-100">
-                <SmartImage
-                  src={getThumbnailUrl(article.thumbnail, article.id)}
-                  alt={article.title}
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-                />
-              </div>
+              <figure className="relative w-full mb-10">
+                <div className="relative aspect-video w-full overflow-hidden border border-slate-200 shadow-sm bg-slate-100">
+                  <SmartImage
+                    src={getThumbnailUrl(article.thumbnail, article.id)}
+                    alt={article.title}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                  />
+                </div>
+                <ImageAttribution attribution={article.thumbnail_attribution} className="mt-2" />
+              </figure>
             )}
 
             <ArticleContent content={article.content} />

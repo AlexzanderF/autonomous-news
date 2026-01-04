@@ -6,7 +6,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import TSVECTOR, UUID
+from sqlalchemy.dialects.postgresql import JSONB
 
 # Database base class
 Base = declarative_base()
@@ -102,6 +102,7 @@ class Article(Base):
     content = Column(Text, nullable=False)  # Generated article content
     thumbnail_url = Column(String(500), nullable=True)  # Local filename (e.g., 'article_123_abc.jpg')
     thumbnail_original_url = Column(String(500), nullable=True)  # Original provider URL (Freepik, Pexels, etc.)
+    thumbnail_attribution = Column(JSONB, nullable=True)  # Thumbnail attribution as JSON {license, license_url, author, source}
     
     # Article status and workflow
     status = Column(String(20), default='published')  # draft, published, archived

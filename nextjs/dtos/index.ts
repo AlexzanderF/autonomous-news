@@ -27,6 +27,14 @@ export interface GetArticleResponse {
   excerpt: string | null;
   content: string;
   thumbnail: string | null;
+  // Thumbnail attribution for Creative Commons compliance
+  thumbnail_attribution: {
+    license: string | null;
+    license_url: string | null;
+    author: string | null;
+    image_page_url: string | null;
+    source: string | null;
+  } | null;
   status: string;
   article_type: string;
   created_at: string;

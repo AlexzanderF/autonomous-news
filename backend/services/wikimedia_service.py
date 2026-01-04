@@ -1,4 +1,5 @@
 import logging
+import re
 import requests
 from typing import List, Dict, Any, Optional
 
@@ -117,9 +118,35 @@ class WikimediaService:
                         height = original_height
                         logger.debug(f"Using original image ({original_width}x{original_height}), no thumbnail needed for: {title}")
                     
-                    description = image_info.get('extmetadata', {}).get('ImageDescription', {}).get('value')
+                    extmetadata = image_info.get('extmetadata', {})
+                    
+                    description = extmetadata.get('ImageDescription', {}).get('value')
                     if description and len(description) > DESCRIPTION_MAX_LENGTH:
                         description = description[:DESCRIPTION_MAX_LENGTH] + '...'
+
+                    # Extract license attribution info
+                    license_name = extmetadata.get('LicenseShortName', {}).get('value')
+                    license_url = extmetadata.get('LicenseUrl', {}).get('value')
+                    author = extmetadata.get('Artist', {}).get('value')
+                    # Clean up author field - it often contains HTML
+                    if author:
+                        # Strip HTML tags for cleaner display
+                        author = re.sub(r'<[^>]+>', '', author).strip()
+                        if len(author) > 200:
+                            author = author[:200] + '...'
+
+                    image_page_url = image_info.get('descriptionurl')  # Wikimedia Commons page URL
+
+                    # Build thumbnail attribution dict for Creative Commons compliance
+                    thumbnail_attribution = None
+                    if license_name or author:
+                        thumbnail_attribution = {
+                            'license': license_name,
+                            'license_url': license_url,
+                            'author': author,
+                            'image_page_url': image_page_url,
+                            'source': 'wikimedia',
+                        }
 
                     timestamp = image_info.get('timestamp')
 
@@ -131,7 +158,8 @@ class WikimediaService:
                             'original_url': original_url,  # Fallback URL for 429 errors
                             'dimensions': f"{width}x{height}" if width and height else None,
                             'timestamp': timestamp,
-                            'source': 'wikimedia'  # Mark source for fallback logic
+                            'source': 'wikimedia',  # Mark source for fallback logic
+                            'thumbnail_attribution': thumbnail_attribution,
                         })
                 
             except requests.RequestException as exc:
