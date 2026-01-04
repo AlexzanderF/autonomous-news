@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image, { ImageProps } from 'next/image';
+import { THUMBNAIL_BASE_URL } from '@/constants';
 
 interface SmartImageProps extends ImageProps {
   containerClassName?: string;
@@ -17,12 +18,10 @@ const SmartImage: React.FC<SmartImageProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Disable Next.js image optimization for:
-  // 1. Wikimedia URLs - they block server-side fetches with 429 errors
-  // 2. Localhost URLs in development - Next.js blocks private IP resolution
   const srcString = typeof props.src === 'string' ? props.src : '';
-  const isWikimediaUrl = srcString.includes('wikimedia.org');
   const isLocalhostUrl = srcString.includes('localhost') || srcString.includes('127.0.0.1');
-  const shouldSkipOptimization = isWikimediaUrl || isLocalhostUrl || props.unoptimized;
+  const isStaticThumbnail = srcString.startsWith(THUMBNAIL_BASE_URL);
+  const shouldSkipOptimization = isStaticThumbnail || isLocalhostUrl || props.unoptimized;
 
   const handleLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
     const img = event.currentTarget;
