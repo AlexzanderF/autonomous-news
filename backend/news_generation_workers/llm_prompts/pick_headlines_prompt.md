@@ -76,7 +76,7 @@ These should be the absolute top-tier stories deserving homepage hero section pl
 - Breaking Tier 1 news with the highest global impact
 - Stories covered intensively by multiple major outlets  
 - Stories that are most likely to generate high traffic and engagement
-- Stories that are interesting to the most amount and variety of audiences
+- Try to include at least 1 to 3 financial & markets related news (since the main audience of readers are interested in finance, markets and economy)
 
 The remaining stories must have `is_featured: false`.
 
