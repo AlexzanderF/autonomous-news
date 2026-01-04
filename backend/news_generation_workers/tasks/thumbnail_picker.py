@@ -99,13 +99,16 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
         # Convert 1-based ID to 0-based index for array access
         thumbnail_idx = thumbnail_id - 1
         if 0 <= thumbnail_idx < len(images):
-            provider_thumbnail_url = images[thumbnail_idx]['image_url']
+            selected_image = images[thumbnail_idx]
+            provider_thumbnail_url = selected_image['image_url']
+            # For Wikimedia, we have original_url as fallback for 429 errors on thumbnails
+            fallback_url = selected_image.get('original_url') if selected_image.get('source') == 'wikimedia' else None
         else:
             raise ValueError(f"Image with ID {thumbnail_id} not found or invalid")
         
         # Download and store the image locally to avoid 429 rate limits from providers
         image_storage = ImageStorageService()
-        stored_filename = image_storage.download_and_store(article_id, provider_thumbnail_url)
+        stored_filename = image_storage.download_and_store(article_id, provider_thumbnail_url, fallback_url=fallback_url)
         
         if not stored_filename:
             logger.warning(f"Failed to store image locally, falling back to provider URL: {provider_thumbnail_url}")

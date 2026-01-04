@@ -10,10 +10,11 @@ import logging
 import hashlib
 import time
 import requests
+from io import BytesIO
 from pathlib import Path
 from typing import Optional
-from urllib.parse import urlparse
-import mimetypes
+from PIL import Image
+from services.image_constants import THUMBNAIL_MAX_WIDTH, AVIF_QUALITY
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ SUPPORTED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 DOWNLOAD_TIMEOUT = 30
 
 # Retry configuration for rate limiting (429 errors)
-MAX_RETRIES = 2
+MAX_RETRIES = int(os.environ.get("THUMBNAIL_DOWNLOAD_MAX_RETRIES", 0))
 INITIAL_RETRY_DELAY = 10.0  # Wikimedia recommends longer waits for 429
 RETRY_BACKOFF_MULTIPLIER = 2.0
 
@@ -35,6 +36,7 @@ RETRY_BACKOFF_MULTIPLIER = 2.0
 class ImageStorageService:
     """
     Service for downloading and storing images locally.
+    Images are resized if larger than THUMBNAIL_MAX_WIDTH and converted to AVIF format.
     """
     
     def __init__(self, storage_path: Optional[str] = None):
@@ -50,47 +52,49 @@ class ImageStorageService:
             logger.error(f"Failed to create storage directory {self.storage_path}: {e}")
             raise
     
-    def _generate_filename(self, article_id: int, original_url: str) -> str:
-        """
-        Generate a unique filename for the image based on article ID and URL hash.
-        
-        Args:
-            article_id: The article ID this image belongs to
-            original_url: The original URL of the image
-            
-        Returns:
-            A filename like 'article_123_abc123def.jpg'
-        """
-        # Extract extension from URL or default to .jpg
-        parsed = urlparse(original_url)
-        path = parsed.path.lower()
-        
-        extension = '.jpg'  # Default
-        for ext in SUPPORTED_EXTENSIONS:
-            if path.endswith(ext):
-                extension = ext
-                break
-        
+    def _generate_filename(self, article_id: int, original_url: str, extension: str) -> str:
+        """Generate a unique filename based on article ID, URL hash, and given extension."""
         # Create a short hash of the URL for uniqueness
         url_hash = hashlib.md5(original_url.encode()).hexdigest()[:12]
+        return f"article_{article_id}_{url_hash}.{extension}"
+    
+    def _resize_image(self, image: Image.Image) -> Image.Image:
+        """
+        Resize image if width exceeds THUMBNAIL_MAX_WIDTH, maintaining aspect ratio.
+        """
+        if image.width > THUMBNAIL_MAX_WIDTH:
+            ratio = THUMBNAIL_MAX_WIDTH / image.width
+            new_height = int(image.height * ratio)
+            logger.info(f"Resizing image from {image.width}x{image.height} to {THUMBNAIL_MAX_WIDTH}x{new_height}")
+            return image.resize((THUMBNAIL_MAX_WIDTH, new_height), Image.Resampling.LANCZOS)
+        return image
+    
+    def _convert_to_avif(self, image: Image.Image) -> bytes:
+        """
+        Convert image to AVIF format with compression.
+        """
+        # Convert to RGB if necessary (AVIF doesn't support all modes)
+        if image.mode in ('RGBA', 'LA', 'P'):
+            # Create white background for transparent images
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            if image.mode == 'P':
+                image = image.convert('RGBA')
+            background.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
+            image = background
+        elif image.mode != 'RGB':
+            image = image.convert('RGB')
         
-        return f"article_{article_id}_{url_hash}{extension}"
+        output = BytesIO()
+        image.save(output, format='AVIF', quality=AVIF_QUALITY)
+        return output.getvalue()
     
-    def _get_extension_from_content_type(self, content_type: str) -> str:
-        """Get file extension from Content-Type header."""
-        extension = mimetypes.guess_extension(content_type.split(';')[0].strip())
-        if extension in SUPPORTED_EXTENSIONS or (extension and extension.lstrip('.') in {'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'}):
-            return extension
-        return '.jpg'  # Default fallback
-    
-    def _download_with_retry(self, url: str, context: str = "") -> requests.Response:
+    def _download_with_retry(self, url: str) -> requests.Response:
         """
         Download a URL with retry logic for 429 rate limit errors.
         Uses exponential backoff between retries.
         
         Args:
             url: The URL to download
-            context: Optional context string for logging (e.g., "article 123")
             
         Returns:
             Response object from successful request
@@ -99,8 +103,7 @@ class ImageStorageService:
             requests.HTTPError: If all retries are exhausted or non-429 error occurs
         """
         headers = {
-            'User-Agent': 'AutonomousNews/1.0 (afarkov@proton.me)',
-            'Accept': 'image/*',
+            'User-Agent': 'pyWikiCommons/1.1 (https://github.com/amckenna41/pyWikiCommons; afarkov@proton.me)',
         }
         
         delay = INITIAL_RETRY_DELAY
@@ -119,17 +122,14 @@ class ImageStorageService:
             if response.status_code == 429:
                 if attempt < MAX_RETRIES:
                     logger.warning(
-                        f"Rate limit (429) downloading {context} "
-                        f"on attempt {attempt + 1}/{MAX_RETRIES + 1}. Retrying in {delay:.1f}s..."
+                        f"Rate limit (429) on attempt {attempt + 1}/{MAX_RETRIES + 1}, "
+                        f"retrying in {delay:.1f}s: {url}"
                     )
                     time.sleep(delay)
                     delay *= RETRY_BACKOFF_MULTIPLIER
                     continue
                 else:
-                    logger.error(
-                        f"Rate limit (429) downloading {context} - "
-                        f"all {MAX_RETRIES + 1} attempts exhausted"
-                    )
+                    logger.error(f"Rate limit (429) - all {MAX_RETRIES + 1} attempts exhausted: {url}")
                     response.raise_for_status()
             
             response.raise_for_status()
@@ -137,69 +137,138 @@ class ImageStorageService:
         
         # Should not reach here, but just in case
         raise requests.RequestException("Unexpected error in retry logic")
-    
-    def download_and_store(self, article_id: int, image_url: str) -> Optional[str]:
+
+    def download_and_store(
+        self, 
+        article_id: int, 
+        image_url: str, 
+        fallback_url: Optional[str] = None
+    ) -> Optional[str]:
         """
         Download an image from the given URL and store it locally.
+        If download fails with 429 and a fallback_url is provided, tries the fallback.
         
         Args:
             article_id: The article ID this image belongs to
-            image_url: The URL of the image to download
+            image_url: The URL of the image to download (typically thumbnail)
+            fallback_url: Optional fallback URL to try if primary fails with 429
             
         Returns:
             The filename of the stored image (e.g., 'article_123_abc.jpg'), 
             or None if download failed. Frontend constructs full URL.
         """
+        urls_to_try = [image_url]
+        if fallback_url and fallback_url != image_url:
+            urls_to_try.append(fallback_url)
+        
+        response = None
+        
+        for i, url in enumerate(urls_to_try):
+            is_fallback = i > 0
+            try:
+                if is_fallback:
+                    logger.info(f"Article {article_id}: trying fallback URL: {url}")
+                else:
+                    logger.info(f"Article {article_id}: downloading image: {url}")
+                
+                response = self._download_with_retry(url)
+                break  # Success, exit the loop
+                
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None and e.response.status_code == 429:
+                    if i < len(urls_to_try) - 1:
+                        logger.warning(f"Article {article_id}: 429 on thumbnail, will try original URL")
+                        continue
+                    else:
+                        logger.error(f"Article {article_id}: all URLs exhausted with 429 errors")
+                        return None
+                else:
+                    logger.error(f"Article {article_id}: HTTP error {e.response.status_code if e.response else 'unknown'}: {url}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Article {article_id}: download failed: {e}")
+                if i < len(urls_to_try) - 1:
+                    continue  # Try next URL on network errors too
+                return None
+        
+        if response is None:
+            return None
+        
+        raw_data = response.content
+        content_type = response.headers.get('Content-Type', '')
+        
         try:
-            logger.info(f"Downloading image for article {article_id}: {image_url}")
+            # Load image data into memory for processing
+            image_data = BytesIO(raw_data)
+            image = Image.open(image_data)
+            original_size = f"{image.width}x{image.height}"
             
-            # For Wikimedia URLs, add ?download= param to signal intentional download
-            # This may help with CDN rate limiting vs hotlinking detection
-            download_url = image_url
-            if 'wikimedia.org' in image_url or 'wikipedia.org' in image_url:
-                separator = '&' if '?' in image_url else '?'
-                download_url = f"{image_url}{separator}download="
+            # Resize if necessary
+            image = self._resize_image(image)
             
-            response = self._download_with_retry(download_url, f"image for article {article_id}")
+            # Convert to AVIF
+            avif_data = self._convert_to_avif(image)
             
-            # Verify we got an image
-            content_type = response.headers.get('Content-Type', '')
-            if not content_type.startswith('image/'):
-                logger.warning(f"Response is not an image (Content-Type: {content_type})")
-                # Continue anyway, some servers don't set correct content-type
-            
-            # Generate filename (might update extension based on content-type)
-            filename = self._generate_filename(article_id, image_url)
-            
-            # Update extension if content-type provides better info
-            if content_type.startswith('image/'):
-                new_ext = self._get_extension_from_content_type(content_type)
-                if new_ext:
-                    base_name = filename.rsplit('.', 1)[0]
-                    filename = f"{base_name}{new_ext}"
-            
-            # Save to disk
+            # Generate filename
+            filename = self._generate_filename(article_id, image_url, 'avif')
             file_path = self.storage_path / filename
             
+            # Save to disk
             with open(file_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
+                f.write(avif_data)
             
             file_size = file_path.stat().st_size
-            logger.info(f"Successfully saved image: {file_path} ({file_size} bytes)")
+            logger.info(
+                f"Article {article_id}: saved {filename} "
+                f"(original: {original_size}, final: {image.width}x{image.height}, size: {file_size} bytes)"
+            )
             
             # Return just the filename - frontend will construct the full URL
             return filename
             
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to download image from {image_url}: {e}")
-            return None
-        except IOError as e:
-            logger.error(f"Failed to save image for article {article_id}: {e}")
-            return None
         except Exception as e:
-            logger.error(f"Unexpected error storing image for article {article_id}: {e}")
-            return None
+            # Fallback: save original image as-is if processing fails
+            logger.warning(f"Article {article_id}: image processing failed ({e}), saving original")
+            
+            try:
+                # Determine extension from content-type or URL
+                extension = self._get_extension_from_content_type(content_type, image_url)
+                filename = self._generate_filename(article_id, image_url, extension)
+                file_path = self.storage_path / filename
+                
+                with open(file_path, 'wb') as f:
+                    f.write(raw_data)
+                
+                file_size = file_path.stat().st_size
+                logger.info(f"Article {article_id}: saved original as {filename} ({file_size} bytes)")
+                return filename
+                
+            except Exception as fallback_error:
+                logger.error(f"Article {article_id}: fallback save also failed: {fallback_error}")
+                return None
+    
+    def _get_extension_from_content_type(self, content_type: str, url: str) -> str:
+        """Get file extension from content-type header or URL, without leading dot."""
+        # Try content-type first
+        type_to_ext = {
+            'image/jpeg': 'jpg',
+            'image/png': 'png',
+            'image/gif': 'gif',
+            'image/webp': 'webp',
+            'image/svg+xml': 'svg',
+            'image/avif': 'avif',
+        }
+        mime = content_type.split(';')[0].strip().lower()
+        if mime in type_to_ext:
+            return type_to_ext[mime]
+        
+        # Fallback to URL extension
+        url_lower = url.lower()
+        for ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'avif']:
+            if url_lower.endswith(f'.{ext}'):
+                return 'jpg' if ext == 'jpeg' else ext
+        
+        return 'jpg'  # Ultimate fallback
     
     def get_image_path(self, filename: str) -> Optional[Path]:
         """

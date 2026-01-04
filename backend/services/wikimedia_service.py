@@ -2,6 +2,8 @@ import logging
 import requests
 from typing import List, Dict, Any, Optional
 
+from services.image_constants import THUMBNAIL_MAX_WIDTH
+
 logger = logging.getLogger(__name__)
 
 WIKIMEDIA_API_BASE = "https://commons.wikimedia.org/w/api.php"
@@ -16,9 +18,6 @@ ALLOWED_MIME_TYPES = {
     'image/svg'
 }
 DESCRIPTION_MAX_LENGTH = 500
-# Use Wikimedia pre-rendered thumbnail sizes to avoid 429 errors on dynamic generation
-# Safe sizes across configs: 1024 appears in both $wgUploadThumbnailRenderMap AND power-of-2 downloads
-THUMBNAIL_MAX_WIDTH = 1024
 
 
 class WikimediaService:
@@ -129,8 +128,10 @@ class WikimediaService:
                             'title': title,
                             'description': description if description else None,
                             'image_url': image_url,
+                            'original_url': original_url,  # Fallback URL for 429 errors
                             'dimensions': f"{width}x{height}" if width and height else None,
-                            'timestamp': timestamp
+                            'timestamp': timestamp,
+                            'source': 'wikimedia'  # Mark source for fallback logic
                         })
                 
             except requests.RequestException as exc:
