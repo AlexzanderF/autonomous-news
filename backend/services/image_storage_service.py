@@ -98,21 +98,9 @@ class ImageStorageService:
         Raises:
             requests.HTTPError: If all retries are exhausted or non-429 error occurs
         """
-        # Use browser-like headers matching actual Chrome request
-        # Wikimedia uses WMF-Uniq cookie to identify legitimate users, so use a session
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.6',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Sec-Ch-Ua': '"Chromium";v="120", "Google Chrome";v="120", "Not A(Brand";v="99"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"macOS"',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
-            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'AutonomousNews/1.0 (afarkov@proton.me)',
+            'Accept': 'image/*',
         }
         
         delay = INITIAL_RETRY_DELAY
