@@ -1,11 +1,9 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
 import { NewsItem } from '@/dtos';
 
 import SmartImage from './SmartImage';
-import { formatTimeAgo } from '@/utils/date';
+import TimeAgo from './TimeAgo';
 
 interface NewsCardProps {
   item: NewsItem;
@@ -42,7 +40,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ item }) => {
           </p>
 
           <div className="mt-auto">
-            <span className="text-xs text-slate-400">{formatTimeAgo(item.timestamp)}</span>
+            <TimeAgo dateString={item.timestamp} className="text-xs text-slate-400" />
           </div>
         </div>
       </article>

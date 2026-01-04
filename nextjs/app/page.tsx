@@ -5,7 +5,7 @@ import NewsCard from '@/components/NewsCard';
 import { getArticles, ArticleType } from '@/services/article-service';
 import { mapArticleToNewsItem } from '@/utils/article-mapper';
 import { getThumbnailUrl } from '@/utils/thumbnails';
-import { formatTimeAgo } from '@/utils/date';
+import TimeAgo from '@/components/TimeAgo';
 
 // Force dynamic rendering to prevent API calls during build time
 export const dynamic = 'force-dynamic';
@@ -306,9 +306,7 @@ export default async function Home() {
                     </p>
                   )}
                   {/* Timestamp */}
-                  <span className="text-xs text-slate-400">
-                    {formatTimeAgo(marketsArticles[0].published_at)}
-                  </span>
+                  <TimeAgo dateString={marketsArticles[0].published_at} className="text-xs text-slate-400" />
                 </Link>
               )}
             </div>
@@ -331,9 +329,7 @@ export default async function Home() {
                       </p>
                     )}
                     {/* Timestamp */}
-                    <span className="text-xs text-slate-400">
-                      {formatTimeAgo(article.published_at)}
-                    </span>
+                    <TimeAgo dateString={article.published_at} className="text-xs text-slate-400" />
                   </Link>
                 </div>
               ))}
@@ -353,9 +349,7 @@ export default async function Home() {
                         {article.title}
                       </h4>
                       {/* Timestamp - desktop only */}
-                      <span className="hidden lg:inline text-xs text-slate-400 mt-1">
-                        {formatTimeAgo(article.published_at)}
-                      </span>
+                      <TimeAgo dateString={article.published_at} className="hidden lg:inline text-xs text-slate-400 mt-1" />
                     </Link>
                   </div>
                 ))}
