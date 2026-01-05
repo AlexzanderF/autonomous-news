@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Optional
 from PIL import Image
 from services.image_constants import THUMBNAIL_MAX_WIDTH, AVIF_QUALITY
+from services.proxy_service import get_proxy_service
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,20 @@ DOWNLOAD_TIMEOUT = 30
 MAX_RETRIES = int(os.environ.get("THUMBNAIL_DOWNLOAD_MAX_RETRIES", 0))
 INITIAL_RETRY_DELAY = 10.0  # Wikimedia recommends longer waits for 429
 RETRY_BACKOFF_MULTIPLIER = 2.0
+
+DEFAULT_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+    'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'Sec-Ch-Ua-Mobile': '?0',
+    'Sec-Ch-Ua-Platform': '"Windows"',
+    'Sec-Fetch-Dest': 'image',
+    'Sec-Fetch-Mode': 'no-cors',
+    'Sec-Fetch-Site': 'cross-site',
+}
 
 
 class ImageStorageService:
@@ -88,10 +103,20 @@ class ImageStorageService:
         image.save(output, format='AVIF', quality=AVIF_QUALITY)
         return output.getvalue()
     
+    def _is_wikimedia_url(self, url: str) -> bool:
+        """Check if the URL is from Wikimedia Commons/Wikipedia."""
+        wikimedia_domains = [
+            'upload.wikimedia.org',
+            'commons.wikimedia.org',
+            'wikipedia.org',
+        ]
+        return any(domain in url.lower() for domain in wikimedia_domains)
+    
     def _download_with_retry(self, url: str) -> requests.Response:
         """
         Download a URL with retry logic for 429 rate limit errors.
         Uses exponential backoff between retries.
+        For Wikimedia URLs, falls back to residential proxy on 429 errors.
         
         Args:
             url: The URL to download
@@ -102,11 +127,10 @@ class ImageStorageService:
         Raises:
             requests.HTTPError: If all retries are exhausted or non-429 error occurs
         """
-        headers = {
-            'User-Agent': 'pyWikiCommons/1.1 (https://github.com/amckenna41/pyWikiCommons; afarkov@proton.me)',
-        }
+        headers = DEFAULT_HEADERS
         
         delay = INITIAL_RETRY_DELAY
+        is_wikimedia = self._is_wikimedia_url(url)
         
         # Use a session to persist cookies (Wikimedia sets WMF-Uniq cookie)
         session = requests.Session()
@@ -120,6 +144,15 @@ class ImageStorageService:
             )
             
             if response.status_code == 429:
+                # For Wikimedia URLs, try using the proxy before exhausting retries
+                if is_wikimedia:
+                    logger.warning(f"Rate limit (429) on direct request, trying proxy: {url}")
+                    proxy_response = self._download_via_proxy(url)
+                    if proxy_response is not None:
+                        return proxy_response
+                    # Proxy failed, continue with normal retry logic
+                    logger.warning("Proxy attempt failed, continuing with direct retries")
+                
                 if attempt < MAX_RETRIES:
                     logger.warning(
                         f"Rate limit (429) on attempt {attempt + 1}/{MAX_RETRIES + 1}, "
@@ -137,6 +170,43 @@ class ImageStorageService:
         
         # Should not reach here, but just in case
         raise requests.RequestException("Unexpected error in retry logic")
+    
+    def _download_via_proxy(self, url: str, headers: Optional[dict] = None) -> Optional[requests.Response]:
+        """
+        Attempt to download a URL using the residential proxy service.
+        
+        Args:
+            url: The URL to download
+            headers: Request headers to use
+            
+        Returns:
+            Response object if successful, None if proxy is not configured or request failed
+        """
+        try:
+            proxy_service = get_proxy_service()
+            
+            if not proxy_service.is_configured():
+                logger.warning("Proxy service not configured, cannot use proxy fallback")
+                return None
+            
+            response = proxy_service.get_with_proxy(
+                url,
+                headers=headers,
+                stream=True,
+            )
+            response.raise_for_status()
+            logger.info(f"Successfully downloaded via proxy: {url}")
+            return response
+            
+        except ValueError as e:
+            logger.warning(f"Proxy not configured: {e}")
+            return None
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Proxy request failed: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error with proxy request: {e}")
+            return None
 
     def download_and_store(
         self, 
@@ -147,6 +217,7 @@ class ImageStorageService:
         """
         Download an image from the given URL and store it locally.
         If download fails with 429 and a fallback_url is provided, tries the fallback.
+        For Wikimedia URLs, will attempt to use proxy on 429 errors.
         
         Args:
             article_id: The article ID this image belongs to
