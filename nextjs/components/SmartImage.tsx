@@ -38,7 +38,7 @@ const SmartImage: React.FC<SmartImageProps> = ({
         <Image
           {...props}
           alt=""
-          className="w-full h-full object-cover blur-xl opacity-50 scale-110"
+          className="w-full h-full object-cover blur-xl opacity-60 scale-110"
           fill
           aria-hidden="true"
         />
