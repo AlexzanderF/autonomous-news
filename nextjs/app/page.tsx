@@ -57,11 +57,11 @@ export default async function Home() {
       {/* Hero / Stats Section */}
 
       {/* Main Content Area */}
-      <section className="w-full py-6 md:py-12">
+      <section className="w-full md:py-12">
 
          {/* Hero Section - 3 Column Layout */}
          {articles.length >= 3 && (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 pb-8 mb-8 border-b border-slate-300">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 pb-6 mb-8 border-b border-slate-300">
               {/* Left Column - 2 Stacked Articles */}
               <div className="order-2 lg:order-none lg:col-span-4 flex flex-col gap-6 lg:border-r lg:border-slate-300 lg:pr-6">
                 {/* First stacked article with image */}
@@ -77,7 +77,7 @@ export default async function Home() {
                   <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
                     {articles[1].category}
                   </span>
-                  <h3 className="text-2xl font-bold text-slate-900 mt-1 mb-2 leading-tight group-hover:text-indigo-700 transition-colors">
+                  <h3 className="text-xl font-bold text-slate-900 mt-1 mb-2 leading-tight group-hover:text-indigo-700 transition-colors">
                     {articles[1].headline}
                   </h3>
                 </Link>
@@ -95,7 +95,7 @@ export default async function Home() {
                   <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
                     {articles[2].category}
                   </span>
-                  <h3 className="text-2xl font-bold text-slate-900 mt-1 mb-2 leading-tight group-hover:text-indigo-700 transition-colors">
+                  <h3 className="text-xl font-bold text-slate-900 mt-1 mb-2 leading-tight group-hover:text-indigo-700 transition-colors">
                     {articles[2].headline}
                   </h3>
                 </Link>
