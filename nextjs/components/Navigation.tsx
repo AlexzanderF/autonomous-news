@@ -115,7 +115,7 @@ const Navigation: React.FC = () => {
       >
         {/* Main Header */}
         <header className="bg-white border-b border-slate-200 h-14 md:h-16 flex items-center isolate">
-          <div className="w-full px-4 md:px-8 lg:px-12 flex items-center justify-between">
+          <div className="w-full container-padding flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0 flex-shrink">
               <Link href="/">
                 <Image
@@ -167,7 +167,7 @@ const Navigation: React.FC = () => {
 
         {/* Sub Navigation - Horizontally scrollable on mobile */}
         <nav className="bg-slate-900 h-10 flex items-center overflow-hidden relative">
-          <div className="w-full px-4 md:px-8 lg:px-12 overflow-x-auto scrollbar-hide">
+          <div className="w-full container-padding overflow-x-auto scrollbar-hide">
             <div className="flex items-center gap-1 w-max md:w-auto">
               {navItems.map((item) => (
                 <Link

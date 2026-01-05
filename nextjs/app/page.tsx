@@ -203,7 +203,7 @@ export default async function Home() {
 
       {/* Featured Analysis Section - Dark Background */}
       {featuredAnalysisArticle && (
-        <section className="-mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 py-12 bg-slate-900">
+        <section className="container-negative-margin container-padding py-12 bg-slate-900">
           <Link href={`/analysis/${featuredAnalysisArticle.slug}`} className="block group">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               {/* Left Column - Text Content */}

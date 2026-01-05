@@ -45,7 +45,7 @@ export default function RootLayout({
         </div>
         
         <Navigation />
-        <div className="w-full px-4 md:px-8 lg:px-12">
+        <div className="w-full container-padding">
           {children}
         </div>
         <Footer />

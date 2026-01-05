@@ -101,7 +101,7 @@ const Footer: React.FC = () => {
     <footer className="bg-slate-900 text-slate-300 mt-16">
       {/* Social Bar */}
       <div className="border-b border-slate-700/50">
-        <div className="w-full px-4 md:px-8 lg:px-12 py-5 flex items-center">
+        <div className="w-full container-padding py-5 flex items-center">
           <div className="flex items-center gap-3">
             {socialLinks.map(({ icon: Icon, href, label }) => (
               <a
@@ -118,7 +118,7 @@ const Footer: React.FC = () => {
       </div>
 
       {/* Main Footer Content */}
-      <div className="w-full px-4 md:px-8 lg:px-12 py-6 md:py-10">
+      <div className="w-full container-padding py-6 md:py-10">
         {/* Desktop: Original 4-column grid */}
         <div className="hidden md:grid md:grid-cols-4 gap-8">
           {/* Topics Column */}
@@ -244,7 +244,7 @@ const Footer: React.FC = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-slate-700/50">
-        <div className="w-full px-4 md:px-8 lg:px-12 py-5">
+        <div className="w-full container-padding py-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Legal Links Row */}
             <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
