@@ -222,8 +222,8 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
     logger.info(f"Fetching headlines from all sources after {after_date}")
     all_articles = []
 
+    # Google News
     try:
-        # Google News
         googleNewsScraper = GoogleNewsScraper()
         google_articles_world = googleNewsScraper.scrape_top_world_headlines(after_date=after_date)
         all_articles.extend(google_articles_world)
@@ -236,8 +236,11 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
         google_articles_technology = googleNewsScraper.scrape_top_technology_headlines(after_date=after_date)
         all_articles.extend(google_articles_technology)
         logger.info(f"Fetched {len(google_articles_technology)} Google News Technology Headlines")
+    except Exception as e:
+        logger.error(f"Error fetching Google News headlines: {str(e)}")
 
-        # WSJ
+    # WSJ
+    try:
         wsjScraper = WSJScraper()
         wsj_articles_world = wsjScraper.scrape_world_news(after_date=after_date)
         all_articles.extend(wsj_articles_world)
@@ -250,56 +253,77 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
         wsj_articles_economy = wsjScraper.scrape_economy_news(after_date=after_date)
         all_articles.extend(wsj_articles_economy)
         logger.info(f"Fetched {len(wsj_articles_economy)} WSJ Economy news")
+    except Exception as e:
+        logger.error(f"Error fetching WSJ headlines: {str(e)}")
 
-        # Yahoo Finance
+    # Yahoo Finance
+    try:
         yahoo_articles = YahooFinanceScraper().scrape_news(after_date=after_date)
         all_articles.extend(yahoo_articles)
         logger.info(f"Fetched {len(yahoo_articles)} Yahoo Finance news")
+    except Exception as e:
+        logger.error(f"Error fetching Yahoo Finance headlines: {str(e)}")
 
-        # Bloomberg
+    # Bloomberg
+    try:
         bloombergScraper = BloombergScraper()
         bloomberg_articles = bloombergScraper.scrape_news(after_date=after_date)
         all_articles.extend(bloomberg_articles)
         logger.info(f"Fetched {len(bloomberg_articles)} Bloomberg articles")
 
-        bloomberg_articles = bloombergScraper.scrape_economics_news(after_date=after_date)
-        all_articles.extend(bloomberg_articles)
-        logger.info(f"Fetched {len(bloomberg_articles)} Bloomberg Economy news")
+        bloomberg_economics_articles = bloombergScraper.scrape_economics_news(after_date=after_date)
+        all_articles.extend(bloomberg_economics_articles)
+        logger.info(f"Fetched {len(bloomberg_economics_articles)} Bloomberg Economy news")
+    except Exception as e:
+        logger.error(f"Error fetching Bloomberg headlines: {str(e)}")
 
-        # Financial Times
+    # Financial Times
+    try:
         financial_times_articles = FinancialTimesScraper().scrape_news(after_date=after_date)
         all_articles.extend(financial_times_articles)
         logger.info(f"Fetched {len(financial_times_articles)} Financial Times articles")
+    except Exception as e:
+        logger.error(f"Error fetching Financial Times headlines: {str(e)}")
 
-        # CNBC
+    # CNBC
+    try:
         cnbc_articles = CNBCScraper().scrape_world_news(after_date=after_date)
         all_articles.extend(cnbc_articles)
         logger.info(f"Fetched {len(cnbc_articles)} CNBC articles")
+    except Exception as e:
+        logger.error(f"Error fetching CNBC headlines: {str(e)}")
 
-        # Reuters
+    # Reuters
+    try:
         reuters_articles = ReutersScraper().scrape_news(after_date=after_date)
         all_articles.extend(reuters_articles)
         logger.info(f"Fetched {len(reuters_articles)} Reuters articles")
+    except Exception as e:
+        logger.error(f"Error fetching Reuters headlines: {str(e)}")
 
-        # The Guardian
+    # The Guardian
+    try:
         guardian_articles = TheGuardianScraper().scrape_world_news(after_date=after_date)
         all_articles.extend(guardian_articles)
         logger.info(f"Fetched {len(guardian_articles)} Guardian articles")
+    except Exception as e:
+        logger.error(f"Error fetching Guardian headlines: {str(e)}")
 
-        # DW
+    # DW
+    try:
         dw_articles = DWScraper().scrape_top_news(after_date=after_date)
         all_articles.extend(dw_articles)
         logger.info(f"Fetched {len(dw_articles)} DW articles")
+    except Exception as e:
+        logger.error(f"Error fetching DW headlines: {str(e)}")
 
-        # Politico
+    # Politico
+    try:
         politico_articles = PoliticoScraper().scrape_europe_news(after_date=after_date)
         all_articles.extend(politico_articles)
         logger.info(f"Fetched {len(politico_articles)} Politico articles")
-
-
     except Exception as e:
-        logger.error(f"Error fetching headlines: {str(e)}")
-        return []
+        logger.error(f"Error fetching Politico headlines: {str(e)}")
 
     logger.info(f"Total headlines fetched: {len(all_articles)}")
     return all_articles
