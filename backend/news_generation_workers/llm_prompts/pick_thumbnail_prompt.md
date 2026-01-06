@@ -43,6 +43,7 @@ Your task is to select **the single most appropriate thumbnail** from a list of 
     *   *Priority 2 (Labor/Jobs):* If the headline mentions jobless claims or unemployment, pick an image of **"Help Wanted" / "Now Hiring" signs**, or workers in generic settings (construction, working spaces), or similar.
     *   *Priority 3 (Financial Markets):* If the headline mentions Wall Street, Stocks, or Indices, pick an image of **electronic stock trading boards (charts/graphs) or trading floors**, the Wall St Bull statue, or the Stock Exchange facade, or similar.
     *   *Priority 4 (Central Banks):* If the focus is interest rates or the Fed, pick an image of the bank's building or the specific Bank Chairperson (e.g., Powell), or similar.
+    *   *NOTE!: Try to avoid images of real charts and stats data, as in most cases is going to be out of date, inaccurate and not representative of the current market conditions.
 
 *   **Scenario: War / Conflict / Accidents**
     *   *Priority 1:* An image of the specific equipment, location, or damage mentioned (e.g., "Leopard 2 Tank", "Burnt building").
