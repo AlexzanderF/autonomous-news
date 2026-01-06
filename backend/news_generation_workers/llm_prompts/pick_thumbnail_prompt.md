@@ -39,10 +39,10 @@ Your task is to select **the single most appropriate thumbnail** from a list of 
     *   *Priority 3:* If the news is about a specific product (e.g., "Apple releases new iPhone"), show a image of the product.
 
 *   **Scenario: Economic Data & Markets (CPI, GDP, jobs)**
-    *   *Priority 1 (Consumer/Inflation):* If the headline mentions prices, CPI, or inflation, prioritize "real world" images like **supermarket aisles, gas pumps, price tags, or shopping carts** over generic money/coins.
-    *   *Priority 2 (Labor/Jobs):* If the headline mentions jobless claims or unemployment, prioritize images of **"Help Wanted" / "Now Hiring" signs** or workers in generic settings (construction, office).
-    *   *Priority 3 (Financial Markets):* If the headline mentions Wall Street, Stocks, or Indices, prioritize **electronic stock trading boards (charts/graphs)**, the Wall St Bull, or the Stock Exchange facade.
-    *   *Priority 4 (Central Banks):* If the focus is interest rates/Fed, prioritize the bank's building or the specific Bank Chairperson (e.g., Powell).
+    *   *Priority 1 (Consumer/Inflation):* If the headline mentions prices, CPI, or inflation, pick an image showing **supermarket aisles, gas pumps, price tags, or shopping carts** — real-world consumer imagery over generic money/coins, or similar.
+    *   *Priority 2 (Labor/Jobs):* If the headline mentions jobless claims or unemployment, pick an image of **"Help Wanted" / "Now Hiring" signs**, or workers in generic settings (construction, working spaces), or similar.
+    *   *Priority 3 (Financial Markets):* If the headline mentions Wall Street, Stocks, or Indices, pick an image of **electronic stock trading boards (charts/graphs) or trading floors**, the Wall St Bull statue, or the Stock Exchange facade, or similar.
+    *   *Priority 4 (Central Banks):* If the focus is interest rates or the Fed, pick an image of the bank's building or the specific Bank Chairperson (e.g., Powell), or similar.
 
 *   **Scenario: War / Conflict / Accidents**
     *   *Priority 1:* An image of the specific equipment, location, or damage mentioned (e.g., "Leopard 2 Tank", "Burnt building").
