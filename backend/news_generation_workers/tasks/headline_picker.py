@@ -22,6 +22,8 @@ from rss_scrapers.politico_scraper import PoliticoScraper
 from rss_scrapers.bloomberg_scraper import BloombergScraper
 from rss_scrapers.yahoo_finance_scraper import YahooFinanceScraper
 from rss_scrapers.ft_scraper import FinancialTimesScraper
+from rss_scrapers.reuters_scraper import ReutersScraper
+from rss_scrapers.cnbc_scraper import CNBCScraper
 
 from celery_config import celery_app
 from .shared import (
@@ -269,10 +271,15 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
         all_articles.extend(financial_times_articles)
         logger.info(f"Fetched {len(financial_times_articles)} Financial Times articles")
 
-        # BBC
-        bbc_articles = BBCScraper().scrape_international_news(after_date=after_date)
-        all_articles.extend(bbc_articles)
-        logger.info(f"Fetched {len(bbc_articles)} BBC articles")
+        # CNBC
+        cnbc_articles = CNBCScraper().scrape_world_news(after_date=after_date)
+        all_articles.extend(cnbc_articles)
+        logger.info(f"Fetched {len(cnbc_articles)} CNBC articles")
+
+        # Reuters
+        reuters_articles = ReutersScraper().scrape_news(after_date=after_date)
+        all_articles.extend(reuters_articles)
+        logger.info(f"Fetched {len(reuters_articles)} Reuters articles")
 
         # The Guardian
         guardian_articles = TheGuardianScraper().scrape_world_news(after_date=after_date)
@@ -283,11 +290,6 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
         dw_articles = DWScraper().scrape_top_news(after_date=after_date)
         all_articles.extend(dw_articles)
         logger.info(f"Fetched {len(dw_articles)} DW articles")
-
-        # France24
-        france24 = France24Scraper().scrape_world_news(after_date=after_date)
-        all_articles.extend(france24)
-        logger.info(f"Fetched {len(france24)} France24 articles")
 
         # Politico
         politico_articles = PoliticoScraper().scrape_europe_news(after_date=after_date)

@@ -52,6 +52,17 @@ class BloombergScraper(BaseRSSScraper):
         url = "https://feeds.bloomberg.com/economics/news.rss"
         return self._scrape_feed(url, num_articles, after_date, "Bloomberg")
 
+    def scrape_markets_news(self, num_articles: int = 200, after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
+        """
+        Scrape markets news from Bloomberg News RSS feed.
+        
+        :param num_articles: Maximum number of articles to scrape (default: 200).
+        :param after_date: Optional datetime to filter articles published after this date.
+        :return: List of ScrapedArticleDTO objects with article data.
+        """
+        url = "https://feeds.bloomberg.com/markets/news.rss"
+        return self._scrape_feed(url, num_articles, after_date, "Bloomberg")
+
     def scrape_industries_news(self, num_articles: int = 200, after_date: Optional[datetime] = None) -> List[ScrapedArticleDTO]:
         """
         Scrape industries news from Bloomberg News RSS feed.
