@@ -180,7 +180,7 @@ const Navigation: React.FC = () => {
                 >
                   {item.icon}
                   <span>{item.label}</span>
-                  <span className="absolute left-0 bottom-[-5px] w-0 h-[5px] bg-white group-hover:w-full transition-all duration-200" />
+                  <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-white group-hover:w-full transition-all duration-200" />
                 </Link>
               ))}
             </div>
