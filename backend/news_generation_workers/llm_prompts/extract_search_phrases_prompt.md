@@ -33,6 +33,21 @@ Output: ["germany", "military service", "young soldiers", "germany flag", "law"]
 Input: "Wall St Week Ahead: Fed's internal split puts spotlight on Powell's rate guidance"
 Output: ["wall street", "federal reserve", "powell", "financial market", "fund rate"]
 
+Input: "S&P 500 hits record high"
+Output: ["trading floor", "stock market", "stock trading board", "financial charts"]
+
+Input: "US CPI rises 3.2% in July, higher than expected"
+Output: ["supermarket aisle", "price tag", "grocery shopping", "inflation", "consumer prices"]
+
+Input: "US weekly jobless claims rise to 230,000"
+Output: ["help sign", "unemployment office", "job seekers", "hiring sign", "jobless claims"]
+
+Input: "US GDP grows 2.8% in Q2, beating expectations"
+Output: ["economic growth", "stock trading board", "financial charts", "economy"]
+
+Input: "Federal Reserve holds interest rates steady at 5.25%"
+Output: ["federal reserve building", "interest rates", "central bank", "fed chairman"]
+
 Input: "EU fines Elon Musk's X $140 million for rule breaches"
 Output: ["elon musk", "elon musk x", "european union", "social media platform"]
 
