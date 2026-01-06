@@ -30,8 +30,6 @@ DOWNLOAD_TIMEOUT = 30
 
 # Retry configuration for rate limiting (429 errors)
 MAX_RETRIES = int(os.environ.get("THUMBNAIL_DOWNLOAD_MAX_RETRIES", 0))
-INITIAL_RETRY_DELAY = 10.0  # Wikimedia recommends longer waits for 429
-RETRY_BACKOFF_MULTIPLIER = 2.0
 
 DEFAULT_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -114,9 +112,9 @@ class ImageStorageService:
     
     def _download_with_retry(self, url: str) -> requests.Response:
         """
-        Download a URL with retry logic for 429 rate limit errors.
-        Uses exponential backoff between retries.
-        For Wikimedia URLs, falls back to residential proxy on 429 errors.
+        Download a URL.
+        If a 429 rate limit error occurs (especially for Wikimedia), 
+        fall back to residential proxy immediately without local retries.
         
         Args:
             url: The URL to download
@@ -125,62 +123,54 @@ class ImageStorageService:
             Response object from successful request
             
         Raises:
-            requests.HTTPError: If all retries are exhausted or non-429 error occurs
+            requests.HTTPError: If error occurs or proxy fallback also fails
         """
         headers = DEFAULT_HEADERS
-        
-        delay = INITIAL_RETRY_DELAY
         is_wikimedia = self._is_wikimedia_url(url)
         
-        # Use a session to persist cookies (Wikimedia sets WMF-Uniq cookie)
+        # Use a session to persist cookies
         session = requests.Session()
         session.headers.update(headers)
         
-        for attempt in range(MAX_RETRIES + 1):
+        try:
             response = session.get(
                 url,
                 timeout=DOWNLOAD_TIMEOUT,
                 stream=True
             )
             
-            if response.status_code == 429:
-                # For Wikimedia URLs, try using the proxy before exhausting retries
-                if is_wikimedia:
-                    logger.warning(f"Rate limit (429) on direct request, trying proxy: {url}")
-                    proxy_response = self._download_via_proxy(url)
-                    if proxy_response is not None:
-                        return proxy_response
-                    # Proxy failed, continue with normal retry logic
-                    logger.warning("Proxy attempt failed, continuing with direct retries")
+            if response.status_code == 429 and is_wikimedia:
+                logger.warning(f"Rate limit (429) on direct request, switching to proxy: {url}")
+                # Hand off to proxy service which handles retries/rotation internally
+                proxy_response = self._download_via_proxy(url)
+                if proxy_response is not None:
+                    return proxy_response
                 
-                if attempt < MAX_RETRIES:
-                    logger.warning(
-                        f"Rate limit (429) on attempt {attempt + 1}/{MAX_RETRIES + 1}, "
-                        f"retrying in {delay:.1f}s: {url}"
-                    )
-                    time.sleep(delay)
-                    delay *= RETRY_BACKOFF_MULTIPLIER
-                    continue
-                else:
-                    logger.error(f"Rate limit (429) - all {MAX_RETRIES + 1} attempts exhausted: {url}")
-                    response.raise_for_status()
-            
+                # If proxy failed (returned None), we fall through to raising the original 429
+                logger.warning("Proxy fallback failed or returned None, raising original 429")
+                
             response.raise_for_status()
             return response
-        
-        # Should not reach here, but just in case
-        raise requests.RequestException("Unexpected error in retry logic")
+        except requests.exceptions.HTTPError as e:
+            # If we caught a 429 above, we handled it. 
+            # If it was 429 but not wikimedia, or proxy failed, we re-raise.
+            if e.response is not None and e.response.status_code == 429 and is_wikimedia:
+                 # Logic above should catch this, but safeguard
+                 pass 
+            raise e
     
     def _download_via_proxy(self, url: str, headers: Optional[dict] = None) -> Optional[requests.Response]:
         """
         Attempt to download a URL using the residential proxy service.
+        Retries up to MAX_RETRIES times with a fresh IP session each time.
+        No backoff delay is needed because we get a new IP per request.
         
         Args:
             url: The URL to download
             headers: Request headers to use
             
         Returns:
-            Response object if successful, None if proxy is not configured or request failed
+            Response object if successful, None if proxy fails or exhausted retries
         """
         try:
             proxy_service = get_proxy_service()
@@ -189,23 +179,41 @@ class ImageStorageService:
                 logger.warning("Proxy service not configured, cannot use proxy fallback")
                 return None
             
-            response = proxy_service.get_with_proxy(
-                url,
-                headers=headers,
-                stream=True,
-            )
-            response.raise_for_status()
-            logger.info(f"Successfully downloaded via proxy: {url}")
-            return response
+            # Retry loop for proxy requests
+            # We try MAX_RETRIES + 1 times (initial + retries)
+            for attempt in range(MAX_RETRIES + 1):
+                try:
+                    if attempt > 0:
+                        logger.info(f"Proxy retry attempt {attempt}/{MAX_RETRIES} for: {url}")
+                        
+                    response = proxy_service.get_with_proxy(
+                        url,
+                        headers=headers,
+                        stream=True,
+                    )
+                    
+                    if response.status_code == 200:
+                        logger.info(f"Successfully downloaded via proxy (attempt {attempt}): {url}")
+                        return response
+                    elif response.status_code == 429:
+                        # 429 on proxy means this specific IP is blocked too
+                        logger.warning(f"Proxy IP rate limited (429) on attempt {attempt}: {url}")
+                        # Continue to next iteration -> new session -> new IP
+                        continue
+                    else:
+                        # Other errors might be permanent, but let's try again for robustness since it's a proxy
+                        logger.warning(f"Proxy request returned {response.status_code} on attempt {attempt}: {url}")
+                        continue
+                        
+                except requests.RequestException as e:
+                    logger.warning(f"Proxy request attempt {attempt} failed: {e}")
+                    continue
             
-        except ValueError as e:
-            logger.warning(f"Proxy not configured: {e}")
+            logger.error(f"All {MAX_RETRIES + 1} proxy attempts failed for: {url}")
             return None
-        except requests.exceptions.RequestException as e:
-            logger.warning(f"Proxy request failed: {e}")
-            return None
+            
         except Exception as e:
-            logger.error(f"Unexpected error with proxy request: {e}")
+            logger.error(f"Unexpected error with proxy request setup: {e}")
             return None
 
     def download_and_store(
