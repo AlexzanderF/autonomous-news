@@ -59,14 +59,23 @@ def run_headline_picker_cycle(self: Task) -> Dict[str, Any]:
 
         redis_client = get_redis_client()
 
-        # Get the last run timestamp, or fall back to 24 hours ago for initial run
+        # Get the last run timestamp, or fall back to 12 hours ago for initial run
         last_run_timestamp = get_last_run_timestamp(redis_client)
+        now = datetime.now(timezone.utc)
+        twelve_hours_ago = now - timedelta(hours=12)
+        twenty_four_hours_ago = now - timedelta(hours=24)
+        
         if last_run_timestamp:
-            after_date = last_run_timestamp
-            logger.info(f"Using last run timestamp: {after_date}")
+            # If last run was more than 24 hours ago, cap at 12 hours to avoid massive scrapes
+            if last_run_timestamp < twenty_four_hours_ago:
+                after_date = twelve_hours_ago
+                logger.info(f"Last run timestamp ({last_run_timestamp}) is older than 24 hours, using 12-hour cap: {after_date}")
+            else:
+                after_date = last_run_timestamp
+                logger.info(f"Using last run timestamp: {after_date}")
         else:
-            after_date = datetime.now(timezone.utc) - timedelta(days=1)
-            logger.info(f"No previous run found, using 24-hour fallback: {after_date}")
+            after_date = twelve_hours_ago
+            logger.info(f"No previous run found, using 12-hour fallback: {after_date}")
 
         # Fetch all headlines
         all_articles = fetch_all_headlines(after_date)
