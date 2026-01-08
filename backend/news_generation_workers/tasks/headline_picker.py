@@ -24,6 +24,7 @@ from rss_scrapers.yahoo_finance_scraper import YahooFinanceScraper
 from rss_scrapers.ft_scraper import FinancialTimesScraper
 from rss_scrapers.reuters_scraper import ReutersScraper
 from rss_scrapers.cnbc_scraper import CNBCScraper
+from rss_scrapers.marketwatch_scraper import MarketWatchScraper
 
 from celery_config import celery_app
 from .shared import (
@@ -333,6 +334,14 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
         logger.info(f"Fetched {len(politico_articles)} Politico articles")
     except Exception as e:
         logger.error(f"Error fetching Politico headlines: {str(e)}")
+
+    # MarketWatch
+    try:
+        marketwatch_articles = MarketWatchScraper().scrape_top_stories(after_date=after_date)
+        all_articles.extend(marketwatch_articles)
+        logger.info(f"Fetched {len(marketwatch_articles)} MarketWatch articles")
+    except Exception as e:
+        logger.error(f"Error fetching MarketWatch headlines: {str(e)}")
 
     logger.info(f"Total headlines fetched: {len(all_articles)}")
     return all_articles
