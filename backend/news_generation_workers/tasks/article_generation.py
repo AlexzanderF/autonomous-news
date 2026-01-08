@@ -31,6 +31,7 @@ from .shared import (
 )
 
 RETRY_DELAY = 60
+MAX_RETRIES = 2
 
 # ============================================================================
 # Article Generation Task
@@ -39,7 +40,7 @@ RETRY_DELAY = 60
 @celery_app.task(
     bind=True,
     name='news_generation_workers.tasks.article_generation.generate_article_from_headline',
-    max_retries=3,
+    max_retries=MAX_RETRIES,
     default_retry_delay=RETRY_DELAY,
 )
 def generate_article_from_headline(self: Task, title: str, category: str, is_featured: bool = False) -> Dict[str, Any]:
@@ -77,7 +78,7 @@ def generate_article_from_headline(self: Task, title: str, category: str, is_fea
             if api_err.code == 429 or api_err.code == 503:
                 raise self.retry(
                     exc=api_err,
-                    kwargs={'title': title, 'category': category},
+                    kwargs={'title': title, 'category': category, 'is_featured': is_featured},
                     countdown=RETRY_DELAY
                 )
             else:
@@ -89,13 +90,17 @@ def generate_article_from_headline(self: Task, title: str, category: str, is_fea
                 logger.warning(f"Gemini MALFORMED_FUNCTION_CALL for: {title}")
                 raise self.retry(
                     exc=Exception("Malformed Gemini search tool function call"),
-                    kwargs={'title': title, 'category': category},
-                    countdown=10 # Shorter delay
+                    kwargs={'title': title, 'category': category, 'is_featured': is_featured},
+                    countdown=RETRY_DELAY
                 )   
 
         if not article_response or not article_response.text:
-            logger.error(f"Empty Article content response from Gemini for headline: {title}")
-            raise RuntimeError("Empty Article content response from LLM")
+            logger.warning(f"Empty Article content response from Gemini for headline: {title}")
+            raise self.retry(
+                exc=RuntimeError("Empty Article content response from LLM"),
+                kwargs={'title': title, 'category': category, 'is_featured': is_featured},
+                countdown=RETRY_DELAY
+            )
 
         article_content = article_response.text.strip()
 
