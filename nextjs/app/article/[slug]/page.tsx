@@ -50,11 +50,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="w-full">
+      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-16 xl:px-24">
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
           <div className="lg:col-span-8 mt-12">
-            <header className="mb-4 lg:mb-8 border-b border-slate-200 pb-4 lg:pb-8">
+            <header className="mb-4 lg:mb-8 border-b border-slate-200 pb-2 lg:pb-4">
               <div className="flex items-center gap-3 mb-4">
                 {article.categories.map((category) => (
                   <span
@@ -70,13 +70,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 {article.title}
               </h1>
 
-              {article.excerpt && (
-                <p className="text-xl text-slate-700 font-light border-l-2 border-indigo-500 pl-4">
-                  {article.excerpt}
-                </p>
-              )}
-
-              <div className="flex items-center justify-between mt-6">
+              <div className="flex items-center justify-between mt-4">
                 <span className="flex items-center gap-1.5 text-slate-500 text-sm">
                   <Clock className="w-4 h-4" />
                   {new Date(article.published_at).toLocaleDateString('en-US', {
@@ -86,7 +80,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   })}
                 </span>
 
-                <button className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                <button className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
                   <Share2 className="w-4 h-4" />
                 </button>
               </div>
