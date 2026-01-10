@@ -69,14 +69,14 @@ class Source(Base):
 class ArticleLLMMetadata(Base):
     """
     LLM generation metadata for news articles.
-    Stores AI model info, sentiment score, and grounding sources for generated articles.
+    Stores AI model info, key points, and grounding sources for generated articles.
     Uses article_id as primary key for true 1:1 relationship.
     """
     __tablename__ = 'article_llm_metadata'
     
     article_id = Column(Integer, ForeignKey('articles.id', ondelete='CASCADE'), primary_key=True)
     ai_model_used = Column(String(50), nullable=False)
-    sentiment_score = Column(Integer, nullable=False, default=0, server_default='0')  # Sentiment score (0-100)
+    key_points = Column(JSONB, nullable=True)  # Array of key point sentences
     
     # Relationships
     article = relationship('Article', back_populates='llm_metadata')

@@ -116,18 +116,18 @@ def generate_article_from_headline(self: Task, title: str, category: str, is_fea
         )
 
         if not article_metadata_response or not article_metadata_response.text:
-            logger.error(f"Empty Excerpt and Sentiment Score response from Gemini for headline: {title}")
-            raise RuntimeError("Empty Excerpt and Sentiment Score response from LLM")
+            logger.error(f"Empty excerpt and key points response from Gemini for headline: {title}")
+            raise RuntimeError("Empty excerpt and key points response from LLM")
 
         # Parse the structured response
         try:
             cleaned_json = clean_json_response(article_metadata_response.text)
             parsed_metadata = json.loads(cleaned_json)
             article_excerpt = parsed_metadata['excerpt'].strip()
-            sentiment_score = parsed_metadata['sentiment_score']
+            key_points = parsed_metadata['key_points']
         except Exception as e:
             logger.error(f"Failed to parse article metadata response as JSON: {e}. Raw response: {article_metadata_response.text}")
-            raise ValueError(f"Failed to parse article metadata response and fallback failed: {str(e)}")
+            raise ValueError(f"Failed to parse article metadata response: {str(e)}")
 
         # Create GeneratedArticle object
         generated_article = GeneratedArticleDTO(
@@ -135,7 +135,7 @@ def generate_article_from_headline(self: Task, title: str, category: str, is_fea
             category=category,
             content=article_content,
             excerpt=article_excerpt,
-            sentiment_score=sentiment_score,
+            key_points=key_points,
             generated_at=datetime.now(timezone.utc),
             status="draft",
             is_featured=is_featured
@@ -211,7 +211,7 @@ def store_generated_article(article: GeneratedArticleDTO) -> Optional[int]:
         llm_metadata = ArticleLLMMetadata(
             article_id=db_article.id,
             ai_model_used=ARTICLE_GENERATION_MODEL_NAME,
-            sentiment_score=article.sentiment_score
+            key_points=article.key_points
         )
         db.add(llm_metadata)
 

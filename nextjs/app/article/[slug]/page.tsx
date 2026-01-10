@@ -2,10 +2,9 @@ import { notFound } from 'next/navigation';
 import { getArticleBySlug, getArticles, ArticleType } from '@/services/article-service';
 import { Share2, Clock } from 'lucide-react';
 import SmartImage from '@/components/SmartImage';
-import TableOfContents from '@/components/TableOfContents';
 import ArticleContent from '@/components/ArticleContent';
 import AdSense from '@/components/AdSense';
-import SentimentAnalysis from '@/components/SentimentAnalysis';
+import KeyPoints from '@/components/KeyPoints';
 import ImageAttribution from '@/components/ImageAttribution';
 import { getThumbnailUrl } from '@/utils/thumbnails';
 import { NewsItem } from '@/dtos';
@@ -29,16 +28,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  // Calculate sentiment score for display
-  const sentimentScore = article.sentiment_score;
-
-  // Extract section headings from markdown for table of contents
-  // Looking for lines that start with ### (h3 headers) which are section titles
-  const headings = article.content
-    .split('\n')
-    .filter(line => line.trim().startsWith('### '))
-    .map(line => line.trim().replace(/^(### )|(\*\*)/g, ''))
-    .filter(heading => heading.length > 0);
+  // Extract key points from article
+  const keyPoints = article.key_points;
 
   // Fetch related articles from the same category
   let relatedArticles: NewsItem[] = [];
@@ -101,10 +92,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
             </header>
 
-            {/* Mobile-only Sentiment Analysis - shown at the beginning on mobile */}
-            <div className="lg:hidden mb-4">
-              <SentimentAnalysis score={sentimentScore} />
-            </div>
+            {/* Key Points Section - shown prominently after header */}
+            {keyPoints && keyPoints.length > 0 && (
+              <KeyPoints keyPoints={keyPoints} />
+            )}
 
             {article.thumbnail && (
               <figure className="relative w-full mb-10">

@@ -13,6 +13,5 @@ export function mapArticleToNewsItem(article: ArticleListItemDTO): NewsItem {
     category: article.categories.length > 0 ? article.categories[0].name : 'General',
     timestamp: article.published_at,
     imageUrl: getThumbnailUrl(article.thumbnail, article.id),
-    sentimentScore: article.sentiment_score
   };
 }

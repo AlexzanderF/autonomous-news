@@ -40,7 +40,7 @@ class ArticleResponse(BaseModel):
     categories: List[CategoryDTO] = []
     # LLM metadata fields (populated from llm_metadata relationship)
     ai_model_used: Optional[str] = None
-    sentiment_score: Optional[int] = None
+    key_points: Optional[List[str]] = None
     sources: List[SourceDTO] = []
 
     class Config:
@@ -67,7 +67,7 @@ class ArticleResponse(BaseModel):
         }
         if article.llm_metadata:
             data['ai_model_used'] = article.llm_metadata.ai_model_used
-            data['sentiment_score'] = article.llm_metadata.sentiment_score
+            data['key_points'] = article.llm_metadata.key_points
             data['sources'] = article.llm_metadata.sources
         return cls(**data)
 
@@ -85,7 +85,7 @@ class ArticleListItemDTO(BaseModel):
     published_at: datetime
     categories: List[CategoryDTO] = []
     # LLM metadata fields (populated from llm_metadata relationship)
-    sentiment_score: Optional[int] = None
+    key_points: Optional[List[str]] = None
     is_featured: bool = False
 
     class Config:
@@ -105,7 +105,7 @@ class ArticleListItemDTO(BaseModel):
             'is_featured': article.is_featured,
         }
         if article.llm_metadata:
-            data['sentiment_score'] = article.llm_metadata.sentiment_score
+            data['key_points'] = article.llm_metadata.key_points
         return cls(**data)
 
 

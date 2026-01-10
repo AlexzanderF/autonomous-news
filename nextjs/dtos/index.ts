@@ -7,7 +7,6 @@ export interface NewsItem {
   category: string; // Category name from API
   timestamp: string; // ISO string
   imageUrl: string;
-  sentimentScore: number; // 0 to 100
 }
 
 export interface CategoryDTO {
@@ -42,7 +41,7 @@ export interface GetArticleResponse {
   published_at: string;
   categories: CategoryDTO[];
   sources: SourceDTO[];
-  sentiment_score: number;
+  key_points: string[] | null;
 }
 
 export interface ArticleListItemDTO {
@@ -53,7 +52,7 @@ export interface ArticleListItemDTO {
   thumbnail: string | null;
   published_at: string;
   categories: CategoryDTO[];
-  sentiment_score: number;
+  key_points: string[] | null;
   is_featured: boolean;
 }
 

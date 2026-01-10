@@ -24,7 +24,7 @@ class GeneratedArticleDTO(BaseModel):
     category: str
     content: str
     excerpt: Optional[str] = None
-    sentiment_score: Optional[int] = None
+    key_points: Optional[List[str]] = None
     generated_at: datetime
     status: str = "draft"
     source_urls: Optional[List[str]] = []
