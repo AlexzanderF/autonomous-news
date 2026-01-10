@@ -94,7 +94,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     day: 'numeric'
                   })}
                 </span>
-                
+
                 <button className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
                   <Share2 className="w-4 h-4" />
                 </button>
@@ -127,16 +127,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
           <div className="lg:col-span-4 mt-4 lg:mt-12">
             <div className="sticky top-32 space-y-6">
-              {/* Table of Contents - hidden on mobile */}
-              <div className="hidden lg:block">
-                <TableOfContents headings={headings} />
-              </div>
-
-              {/* Sentiment Analysis - hidden on mobile (shown at beginning instead) */}
-              <div className="hidden lg:block">
-                <SentimentAnalysis score={sentimentScore} />
-              </div>
-
               {/* Advertisement */}
               <AdSense format="rectangle" />
             </div>
