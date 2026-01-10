@@ -12,7 +12,7 @@ export default function KeyPoints({ keyPoints }: KeyPointsProps) {
   }
 
   return (
-    <div className="bg-slate-50 border-l-4 border-indigo-500 py-2 px-6 mb-8">
+    <div className="bg-slate-50 border-l-4 border-indigo-500 py-2 px-6 mb-10">
       <div className="flex items-center gap-2 mb-3">
         <h2 className="text-lg font-bold text-indigo-500 uppercase tracking-wider">
           Key Points
