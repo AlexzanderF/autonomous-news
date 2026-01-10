@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from datetime import datetime, timezone, timedelta
@@ -9,7 +10,6 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from dto import ScrapedArticleDTO, ProcessedHeadlineDTO, HeadlinePickerResponse
 
 # Import RSS scrapers
 from rss_scrapers.google_news_scraper import GoogleNewsScraper
@@ -26,6 +26,7 @@ from rss_scrapers.reuters_scraper import ReutersScraper
 from rss_scrapers.cnbc_scraper import CNBCScraper
 from rss_scrapers.marketwatch_scraper import MarketWatchScraper
 
+from dto import ScrapedArticleDTO, ProcessedHeadlineDTO, HeadlinePickerResponse
 from celery_config import celery_app
 from .shared import (
     get_redis_client,
@@ -38,10 +39,9 @@ from .shared import (
     HEADLINES_PICKER_THINKING_LEVEL,
     HEADLINES_PICKER_TEMPERATURE,
 )
-
 from db import Article, get_database_session
 
-import os
+MAX_DESCRIPTION_LENGTH = 300
 
 # ============================================================================
 # Headline Ingestion Task
@@ -311,14 +311,6 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
     except Exception as e:
         logger.error(f"Error fetching Reuters headlines: {str(e)}")
 
-    # The Guardian
-    try:
-        guardian_articles = TheGuardianScraper().scrape_world_news(after_date=after_date)
-        all_articles.extend(guardian_articles)
-        logger.info(f"Fetched {len(guardian_articles)} Guardian articles")
-    except Exception as e:
-        logger.error(f"Error fetching Guardian headlines: {str(e)}")
-
     # DW
     try:
         dw_articles = DWScraper().scrape_top_news(after_date=after_date)
@@ -326,14 +318,6 @@ def fetch_all_headlines(after_date: datetime) -> List[ScrapedArticleDTO]:
         logger.info(f"Fetched {len(dw_articles)} DW articles")
     except Exception as e:
         logger.error(f"Error fetching DW headlines: {str(e)}")
-
-    # Politico
-    try:
-        politico_articles = PoliticoScraper().scrape_europe_news(after_date=after_date)
-        all_articles.extend(politico_articles)
-        logger.info(f"Fetched {len(politico_articles)} Politico articles")
-    except Exception as e:
-        logger.error(f"Error fetching Politico headlines: {str(e)}")
 
     # MarketWatch
     try:
@@ -359,12 +343,17 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
 
     # Fetch existing article titles for deduplication
     existing_titles = fetch_recent_article_titles(hours=12)
-
+    
     headlines_data: List[Dict[str, str]] = []
     for article in articles:
+        description = article.short_description or ""
+        # Cap description length to reduce LLM input tokens
+        if len(description) > MAX_DESCRIPTION_LENGTH:
+            description = description[:MAX_DESCRIPTION_LENGTH] + "..."
+        
         headlines_data.append({
             'title': article.title,
-            'short_description': article.short_description or "",
+            'short_description': description,
             'date': article.date.isoformat(),
         })
 
