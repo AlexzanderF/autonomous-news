@@ -12,7 +12,7 @@ Do not write like an opinion piece; maintain neutrality and clarity, but also do
 
 **Article Requirements**
 
-- Write a 350–500 word market article in professional wire style.
+- Write a 250–400 word market article in professional wire style.
 - Include:
     * Event description
     * Market reaction (rates, equities, bonds, etc.)
