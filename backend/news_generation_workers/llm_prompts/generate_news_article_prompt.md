@@ -29,8 +29,8 @@ Do not write like an opinion piece; maintain neutrality and clarity, but also do
 - Quotes may show minimal personality or perspective.
 - Avoid clichés like “markets reacted swiftly” or “investors are watching.”
 - Avoid round probabilities or overconfident statements.
-- End with a factual implication or next step, not a moral or opinionated conclusion.
 - Do not use bullet points and subheadings.
+- Do not use paragraphs of equal length.
 
 **Final Internal Check (Mandatory)**
 Before outputting, confirm silently:
