@@ -16,3 +16,5 @@ pillow
 pillow-avif-plugin
 langchain
 langchain-google-genai
+langchain-anthropic
+langchain-tavily

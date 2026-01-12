@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import redis
 from google import genai
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_anthropic import ChatAnthropic
 import sys
 
 # Add parent directory to path
@@ -40,6 +41,9 @@ REDIS_LAST_RUN_KEY = 'news:worker:last_run_timestamp'
 LLM_API_KEY = os.getenv('LLM_API_KEY')
 if not LLM_API_KEY:
     raise ValueError("LLM_API_KEY environment variable is required")
+
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+TAVILY_API_KEY = os.getenv('TAVILY_API_KEY')
 
 HEADLINES_PICKER_MODEL_NAME = os.getenv('HEADLINES_PICKER_MODEL_NAME', 'gemini-2.5-flash')
 ARTICLE_GENERATION_MODEL_NAME = os.getenv('ARTICLE_GENERATION_MODEL_NAME', 'gemini-2.5-flash')
@@ -79,24 +83,62 @@ def get_genai_client() -> genai.Client:
     return genai.Client(api_key=LLM_API_KEY)
 
 
-def get_llm(model_name: str, temperature: float = 1.0, **kwargs) -> ChatGoogleGenerativeAI:
+def get_llm(model_name: str, temperature: float = 1.0, max_retries: int = 1, **kwargs):
     """
-    Factory function to create LangChain LLM instances.
+    Unified factory function to create LangChain LLM instances.
+    Auto-detects provider based on model name prefix.
     
     Args:
-        model_name: The name of the model to use (e.g., 'gemini-2.5-flash')
-        temperature: Sampling temperature (0.0 to 2.0)
-        **kwargs: Additional arguments passed to ChatGoogleGenerativeAI
+        model_name: The name of the model to use. Supports:
+            - Google: 'gemini-*', 'gemma-*' (uses LLM_API_KEY)
+            - Anthropic: 'claude-*' (uses ANTHROPIC_API_KEY)
+        temperature: Sampling temperature
+        **kwargs: Additional arguments passed to the LLM constructor
         
     Returns:
-        A configured ChatGoogleGenerativeAI instance
+        A configured LangChain chat model instance (ChatGoogleGenerativeAI or ChatAnthropic)
+        
+    Raises:
+        ValueError: If the model provider is not supported or API key is missing
     """
-    return ChatGoogleGenerativeAI(
-        model=model_name,
-        google_api_key=LLM_API_KEY,
-        temperature=temperature,
-        **kwargs
-    )
+    model_lower = model_name.lower()
+    
+    # Anthropic Claude models
+    if model_lower.startswith('claude'):
+        if not ANTHROPIC_API_KEY:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is required for Claude models")
+
+        return ChatAnthropic(
+            model=model_name,
+            api_key=ANTHROPIC_API_KEY,
+            temperature=temperature,
+            max_retries=max_retries,
+            **kwargs
+        )
+    
+    # Google Gemini/Gemma models (default)
+    elif model_lower.startswith(('gemini', 'gemma')):
+        if not LLM_API_KEY:
+            raise ValueError("LLM_API_KEY environment variable is required for Gemini/Gemma models")
+
+        return ChatGoogleGenerativeAI(
+            model=model_name,
+            google_api_key=LLM_API_KEY,
+            temperature=temperature,
+            max_retries=max_retries,
+            **kwargs
+        )
+    
+    else:
+        # Default to Google for unknown models (backwards compatibility)
+        logger.warning(f"Unknown model prefix for '{model_name}', defaulting to Google GenAI")
+        return ChatGoogleGenerativeAI(
+            model=model_name,
+            google_api_key=LLM_API_KEY,
+            temperature=temperature,
+            max_retries=max_retries,
+            **kwargs
+        )
 
 
 # ============================================================================
