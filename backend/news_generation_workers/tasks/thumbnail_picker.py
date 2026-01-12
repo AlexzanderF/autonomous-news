@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from celery import Task
 import sys
 from pathlib import Path
-from google import genai
 import json
+from langchain_core.prompts import ChatPromptTemplate
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from news_generation_workers.dto import ThumbnailPickerResponse
@@ -17,14 +17,14 @@ from services.image_storage_service import ImageStorageService
 
 from celery_config import celery_app
 from .shared import (
-    get_genai_client,
+    get_llm,
     load_prompt,
     logger,
+    clean_json_response,
     SEARCH_PHRASES_MODEL_NAME,
     THUMBNAIL_PICKER_MODEL_NAME,
-    THUMBNAIL_PICKER_THINKING_BUDGET,
-    THUMBNAIL_PICKER_THINKING_LEVEL,
     THUMBNAIL_PICKER_TEMPERATURE,
+    THUMBNAIL_PICKER_THINKING_BUDGET,
 )
 
 
@@ -46,13 +46,13 @@ def add_thumbnail_to_article(self: Task, article_id: int) -> Dict[str, Any]:
             raise ValueError(f"Article with ID {article_id} not found")
         
         # Check if thumbnail already exists
-        if article.thumbnail_url:
-            logger.info(f"Article ID {article_id} already has a thumbnail: {article.thumbnail_url}")
-            return {
-                'status': 'success',
-                'message': 'Article already has a thumbnail',
-                'thumbnail_url': article.thumbnail_url
-            }
+        # if article.thumbnail_url:
+        #     logger.info(f"Article ID {article_id} already has a thumbnail: {article.thumbnail_url}")
+        #     return {
+        #         'status': 'success',
+        #         'message': 'Article already has a thumbnail',
+        #         'thumbnail_url': article.thumbnail_url
+        #     }
 
         # Get search phrases based on article content
         search_phrases = get_search_phrases_with_llm(article.title, article.content)
@@ -154,20 +154,30 @@ def get_search_phrases_with_llm(title: str, content: str) -> List[str]:
     """
     Get search phrases for an article using LLM.
     """
+    # Note: Using single human message since some models (like Gemma) don't support system instructions
+    instructions = load_prompt('llm_prompts/extract_search_phrases_prompt.md')
+    
+    # Create LangChain LLM
+    llm = get_llm(model_name=SEARCH_PHRASES_MODEL_NAME)
+    
+    # Create prompt template with combined instructions and content
+    prompt = ChatPromptTemplate.from_messages([
+        ("human", "{instructions}\n\nArticle Title: {title}\nArticle Content: {content}"),
+    ])
+    
+    # Create and invoke the chain
+    chain = prompt | llm
+    response = chain.invoke({
+        "instructions": instructions,
+        "title": title,
+        "content": content,
+    })
 
-    system_prompt = load_prompt('llm_prompts/extract_search_phrases_prompt.md')
-    user_message = f"{system_prompt}\nArticle Title: {title}\nArticle Content: {content}"
-    genai_client = get_genai_client()
-
-    response = genai_client.models.generate_content(
-        model=SEARCH_PHRASES_MODEL_NAME,
-        contents=user_message,
-    )
-
-    response_text = response.text.strip()
+    response_text = response.content.strip()
     
     try:
-        return json.loads(response_text)
+        cleaned_json = clean_json_response(response_text)
+        return json.loads(cleaned_json)
     except json.JSONDecodeError as exc:
         logger.error(f"Failed to parse JSON response: {exc}. Raw output: {response_text[:200]}...")
         return []
@@ -188,23 +198,28 @@ def pick_thumbnail_with_llm(title: str, content: str, images: List[Dict[str, Any
     user_message = f"Article Title: {title}\nArticle Content: {content}\nImages candidates:\n{"\n".join(input_data)}"
     system_prompt = load_prompt('llm_prompts/pick_thumbnail_prompt.md')
 
-    genai_client = get_genai_client()
-    
     try:
-        response = genai_client.models.generate_content(
-            model=THUMBNAIL_PICKER_MODEL_NAME,
-            contents=user_message,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                response_mime_type='application/json',
-                response_schema=ThumbnailPickerResponse,
-                temperature=THUMBNAIL_PICKER_TEMPERATURE,
-                thinking_config=genai.types.ThinkingConfig(thinking_budget=THUMBNAIL_PICKER_THINKING_BUDGET)
-            )
+        # Create LangChain LLM with structured output
+        llm = get_llm(
+            model_name=THUMBNAIL_PICKER_MODEL_NAME,
+            temperature=THUMBNAIL_PICKER_TEMPERATURE,
+            thinking_budget=THUMBNAIL_PICKER_THINKING_BUDGET,
         )
-
-        # Parse the structured response using Pydantic
-        parsed_response = ThumbnailPickerResponse.model_validate_json(response.text)
+        structured_llm = llm.with_structured_output(ThumbnailPickerResponse)
+        
+        # Create prompt template with system and user messages
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "{system_prompt}"),
+            ("human", "{user_message}"),
+        ])
+        
+        # Create and invoke the chain
+        chain = prompt | structured_llm
+        parsed_response = chain.invoke({
+            "system_prompt": system_prompt,
+            "user_message": user_message,
+        })
+        
         thumbnail_id = parsed_response.id
         
         logger.info(f"LLM thumbnail picker selected ID: {thumbnail_id}")

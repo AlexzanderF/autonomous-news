@@ -47,6 +47,3 @@ Before outputting, confirm silently:
 **Output:**
 Do not include any introductory or concluding remarks about the generation process, data sourcing, or how the article was constructed.
 Return **only** the raw Markdown text of the article.
-
-**Task:**
-Your task is to generate article for the following headline: "{Topic Placeholder}"

@@ -6,6 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import redis
 from google import genai
+from langchain_google_genai import ChatGoogleGenerativeAI
 import sys
 
 # Add parent directory to path
@@ -76,6 +77,26 @@ from services.redis_client import get_redis_client
 def get_genai_client() -> genai.Client:
     """Create and return a Google GenAI client."""
     return genai.Client(api_key=LLM_API_KEY)
+
+
+def get_llm(model_name: str, temperature: float = 1.0, **kwargs) -> ChatGoogleGenerativeAI:
+    """
+    Factory function to create LangChain LLM instances.
+    
+    Args:
+        model_name: The name of the model to use (e.g., 'gemini-2.5-flash')
+        temperature: Sampling temperature (0.0 to 2.0)
+        **kwargs: Additional arguments passed to ChatGoogleGenerativeAI
+        
+    Returns:
+        A configured ChatGoogleGenerativeAI instance
+    """
+    return ChatGoogleGenerativeAI(
+        model=model_name,
+        google_api_key=LLM_API_KEY,
+        temperature=temperature,
+        **kwargs
+    )
 
 
 # ============================================================================

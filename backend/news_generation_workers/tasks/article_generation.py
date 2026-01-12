@@ -2,36 +2,34 @@ import os
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
-from google import genai
-from google.genai import errors
 from celery import Task
 import json
 from slugify import slugify
 from sqlalchemy.orm import Session
 import sys
 from pathlib import Path
-from .thumbnail_picker import add_thumbnail_to_article
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from dto import GeneratedArticleDTO
 from db import Article, Category, ArticleLLMMetadata, get_database_session
 
+from .thumbnail_picker import add_thumbnail_to_article
 from celery_config import celery_app
 from .shared import (
-    get_genai_client,
+    get_llm,
     load_prompt,
     logger,
     ARTICLE_GENERATION_MODEL_NAME,
     clean_json_response,
-    ARTICLE_GENERATION_THINKING_BUDGET,
-    ARTICLE_GENERATION_THINKING_LEVEL,
     ARTICLE_GENERATION_TEMPERATURE,
+    ARTICLE_GENERATION_THINKING_BUDGET,
     ARTICLE_METADATA_MODEL_NAME,
-    MALFORMED_FUNCTION_REASON_STRING
 )
 
-RETRY_DELAY = 60
 MAX_RETRIES = 2
+EMPTY_RESPONSE_RETRY_DELAY = 30  # Retry delay for empty responses (Gemini internal errors)
 
 # ============================================================================
 # Article Generation Task
@@ -41,7 +39,7 @@ MAX_RETRIES = 2
     bind=True,
     name='news_generation_workers.tasks.article_generation.generate_article_from_headline',
     max_retries=MAX_RETRIES,
-    default_retry_delay=RETRY_DELAY,
+    default_retry_delay=EMPTY_RESPONSE_RETRY_DELAY,
 )
 def generate_article_from_headline(self: Task, title: str, category: str, is_featured: bool = False) -> Dict[str, Any]:
     """
@@ -55,79 +53,73 @@ def generate_article_from_headline(self: Task, title: str, category: str, is_fea
             logger.warning("Empty title received, skipping article generation")
             raise ValueError("Empty title provided")
 
-        genai_client = get_genai_client()
-
         # Load the article generation prompt
-        article_prompt_template = load_prompt('llm_prompts/generate_news_article_prompt.md')
-        article_prompt = article_prompt_template.replace('{Topic Placeholder}', title)
-        try:
-            # Generate article using Gemini with search grounding
-            article_response = genai_client.models.generate_content(
-                contents=article_prompt,
-                model=ARTICLE_GENERATION_MODEL_NAME,
-                config=genai.types.GenerateContentConfig(
-                    temperature=ARTICLE_GENERATION_TEMPERATURE,
-                    tools=[genai.types.Tool(google_search=genai.types.GoogleSearch())],
-                    thinking_config=genai.types.ThinkingConfig(
-                        # thinking_level=ARTICLE_GENERATION_THINKING_LEVEL,  # Used by the newer Gemini 3 models
-                        thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET
-                    )
-                )
-            )
-        except errors.APIError as api_err:
-            logger.warning(f"Gemini API Error: {api_err}")
-            if api_err.code == 429 or api_err.code == 503:
-                raise self.retry(
-                    exc=api_err,
-                    kwargs={'title': title, 'category': category, 'is_featured': is_featured},
-                    countdown=RETRY_DELAY
-                )
-            else:
-                raise api_err
+        system_prompt = load_prompt('llm_prompts/generate_news_article_prompt.md')
+        
+        # Create LangChain LLM with Google Search tool for grounding
+        llm = get_llm(
+            model_name=ARTICLE_GENERATION_MODEL_NAME,
+            temperature=ARTICLE_GENERATION_TEMPERATURE,
+            thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET,
+            max_retries=MAX_RETRIES,
+        )
+        # Bind Google Search tool for real-time search grounding
+        llm_with_search = llm.bind_tools([{"google_search": {}}])
+        
+        # Create prompt template
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "{system_prompt}"),
+            ("human", "Generate an article for the following headline: {title}"),
+        ])
+        
+        chain = prompt | llm_with_search | StrOutputParser()
+        article_content = chain.invoke({
+            "system_prompt": system_prompt,
+            "title": title,
+        })
 
-        if article_response and article_response.candidates and article_response.candidates[0]:
-            finish_reason = article_response.candidates[0].finish_reason
-            if str(finish_reason) == MALFORMED_FUNCTION_REASON_STRING:
-                logger.warning(f"Gemini MALFORMED_FUNCTION_CALL for: {title}")
-                raise self.retry(
-                    exc=Exception("Malformed Gemini search tool function call"),
-                    kwargs={'title': title, 'category': category, 'is_featured': is_featured},
-                    countdown=RETRY_DELAY
-                )   
-
-        if not article_response or not article_response.text:
-            logger.warning(f"Empty Article content response from Gemini for headline: {title}")
+        # Handle empty responses (Gemini might return 200 with empty content)
+        if not article_content or not article_content.strip():
+            logger.warning(f"Empty Article content response from LLM for headline: {title}")
             raise self.retry(
                 exc=RuntimeError("Empty Article content response from LLM"),
                 kwargs={'title': title, 'category': category, 'is_featured': is_featured},
-                countdown=RETRY_DELAY
+                countdown=EMPTY_RESPONSE_RETRY_DELAY
             )
+        
+        article_content = article_content.strip()
 
-        article_content = article_response.text.strip()
+        # Generate article metadata using LangChain
+        # Note: Using single human message since some models (like Gemma) don't support system instructions
+        instructions = load_prompt('llm_prompts/article_metadata_prompt.md')
+        
+        llm = get_llm(model_name=ARTICLE_METADATA_MODEL_NAME)
+        
+        # Create prompt template with combined instructions and content
+        prompt = ChatPromptTemplate.from_messages([
+            ("human", "{instructions}\n\nArticle Title: {title}\nArticle Content:\n{content}"),
+        ])
+        
+        # Create and invoke the chain
+        chain = prompt | llm
+        metadata_response = chain.invoke({
+            "instructions": instructions,
+            "title": title,
+            "content": article_content,
+        })
 
-        # Load the article metadata prompt
-        article_metadata_prompt_template = load_prompt('llm_prompts/article_metadata_prompt.md')
-        article_metadata_prompt = article_metadata_prompt_template.replace('{Title Placeholder}', title)
-        article_metadata_prompt = article_metadata_prompt_template.replace('{Content Placeholder}', article_content)
-
-        # Generate article metadata
-        article_metadata_response = genai_client.models.generate_content(
-            contents=article_metadata_prompt,
-            model=ARTICLE_METADATA_MODEL_NAME,
-        )
-
-        if not article_metadata_response or not article_metadata_response.text:
-            logger.error(f"Empty excerpt and key points response from Gemini for headline: {title}")
+        if not metadata_response or not metadata_response.content:
+            logger.error(f"Empty excerpt and key points response from LLM for headline: {title}")
             raise RuntimeError("Empty excerpt and key points response from LLM")
 
         # Parse the structured response
         try:
-            cleaned_json = clean_json_response(article_metadata_response.text)
+            cleaned_json = clean_json_response(metadata_response.content)
             parsed_metadata = json.loads(cleaned_json)
             article_excerpt = parsed_metadata['excerpt'].strip()
             key_points = parsed_metadata['key_points']
         except Exception as e:
-            logger.error(f"Failed to parse article metadata response as JSON: {e}. Raw response: {article_metadata_response.text}")
+            logger.error(f"Failed to parse article metadata response as JSON: {e}. Raw response: {metadata_response.content}")
             raise ValueError(f"Failed to parse article metadata response: {str(e)}")
 
         # Create GeneratedArticle object

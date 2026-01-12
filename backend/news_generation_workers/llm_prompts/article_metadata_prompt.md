@@ -31,8 +31,4 @@ Return **only** a valid JSON object with the following exact JSON schema:
 }
 
 **Task:**
-Your task is to generate an excerpt and key points for the following article:
-
-Article Title: {Title Placeholder}
-Article Content:
-{Content Placeholder}
+Your task is to generate an excerpt and key points.

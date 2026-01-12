@@ -9,9 +9,10 @@ psycopg2-binary
 alembic
 python-slugify
 redis
-google-genai
 fastapi
 uvicorn[standard]
 python-multipart
 pillow
 pillow-avif-plugin
+langchain
+langchain-google-genai

@@ -4,10 +4,10 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 import redis
-from google import genai
 from celery import Task
 import sys
 from pathlib import Path
+from langchain_core.prompts import ChatPromptTemplate
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -30,14 +30,13 @@ from dto import ScrapedArticleDTO, ProcessedHeadlineDTO, HeadlinePickerResponse
 from celery_config import celery_app
 from .shared import (
     get_redis_client,
-    get_genai_client,
+    get_llm,
     load_prompt,
     logger,
     REDIS_LAST_RUN_KEY,
     HEADLINES_PICKER_MODEL_NAME,
-    HEADLINES_PICKER_THINKING_BUDGET,
-    HEADLINES_PICKER_THINKING_LEVEL,
     HEADLINES_PICKER_TEMPERATURE,
+    HEADLINES_PICKER_THINKING_BUDGET,
 )
 from db import Article, get_database_session
 
@@ -338,8 +337,7 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
 
     logger.info(f"Selecting top headlines from {len(articles)} scraped items using {HEADLINES_PICKER_MODEL_NAME}")
 
-    pick_headlines_prompt = load_prompt('llm_prompts/pick_headlines_prompt.md')
-    genai_client = get_genai_client()
+    system_prompt = load_prompt('llm_prompts/pick_headlines_prompt.md')
 
     # Fetch existing article titles for deduplication
     existing_titles = fetch_recent_article_titles(hours=12)
@@ -375,20 +373,27 @@ def pick_headlines_with_llm(articles: List[ScrapedArticleDTO], max_headlines_cou
     user_message = "\n".join(user_message_parts)
 
     try:
-        response = genai_client.models.generate_content(
-            model=HEADLINES_PICKER_MODEL_NAME,
-            contents=user_message,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=pick_headlines_prompt,
-                response_mime_type='application/json',
-                response_schema=HeadlinePickerResponse,
-                temperature=HEADLINES_PICKER_TEMPERATURE,
-                thinking_config=genai.types.ThinkingConfig(thinking_level=HEADLINES_PICKER_THINKING_LEVEL)
-            )
+        # Create LangChain LLM with structured output
+        llm = get_llm(
+            model_name=HEADLINES_PICKER_MODEL_NAME,
+            temperature=HEADLINES_PICKER_TEMPERATURE,
+            thinking_budget=HEADLINES_PICKER_THINKING_BUDGET,
         )
+        structured_llm = llm.with_structured_output(HeadlinePickerResponse)
+        
+        # Create prompt template with system and user messages
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "{system_prompt}"),
+            ("human", "{user_message}"),
+        ])
+        
+        # Create and invoke the chain
+        chain = prompt | structured_llm
+        parsed_response = chain.invoke({
+            "system_prompt": system_prompt,
+            "user_message": user_message,
+        })
 
-        # Parse the structured response using Pydantic
-        parsed_response = HeadlinePickerResponse.model_validate_json(response.text)
         processed_headlines = parsed_response.headlines
 
         logger.info(
