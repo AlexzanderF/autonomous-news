@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_tavily import TavilySearch
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from dto import GeneratedArticleDTO
@@ -26,14 +27,95 @@ from .shared import (
     ARTICLE_GENERATION_TEMPERATURE,
     ARTICLE_GENERATION_THINKING_BUDGET,
     ARTICLE_METADATA_MODEL_NAME,
+    TAVILY_API_KEY,
 )
 
+TAVILY_MAX_RESULTS = 20
+TAVILY_DAYS = 3
 MAX_RETRIES = 2
 EMPTY_RESPONSE_RETRY_DELAY = 30  # Retry delay for empty responses (Gemini internal errors)
 
 # ============================================================================
 # Article Generation Task
 # ============================================================================
+
+def _generate_with_gemini_search(title: str, system_prompt: str) -> str:
+    """
+    Generate article content using Gemini with built-in Google Search grounding.
+    Used for regular (non-featured) articles.
+    """
+    llm = get_llm(
+        model_name=ARTICLE_GENERATION_MODEL_NAME,
+        temperature=ARTICLE_GENERATION_TEMPERATURE,
+        thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET,
+        max_retries=MAX_RETRIES,
+    )
+    # Bind Google Search tool for real-time search grounding
+    llm_with_search = llm.bind_tools([{"google_search": {}}])
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "{system_prompt}"),
+        ("human", "Generate an article for the following headline: {title}"),
+    ])
+    
+    chain = prompt | llm_with_search | StrOutputParser()
+    return chain.invoke({
+        "system_prompt": system_prompt,
+        "title": title,
+    })
+
+
+def _generate_with_tavily(title: str, system_prompt: str) -> str:
+    """
+    Generate article content using Tavily search + Claude (Anthropic).
+    Used for featured articles for higher quality output.
+    """
+    if not TAVILY_API_KEY:
+        raise ValueError("TAVILY_API_KEY environment variable is required for featured article generation")
+    
+    # Step 1: Search for context using Tavily
+    tavily = TavilySearch(
+        api_key=TAVILY_API_KEY,
+        topic="news",
+        max_results=TAVILY_MAX_RESULTS,
+        days=TAVILY_DAYS
+    )
+    
+    logger.info(f"Searching for context with Tavily for headline: {title}")
+    search_results = tavily.invoke(title)
+    
+    # Format search results as context
+    if isinstance(search_results.get('results'), list):
+        context = "\n\n".join([
+            f"Source: {r.get('url', 'Unknown')}\n{r.get('content', '')}" 
+            for r in search_results['results']
+        ])
+        result_count = len(search_results['results'])
+    else:
+        context = str(search_results)
+        result_count = 1
+    
+    logger.info(f"Tavily search returned {result_count} results")
+    
+    # Step 2: Generate article with Claude using search context
+    llm = get_llm(
+        model_name='claude-haiku-4-5',
+        temperature=ARTICLE_GENERATION_TEMPERATURE,
+        max_retries=MAX_RETRIES,
+    )
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "{system_prompt}"),
+        ("human", "Generate an article for the following headline: {title}\n\nResearch context from web search:\n{context}"),
+    ])
+    
+    chain = prompt | llm | StrOutputParser()
+    return chain.invoke({
+        "system_prompt": system_prompt,
+        "title": title,
+        "context": context,
+    })
+
 
 @celery_app.task(
     bind=True,
@@ -43,11 +125,11 @@ EMPTY_RESPONSE_RETRY_DELAY = 30  # Retry delay for empty responses (Gemini inter
 )
 def generate_article_from_headline(self: Task, title: str, category: str, is_featured: bool = False) -> Dict[str, Any]:
     """
-    Generate a full news article from a headline using Gemini with search/grounding.
+    Generate a full news article from a headline.
     This task is queued automatically when headlines are selected.
     """
     try:
-        logger.info(f"Generating article for headline: {title[:50]}...")
+        logger.info(f"Generating {'featured ' if is_featured else ''}article for headline: {title[:50]}...")
 
         if not title:
             logger.warning("Empty title received, skipping article generation")
@@ -56,29 +138,15 @@ def generate_article_from_headline(self: Task, title: str, category: str, is_fea
         # Load the article generation prompt
         system_prompt = load_prompt('llm_prompts/generate_news_article_prompt.md')
         
-        # Create LangChain LLM with Google Search tool for grounding
-        llm = get_llm(
-            model_name=ARTICLE_GENERATION_MODEL_NAME,
-            temperature=ARTICLE_GENERATION_TEMPERATURE,
-            thinking_budget=ARTICLE_GENERATION_THINKING_BUDGET,
-            max_retries=MAX_RETRIES,
-        )
-        # Bind Google Search tool for real-time search grounding
-        llm_with_search = llm.bind_tools([{"google_search": {}}])
-        
-        # Create prompt template
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", "{system_prompt}"),
-            ("human", "Generate an article for the following headline: {title}"),
-        ])
-        
-        chain = prompt | llm_with_search | StrOutputParser()
-        article_content = chain.invoke({
-            "system_prompt": system_prompt,
-            "title": title,
-        })
+        # Choose generation method based on featured status
+        if is_featured:
+            logger.info("Using Tavily + Claude for featured article")
+            article_content = _generate_with_tavily(title, system_prompt)
+        else:
+            logger.info("Using Gemini + Google Search for regular article")
+            article_content = _generate_with_gemini_search(title, system_prompt)
 
-        # Handle empty responses (Gemini might return 200 with empty content)
+        # Handle empty responses
         if not article_content or not article_content.strip():
             logger.warning(f"Empty Article content response from LLM for headline: {title}")
             raise self.retry(
